@@ -2,7 +2,7 @@
 
 A real-time world-conquest strategy game that runs entirely in the browser — no install, no build step, no server. Mine gold, feed your armies, raise a military, and take over the Earth while rival nations (and the sea) fight back.
 
-**[Play it live](#)** — replace this link with your GitHub Pages URL once it's enabled (see below).
+**[Play it live](https://kooooneth.github.io/dominion/)**
 
 ## Features
 
