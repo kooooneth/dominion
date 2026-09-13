@@ -1,0 +1,969 @@
+<meta charset="utf-8">
+<title>Dominion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+  :root{
+    --parchment:#e7d9ba; --parchment-2:#f2e8cf; --parchment-3:#ddcca6; --inset:#d3c099;
+    --ink:#352b1a; --ink-soft:#6d5c3f; --line:#b39b6c; --line-soft:#c8b488;
+    --sea:#33586e; --sea-2:#2c4d61; --sea-deep:#1c3140;
+    --gold:#b0863a; --gold-2:#caa24f; --crimson:#98281f; --crimson-2:#b8362a;
+    --good:#4c6b38; --player:#2e5e8c; --shadow:0 2px 8px rgba(53,43,26,.18); --radius:7px;
+  }
+  @property --aside-w{ syntax:"<length>"; inherits:true; initial-value:320px; }
+  *{box-sizing:border-box}
+  [hidden]{display:none !important;}
+  body{margin:0;font-family:'Spectral',Georgia,serif;color:var(--ink);
+    background:radial-gradient(ellipse at 20% 0%,#efe3c6 0%,rgba(239,227,198,0) 55%),var(--parchment);
+    min-height:100vh;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  h1,h2,h3{font-family:'Cinzel',serif;}
+  button{font-family:inherit;cursor:pointer;color:var(--ink);}
+  button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--gold);outline-offset:2px;}
+
+  .app{display:grid;grid-template-rows:auto 1fr auto;height:100vh;max-width:1360px;margin:0 auto;overflow:hidden;}
+  header.hud{display:flex;align-items:center;gap:14px;flex-wrap:nowrap;padding:9px 18px;
+    border-bottom:2px solid var(--line);background:linear-gradient(180deg,#f3e9d0,#e9dcbd);}
+  .brand{display:flex;flex-direction:column;line-height:1;flex:none;}
+  .brand .title{font-size:23px;font-weight:700;letter-spacing:.15em;color:var(--crimson);}
+  .brand .sub{font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--ink-soft);margin-top:3px;}
+  .stats{display:flex;gap:9px;flex-wrap:nowrap;flex:1 1 auto;min-width:0;justify-content:flex-start;overflow-x:auto;scrollbar-width:none;}
+  .stats::-webkit-scrollbar{display:none;}
+  .hdr-actions{flex:none;}
+  .stat{display:flex;flex-direction:column;align-items:center;min-width:52px;padding:3px 9px;
+    border:1px solid var(--line-soft);border-radius:var(--radius);background:var(--parchment-2);}
+  .stat .lbl{font-size:8.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);}
+  .stat .val{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:1px;min-width:34px;text-align:center;}
+  .stat .net{min-width:44px;text-align:center;}
+  #missileBtn{width:62px;padding-left:4px;padding-right:4px;text-align:center;flex:none;}
+  #leaveBtn{width:84px;text-align:center;flex:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #leaveBtn.armed{background:var(--crimson);color:#f6ecd2;border-color:#7a2019;}
+  #rulesBtn,#langSel,.speed{flex:none;}
+  @media(max-width:1180px){ .buffchip,.diffchip{display:none;} }
+  .stat .net{font-size:9.5px;font-variant-numeric:tabular-nums;} .net.pos{color:var(--good);} .net.neg{color:var(--crimson);}
+  .threatwrap{min-width:104px;}
+  .threatbar{height:7px;border-radius:5px;background:var(--inset);overflow:hidden;border:1px solid var(--line-soft);margin-top:3px;}
+  .threatbar>i{display:block;height:100%;background:linear-gradient(90deg,var(--good),var(--gold),var(--crimson));}
+  .hdr-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+  .speed{display:flex;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;}
+  .speed button{background:var(--parchment-2);border:0;padding:6px 8px;font-size:12px;border-right:1px solid var(--line-soft);}
+  .speed button:last-child{border-right:0;} .speed button.on{background:var(--crimson);color:#f6ecd2;}
+  .btn{border:1px solid var(--line);border-radius:var(--radius);background:var(--parchment-2);padding:7px 11px;font-size:12.5px;font-weight:500;transition:transform .06s,background .15s;}
+  .btn:hover{background:#fff6e0;} .btn:active{transform:translateY(1px);}
+  .btn.warn{background:#7a2a12;color:#f6dcc2;border-color:#5a1d0c;font-family:'Cinzel',serif;letter-spacing:.04em;}
+  .btn.warn:hover{background:#933418;} .btn.primary{background:var(--crimson);color:#f6ecd2;border-color:#7a2019;font-family:'Cinzel',serif;font-weight:600;}
+  .btn.primary:hover{background:var(--crimson-2);} .btn.ghost{background:transparent;} .btn:disabled{opacity:.4;cursor:not-allowed;}
+  .buffchip{font-size:10.5px;padding:3px 8px;border-radius:20px;border:1px dashed var(--gold);background:rgba(176,134,58,.12);color:#7a5c1f;}
+  .langsel{font-family:inherit;font-size:12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--parchment-2);color:var(--ink);padding:6px 6px;cursor:pointer;}
+  .langsel:hover{background:#fff6e0;}
+  .diffchip{font-size:10.5px;padding:3px 8px;border-radius:20px;border:1px solid var(--crimson);color:var(--crimson);background:rgba(152,40,31,.06);text-transform:uppercase;letter-spacing:.08em;}
+
+  main{position:relative;overflow:hidden;min-width:0;min-height:0;}
+  .mapwrap{position:absolute;inset:0;overflow:hidden;}
+  canvas#map{position:absolute;inset:0;display:block;width:100%;height:100%;background:radial-gradient(ellipse at 50% 40%,#2c526a,#16262f);cursor:grab;}
+  canvas#map.grabbing{cursor:grabbing;}
+  .maphud{position:absolute;left:12px;bottom:12px;font-size:11px;color:#e8dcc0;background:rgba(28,49,64,.72);
+    padding:6px 10px;border-radius:7px;border:1px solid rgba(255,255,255,.15);line-height:1.5;pointer-events:none;}
+  .modebar{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:13px;padding:8px 14px;border-radius:8px;
+    border:1.5px dashed #ffcf8f;background:rgba(122,42,18,.92);color:#ffe9cf;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);}
+  .modebar button{background:rgba(255,255,255,.15);color:#ffe9cf;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:3px 9px;font-size:11px;}
+  .zoomctl{position:absolute;right:calc(clamp(240px,var(--aside-w,320px),520px) + 12px);bottom:12px;display:flex;flex-direction:column;gap:4px;z-index:6;}
+  .zoomctl button{width:32px;height:32px;font-size:17px;border-radius:7px;border:1px solid var(--line);background:rgba(242,232,207,.92);}
+
+  aside{position:fixed;right:0;top:52px;height:calc(100vh - 52px);width:min(clamp(240px,var(--aside-w,320px),520px), calc(100vw - 8px));z-index:20;background:var(--parchment-2);border-left:2px solid var(--line);display:flex;flex-direction:column;overflow:hidden;box-shadow:-5px 0 16px rgba(53,43,26,.16);}
+  .resizer{position:absolute;left:0;top:0;bottom:0;width:14px;cursor:col-resize;z-index:8;display:flex;align-items:center;justify-content:center;touch-action:none;}
+  .resizer::before{content:"";width:4px;height:38px;border-radius:3px;background:var(--line);opacity:.55;transition:opacity .12s,background .12s;}
+  .resizer:hover::before,.resizer.drag::before{opacity:1;background:var(--gold);height:60px;}
+  .phead{padding:9px 12px;background:linear-gradient(180deg,#efe4c7,#e4d5b2);border-bottom:1px solid var(--line-soft);
+    font-family:'Cinzel',serif;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  #ppBody{padding:11px;overflow-y:auto;flex:1;}
+  .muted{color:var(--ink-soft);font-size:12.5px;line-height:1.5;}
+  .prow{display:flex;justify-content:space-between;align-items:baseline;padding:2px 0;font-size:12.5px;border-bottom:1px dotted var(--line-soft);}
+  .prow:last-child{border-bottom:0;} .prow .k{color:var(--ink-soft);} .prow .v{font-weight:600;font-variant-numeric:tabular-nums;}
+  .ownerdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:middle;border:1px solid rgba(0,0,0,.3);}
+  .built{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}
+  .btag{font-size:10.5px;padding:2px 6px;border-radius:11px;background:var(--parchment-3);border:1px solid var(--line-soft);}
+  .buildgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:9px;}
+  .bbtn{border:1px solid var(--line);border-radius:6px;background:var(--parchment);padding:5px 7px;display:flex;flex-direction:column;gap:1px;align-items:flex-start;font-size:11px;text-align:left;line-height:1.12;}
+  .bbtn:hover:not(:disabled){background:#fff6e0;} .bbtn:disabled{opacity:.36;cursor:not-allowed;}
+  .bbtn .bt{font-weight:600;} .bbtn small{color:var(--ink-soft);font-size:9px;} .bbtn .cost{color:#7a5c1f;font-size:9px;font-weight:600;}
+  .full{grid-column:1/-1;}
+  .deploy{margin-top:9px;border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--parchment);}
+  .deploy input[type=range]{width:100%;accent-color:var(--crimson);}
+  .deploy .amt{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);}
+  .deploy .amt b{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums;}
+  .lockbtn{font-size:10px;padding:1px 7px;border:1px solid var(--line);border-radius:11px;background:var(--parchment-3);margin-left:5px;}
+  .lockbtn.on{background:var(--crimson);color:#f6ecd2;border-color:#7a2019;}
+  .hint{font-size:11.5px;color:#7a5c1f;background:rgba(176,134,58,.12);border:1px dashed var(--gold);border-radius:6px;padding:6px 8px;margin-top:9px;line-height:1.4;}
+
+  footer.log{border-top:2px solid var(--line);padding:6px 18px 9px;background:linear-gradient(180deg,#e9dcbd,#e3d4b2);}
+  .logfeed{display:flex;gap:16px;overflow-x:auto;font-size:12px;white-space:nowrap;}
+  .logline{color:var(--ink-soft);} .logline .tag{color:var(--gold);font-variant-numeric:tabular-nums;margin-right:5px;font-size:10.5px;}
+  .logline.good{color:#3c5a2a;} .logline.bad{color:var(--crimson);} .logline.sea{color:var(--sea-2);} .logline.boom{color:#8a3410;font-weight:600;}
+
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:20px;z-index:50;
+    background:radial-gradient(ellipse at center,rgba(28,20,10,.6),rgba(28,20,10,.9));overflow-y:auto;}
+  .modal{width:min(820px,100%);background:var(--parchment-2);border:2px solid var(--gold);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.5);padding:22px 26px;}
+  .modal h2{margin:0 0 4px;font-size:29px;letter-spacing:.1em;color:var(--crimson);text-align:center;}
+  .modal .tagline{text-align:center;color:var(--ink-soft);font-style:italic;margin-bottom:16px;font-size:13.5px;line-height:1.5;}
+  .steplbl{font-family:'Cinzel',serif;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin:6px 0 8px;text-align:center;}
+  .diffs{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-bottom:16px;}
+  .dchip{border:1.5px solid var(--line);border-radius:9px;padding:8px 14px;background:var(--parchment);text-align:center;min-width:120px;}
+  .dchip.sel{border-color:var(--crimson);background:#fff2e2;box-shadow:var(--shadow);}
+  .dchip .dn{font-family:'Cinzel',serif;font-size:14px;} .dchip .dd{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+  #modePick .dchip{min-width:150px;}
+  .fogtoggle{display:flex;align-items:center;gap:8px;justify-content:center;font-size:12.5px;color:var(--ink-soft);margin:-4px 0 16px;cursor:pointer;}
+  .fogtoggle input{width:15px;height:15px;accent-color:var(--crimson);cursor:pointer;} .fogtoggle b{color:#7a5c1f;}
+  .factions{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  @media(max-width:640px){.factions{grid-template-columns:1fr 1fr;}.diffs{gap:6px;}}
+  .fcard{text-align:left;border:1px solid var(--line);border-radius:9px;padding:11px;background:var(--parchment);transition:transform .08s,box-shadow .15s,border-color .15s;}
+  .fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--gold);background:#fff6e0;}
+  .fcard .fn{font-family:'Cinzel',serif;font-size:13.5px;margin-bottom:3px;display:flex;align-items:center;gap:6px;}
+  .fcard .fi{font-size:17px;} .fcard .fb{font-size:12px;line-height:1.4;} .fcard .fb b{color:#7a5c1f;}
+  .rules{font-size:12.5px;line-height:1.55;} .rules li{margin-bottom:5px;} .rules b{color:#7a5c1f;}
+  .closebar{display:flex;justify-content:flex-end;margin-top:12px;}
+  .endmodal{text-align:center;} .endmodal h2{font-size:38px;} .endmodal p{font-size:14px;color:var(--ink-soft);margin:6px 0 16px;}
+  /* ---- responsive: keep it playable in small / non-fullscreen windows ---- */
+  @media(max-width:720px){
+    .resizer{display:none;}
+    .zoomctl{right:12px;}
+    header.hud{gap:7px;padding:6px 10px;}
+    .brand .sub{display:none;} .brand .title{font-size:19px;letter-spacing:.1em;}
+    .stats{justify-content:flex-start;flex-wrap:nowrap;overflow-x:auto;flex:1 1 100%;order:3;}
+    .stat{min-width:44px;padding:3px 6px;} .stat .val{font-size:14px;} .threatwrap{min-width:92px;}
+    .buffchip,.diffchip{display:none;}
+    aside{position:fixed;top:auto;left:0;right:0;bottom:0;height:auto;width:auto;max-height:60%;z-index:20;
+      border-left:0;border-top:2px solid var(--line);border-radius:12px 12px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.32);
+      transform:translateY(calc(100% - 44px));transition:transform .25s ease;}
+    aside.open{transform:translateY(0);}
+    aside::before{content:"";position:absolute;top:6px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:3px;background:var(--line);}
+    .phead{cursor:pointer;padding-top:14px;}
+    .maphud{display:none;} footer.log{padding:5px 10px 7px;}
+  }
+  @media(max-width:430px){ .factions{grid-template-columns:1fr;} .diffs{flex-direction:column;align-items:stretch;} .modal{padding:18px 16px;} .modal h2{font-size:24px;} }
+</style>
+
+<div class="app" id="app" hidden>
+  <header class="hud">
+    <div class="brand"><span class="title">DOMINION</span><span class="sub">Live World Conquest</span></div>
+    <div class="stats" id="stats"></div>
+    <div class="hdr-actions">
+      <span class="diffchip" id="diffchip"></span>
+      <span class="buffchip" id="buffchip"></span>
+      <div class="speed" id="speed">
+        <button data-s="0">⏸</button><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="3">3×</button>
+      </div>
+      <button class="btn warn" id="missileBtn">🚀</button>
+      <select class="langsel" id="langSel" title="Language"></select>
+      <button class="btn ghost" id="rulesBtn">Rules</button>
+      <button class="btn ghost" id="leaveBtn" title="Leave game">Leave</button>
+    </div>
+  </header>
+  <main>
+    <div class="mapwrap">
+      <canvas id="map"></canvas>
+      <div class="modebar" id="modebar" hidden></div>
+      <div class="maphud" id="maphud"></div>
+      <div class="zoomctl"><button id="zin">+</button><button id="zout">−</button></div>
+    </div>
+    <aside><div class="resizer" id="resizer" title="Drag to resize the panel"></div><div class="phead"><span id="ppTitle">Province</span><span id="ppTag"></span></div><div id="ppBody"></div></aside>
+  </main>
+  <footer class="log"><div class="logfeed" id="logfeed"></div></footer>
+</div>
+
+<div class="overlay" id="startOverlay">
+  <div class="modal">
+    <h2>DOMINION</h2>
+    <div class="tagline" id="startTagline">A living world of continents and scattered isles. Time never stops — mine gold, raise armies, sail the seas and take the Earth in real time, while rival powers do the same. Set the challenge, then choose your people.</div>
+    <div class="steplbl">1 · Choose a game mode</div>
+    <div class="diffs" id="modePick"></div>
+    <div class="steplbl">2 · Choose your enemies</div>
+    <div class="diffs" id="diffPick"></div>
+    <label class="fogtoggle"><input type="checkbox" id="fogChk"> <span id="fogText"><b>Fog of War</b> — the map beyond your borders stays hidden (more realistic)</span></label>
+    <div class="steplbl">3 · Choose your faction — this begins the war</div>
+    <div class="factions" id="factionPick"></div>
+  </div>
+</div>
+
+<div class="overlay" id="rulesOverlay" hidden>
+  <div class="modal"><h2 style="font-size:22px" id="rulesTitle">How to Play</h2>
+    <ul class="rules">
+      <li><b>It's real time.</b> There is no end-turn — gold, food and armies all flow continuously. Use the ⏸ / 1× / 2× / 3× speed controls any time.</li>
+      <li><b>Navigate the world:</b> <b>drag</b> to pan, scroll or use +/− to zoom. The world is large, with continents and ~30 islands — some holding special sites (💎 gold, 🛢️ oil, 🌱 delta, 🏛️ ruins, 🗿 fortress) that reward whoever holds them.</li>
+      <li><b>Select a province you own</b> → set the deploy slider → <b>click an adjacent tile</b> (or a coast in range, if it has a ⚓ Harbor) to send an army. Armies <b>march and fight</b> where they land — you'll see it happen.</li>
+      <li><b>Build</b> (up to 5 per province) with gold: Factory/Mine/Market/Bank (gold), Farm (food), Barracks (army cap), Fort/Watchtower (defense), Hospital (heal), Harbor (cross seas), Lab (+income), Silo (missiles). Every building shows on the map.</li>
+      <li><b>🚀 Missiles</b> (need a Silo): click the rocket button, then any enemy tile except a ★ capital. It devastates the target <b>and the tiles around it</b>, then <b>reloads on a cooldown</b>. Defend with <b>🛰 Air Defense</b> (a chance to shoot incoming missiles down) and a <b>🔰 Shield</b> (blocks one hit — missile or army — then it's spent). Capitals can only be taken by a marching army.</li>
+      <li><b>Save your deploy size:</b> hit <b>🔓 save</b> next to the slider and the chosen troop count is kept for every province, so you don't reset it each time.</li>
+      <li><b>Rival bots</b> grow, build, sail with harbors and <b>attack you</b> — invade their land and they'll fight back. Difficulty sets how rich, fast and vicious they are.</li>
+      <li><b>Modes:</b> 🌍 Conquest (hold half the world), ⚡ Blitz (fast & rich), 👑 Regicide (take every rival capital), 🛡 Last Stand (outlast a bigger, escalating world). <b>Difficulty</b> runs from Peaceful to Impossible.</li>
+      <li><b>Living world:</b> provinces slowly raise a local militia, armies march slower through mountains & jungle, and random <b>events</b> strike — gold rushes 💰, plagues ☠, rebel uprisings ⚔, harvests 🌾 and migrations 👥. Grab <b>special sites</b> (💎🛢🌱🏛🗿⛰⛪) for lasting bonuses.</li>
+      <li><b>Win/Lose:</b> hit the mode's goal to win; you always lose if your capital falls.</li>
+    </ul>
+    <div class="closebar"><button class="btn primary" id="rulesClose">Understood</button></div></div>
+</div>
+
+<div class="overlay" id="endOverlay" hidden>
+  <div class="modal endmodal"><h2 id="endTitle"></h2><p id="endText"></p><button class="btn primary" id="restartBtn">Play Again</button></div>
+</div>
+
+<script>
+"use strict";
+/* ===== HEX GEOMETRY (pointy-top, odd-r) ===== */
+const COLS=30, ROWS=20, SIZE=22;
+const HW=Math.sqrt(3)*SIZE, HH=2*SIZE, RSTEP=HH*0.75;
+const WORLD_W=Math.round(HW*COLS+HW), WORLD_H=Math.round(RSTEP*(ROWS-1)+HH+4);
+function hexCenter(c,r){ return {x:HW*c+(r%2?HW/2:0)+HW/2+2, y:RSTEP*r+HH/2+2}; }
+function hexPolyPoints(cx,cy){ const p=[]; for(let i=0;i<6;i++){ const a=(60*i-90)*Math.PI/180; p.push([cx+SIZE*Math.cos(a),cy+SIZE*Math.sin(a)]);} return p; }
+const OFF_EVEN=[[1,0],[-1,0],[0,-1],[-1,-1],[0,1],[-1,1]], OFF_ODD=[[1,0],[-1,0],[1,-1],[0,-1],[1,1],[0,1]];
+function cube(c,r){ const x=c-(r-(r&1))/2,z=r; return {x,z,y:-x-z}; }
+function hexDist(a,b){ const A=cube(a.col,a.row),B=cube(b.col,b.row); return (Math.abs(A.x-B.x)+Math.abs(A.y-B.y)+Math.abs(A.z-B.z))/2; }
+
+/* ===== TABLES ===== */
+const TERR={Plains:{def:0,tint:"#cdbf7d"},Forest:{def:.20,tint:"#7f9459"},Mountains:{def:.40,tint:"#9a8c74"},
+  Desert:{def:.10,tint:"#dcbd78"},Tundra:{def:.10,tint:"#c3ccc6"},Jungle:{def:.22,tint:"#6f8a49"}};
+const B={
+  factory:{n:"Factory",i:"🏭",c:32,gold:1.2,d:"+1.2 gold/s"}, mine:{n:"Mine",i:"⛏",c:22,gold:.8,d:"+0.8 gold/s"},
+  market:{n:"Market",i:"🏪",c:26,gold:.6,d:"+0.6 gold/s"}, bank:{n:"Bank",i:"🏦",c:45,gold:1.6,d:"+1.6 gold/s"},
+  farm:{n:"Farm",i:"🌾",c:18,food:1.0,d:"+1.0 food/s"}, barracks:{n:"Barracks",i:"⛺",c:24,cap:8,d:"+8 army cap"},
+  fort:{n:"Fort",i:"🏰",c:30,def:.35,d:"+35% defense"}, tower:{n:"Watchtower",i:"🗼",c:20,defAdj:.15,d:"+15% def, adj too"},
+  hospital:{n:"Hospital",i:"⛑",c:28,regen:.4,d:"heals troops"}, harbor:{n:"Harbor",i:"⚓",c:28,harbor:true,d:"invade by sea"},
+  lab:{n:"Lab",i:"🔬",c:40,boost:.10,d:"+10% income"}, silo:{n:"Missile Silo",i:"🚀",c:55,silo:true,d:"launch missiles"},
+  interceptor:{n:"Air Defense",i:"🛰",c:34,intercept:true,d:"may shoot down missiles"}, shield:{n:"Shield",i:"🔰",c:24,shield:true,d:"blocks one attack, once"}};
+const BORDER=["factory","mine","market","bank","farm","barracks","fort","tower","hospital","harbor","lab","silo","interceptor","shield"];
+const MAXB=5;
+const PERKS={ industrial:{n:"Industrialists",i:"🏭",d:"<b>+25% gold</b>."}, agrarian:{n:"Agrarians",i:"🌾",d:"<b>+25% food</b>, cheap troops."},
+  warmonger:{n:"Warmongers",i:"⚔",d:"armies <b>attack +20%</b>."}, fortifier:{n:"Fortifiers",i:"🛡",d:"provinces <b>defend +20%</b>."},
+  rocketeer:{n:"Rocketeers",i:"🚀",d:"cheap missiles; <b>start w/ Silo</b>."}, seafarer:{n:"Seafarers",i:"⚓",d:"longer naval reach; coasts resist raids."}};
+const SITES={ gold:{i:"💎",n:"Gold Vein",gold:1.0}, oil:{i:"🛢",n:"Oil Field",gold:1.2}, delta:{i:"🌱",n:"Fertile Delta",food:1.2},
+  ruins:{i:"🏛",n:"Ancient Ruins",boost:.15}, fortress:{i:"🗿",n:"Old Fortress",def:.5},
+  metals:{i:"⛰",n:"Rare Metals",gold:1.7}, holy:{i:"⛪",n:"Holy Site",def:.3,boost:.1} };
+const DIFF={ peaceful:{n:"Peaceful",d:"Bots barely fight",econ:.5,think:6,aggr:.03,build:.25,harbor:false,missile:false,edge:.7},
+  easy:{n:"Easy",d:"Passive, poor bots",econ:.6,think:4.5,aggr:.15,build:.35,harbor:false,missile:false,edge:.85},
+  medium:{n:"Medium",d:"A fair fight",econ:1.0,think:3.2,aggr:.35,build:.55,harbor:true,missile:false,edge:1.0},
+  hard:{n:"Hard",d:"Rich & aggressive",econ:1.5,think:2.3,aggr:.6,build:.72,harbor:true,missile:false,edge:1.12},
+  nightmare:{n:"Nightmare",d:"Relentless. Nukes.",econ:2.3,think:1.4,aggr:.88,build:.9,harbor:true,missile:true,edge:1.28},
+  impossible:{n:"Impossible",d:"Everything, at once",econ:3.4,think:0.9,aggr:1.0,build:1.0,harbor:true,missile:true,edge:1.5} };
+const MODE={ conquest:{n:"Conquest",d:"Rule half the world",i:"🌍",win:.5,econ:1,aggr:0,esc:0,botStart:0,capOnly:false},
+  blitz:{n:"Blitz",d:"Fast, rich, brutal",i:"⚡",win:.4,econ:1.7,aggr:.15,esc:0,botStart:0,capOnly:false},
+  regicide:{n:"Regicide",d:"Take every capital",i:"👑",win:1.1,econ:1,aggr:.1,esc:0,botStart:0,capOnly:true},
+  laststand:{n:"Last Stand",d:"Outlast a stronger world",i:"🛡",win:.45,econ:1,aggr:.35,esc:1,botStart:2,capOnly:false} };
+const AI_NAMES=["Ironpeak Hegemony","Verdant Coalition","Sunspear Caliphate","Frostmark Realm","Azure League"];
+const AI_COLORS=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const PLAYER_COLOR="#2e5e8c";
+const WIN_FRACTION=0.5, MISSILE_COST=45, UPKEEP=0.06, MISSILE_COOLDOWN=18, MISSILE_BLAST=2, INT_RANGE=4, INT_CHANCE=0.6;
+const POP_RATE=0.075, EVENT_MIN=28, EVENT_MAX=55;
+
+/* ===== i18n (translations) ===== */
+const LANGS=[["en","EN · English"],["es","ES · Español"],["fr","FR · Français"],["de","DE · Deutsch"],["pt","PT · Português"],["it","IT · Italiano"],["ru","RU · Русский"],["zh","ZH · 中文"],["ja","JA · 日本語"]];
+let LANG=(()=>{try{return localStorage.getItem("dominion_lang")||"en";}catch(e){return "en";}})();
+const TAGLINE="A living world of continents and scattered isles. Time never stops — mine gold, raise armies, sail the seas and take the Earth in real time, while rival powers do the same. Set the challenge, then choose your people.";
+const TR={
+ es:{
+  "Live World Conquest":"Conquista Mundial en Vivo","Gold":"Oro","Food":"Comida","Army":"Ejército","Land":"Tierra","World held":"Mundo","Crowns taken":"Coronas","win":"objetivo","capitals":"capitales","Rules":"Reglas","Leave":"Salir","Leave?":"¿Salir?",
+  "Province":"Provincia","Click a province.":"Haz clic en una provincia.","Open Sea":"Mar Abierto","You":"Tú","Unclaimed":"Sin dueño","Unknown Lands":"Tierras Desconocidas","a rival":"un rival",
+  "Terrain":"Terreno","Defense":"Defensa","Garrison":"Guarnición","Special":"Especial","Build slots":"Espacios","Deploy":"Desplegar","save":"guardar","saved":"guardado","Recruit":"Reclutar","Recruit ×5":"Reclutar ×5","coast":"costa",
+  "Victory":"Victoria","Defeat":"Derrota","Play Again":"Jugar de nuevo","Understood":"Entendido","How to Play":"Cómo jugar",
+  "Factory":"Fábrica","Mine":"Mina","Market":"Mercado","Bank":"Banco","Farm":"Granja","Barracks":"Cuartel","Fort":"Fuerte","Watchtower":"Atalaya","Hospital":"Hospital","Harbor":"Puerto","Lab":"Laboratorio","Missile Silo":"Silo de Misiles","Air Defense":"Defensa Aérea","Shield":"Escudo",
+  "+1.2 gold/s":"+1.2 oro/s","+0.8 gold/s":"+0.8 oro/s","+0.6 gold/s":"+0.6 oro/s","+1.6 gold/s":"+1.6 oro/s","+1.0 food/s":"+1.0 comida/s","+8 army cap":"+8 cap. ejército","+35% defense":"+35% defensa","+15% def, adj too":"+15% def, y adyacentes","heals troops":"cura tropas","invade by sea":"invadir por mar","+10% income":"+10% ingresos","launch missiles":"lanzar misiles","may shoot down missiles":"puede derribar misiles","blocks one attack, once":"bloquea un ataque, una vez",
+  "Plains":"Llanura","Forest":"Bosque","Mountains":"Montañas","Desert":"Desierto","Tundra":"Tundra","Jungle":"Jungla",
+  "Gold Vein":"Veta de Oro","Oil Field":"Campo Petrolífero","Fertile Delta":"Delta Fértil","Ancient Ruins":"Ruinas Antiguas","Old Fortress":"Vieja Fortaleza","Rare Metals":"Metales Raros","Holy Site":"Sitio Sagrado",
+  "Conquest":"Conquista","Rule half the world":"Domina medio mundo","Blitz":"Blitz","Fast, rich, brutal":"Rápido, rico, brutal","Regicide":"Regicidio","Take every capital":"Toma cada capital","Last Stand":"Última Resistencia","Outlast a stronger world":"Sobrevive a un mundo más fuerte",
+  "Peaceful":"Pacífico","Bots barely fight":"Los bots apenas luchan","Easy":"Fácil","Passive, poor bots":"Bots pasivos y pobres","Medium":"Medio","A fair fight":"Una pelea justa","Hard":"Difícil","Rich & aggressive":"Ricos y agresivos","Nightmare":"Pesadilla","Relentless. Nukes.":"Implacables. Nucleares.","Impossible":"Imposible","Everything, at once":"Todo, a la vez",
+  "Industrialists":"Industriales","Agrarians":"Agrarios","Warmongers":"Belicistas","Fortifiers":"Fortificadores","Rocketeers":"Cohetes","Seafarers":"Navegantes",
+  "<b>+25% gold</b>.":"<b>+25% oro</b>.","<b>+25% food</b>, cheap troops.":"<b>+25% comida</b>, tropas baratas.","armies <b>attack +20%</b>.":"los ejércitos <b>atacan +20%</b>.","provinces <b>defend +20%</b>.":"las provincias <b>defienden +20%</b>.","cheap missiles; <b>start w/ Silo</b>.":"misiles baratos; <b>empieza con Silo</b>.","longer naval reach; coasts resist raids.":"mayor alcance naval; costas resisten asaltos.",
+  "1 · Choose a game mode":"1 · Elige un modo de juego","2 · Choose your enemies":"2 · Elige tus enemigos","3 · Choose your faction — this begins the war":"3 · Elige tu facción — así comienza la guerra","Fog of War":"Niebla de Guerra","the map beyond your borders stays hidden (more realistic)":"el mapa más allá de tus fronteras permanece oculto (más realista)",
+  "Click a highlighted tile to send this many.":"Haz clic en una casilla resaltada para enviar esta cantidad.","Amount is kept for every province.":"La cantidad se mantiene en cada provincia.",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"Selecciona esta casilla, ajusta el control y haz clic en un vecino brillante para marchar o atacar. Los puertos ⚓ te permiten atacar costas al otro lado del mar.",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"El dominio de los asaltantes. Las costas son atacadas desde aquí: construye puertos y mantén tropas en la orilla.",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"Territorio inexplorado, oculto por la niebla de guerra. Expándete hacia él para revelar lo que hay.",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"Sin dueño. Envía un ejército desde una casilla tuya adyacente, o 🚀 lánzale un misil.","Held by":"En manos de","Send an army from an adjacent tile you own, or 🚀 missile it.":"Envía un ejército desde una casilla tuya adyacente, o 🚀 lánzale un misil.",
+  [TAGLINE]:"Un mundo vivo de continentes e islas dispersas. El tiempo nunca se detiene: extrae oro, forma ejércitos, navega los mares y conquista la Tierra en tiempo real, mientras las potencias rivales hacen lo mismo. Fija el reto y elige tu pueblo."
+ },
+ fr:{
+  "Live World Conquest":"Conquête du Monde en Direct","Gold":"Or","Food":"Vivres","Army":"Armée","Land":"Terres","World held":"Monde","Crowns taken":"Couronnes","win":"objectif","capitals":"capitales","Rules":"Règles","Leave":"Quitter","Leave?":"Quitter ?",
+  "Province":"Province","Click a province.":"Cliquez sur une province.","Open Sea":"Haute Mer","You":"Vous","Unclaimed":"Libre","Unknown Lands":"Terres Inconnues","a rival":"un rival",
+  "Terrain":"Terrain","Defense":"Défense","Garrison":"Garnison","Special":"Spécial","Build slots":"Emplacements","Deploy":"Déployer","save":"garder","saved":"gardé","Recruit":"Recruter","Recruit ×5":"Recruter ×5","coast":"côte",
+  "Victory":"Victoire","Defeat":"Défaite","Play Again":"Rejouer","Understood":"Compris","How to Play":"Comment jouer",
+  "Factory":"Usine","Mine":"Mine","Market":"Marché","Bank":"Banque","Farm":"Ferme","Barracks":"Caserne","Fort":"Fort","Watchtower":"Tour de guet","Hospital":"Hôpital","Harbor":"Port","Lab":"Labo","Missile Silo":"Silo à missiles","Air Defense":"Défense aérienne","Shield":"Bouclier",
+  "+1.2 gold/s":"+1.2 or/s","+0.8 gold/s":"+0.8 or/s","+0.6 gold/s":"+0.6 or/s","+1.6 gold/s":"+1.6 or/s","+1.0 food/s":"+1.0 vivres/s","+8 army cap":"+8 cap. armée","+35% defense":"+35% défense","+15% def, adj too":"+15% déf, adjacents aussi","heals troops":"soigne les troupes","invade by sea":"envahir par mer","+10% income":"+10% revenus","launch missiles":"lancer des missiles","may shoot down missiles":"peut abattre les missiles","blocks one attack, once":"bloque une attaque, une fois",
+  "Plains":"Plaine","Forest":"Forêt","Mountains":"Montagnes","Desert":"Désert","Tundra":"Toundra","Jungle":"Jungle",
+  "Gold Vein":"Filon d'or","Oil Field":"Champ pétrolier","Fertile Delta":"Delta fertile","Ancient Ruins":"Ruines anciennes","Old Fortress":"Vieille forteresse","Rare Metals":"Métaux rares","Holy Site":"Lieu saint",
+  "Conquest":"Conquête","Rule half the world":"Dominez la moitié du monde","Blitz":"Blitz","Fast, rich, brutal":"Rapide, riche, brutal","Regicide":"Régicide","Take every capital":"Prenez chaque capitale","Last Stand":"Dernier Rempart","Outlast a stronger world":"Survivez à un monde plus fort",
+  "Peaceful":"Paisible","Bots barely fight":"Les bots se battent à peine","Easy":"Facile","Passive, poor bots":"Bots passifs et pauvres","Medium":"Moyen","A fair fight":"Un combat équitable","Hard":"Difficile","Rich & aggressive":"Riches et agressifs","Nightmare":"Cauchemar","Relentless. Nukes.":"Implacables. Nucléaire.","Impossible":"Impossible","Everything, at once":"Tout, à la fois",
+  "Industrialists":"Industriels","Agrarians":"Agrariens","Warmongers":"Bellicistes","Fortifiers":"Fortificateurs","Rocketeers":"Fuséistes","Seafarers":"Marins",
+  "<b>+25% gold</b>.":"<b>+25% or</b>.","<b>+25% food</b>, cheap troops.":"<b>+25% vivres</b>, troupes bon marché.","armies <b>attack +20%</b>.":"les armées <b>attaquent +20%</b>.","provinces <b>defend +20%</b>.":"les provinces <b>défendent +20%</b>.","cheap missiles; <b>start w/ Silo</b>.":"missiles bon marché ; <b>départ avec Silo</b>.","longer naval reach; coasts resist raids.":"portée navale accrue ; côtes résistent aux raids.",
+  "1 · Choose a game mode":"1 · Choisissez un mode de jeu","2 · Choose your enemies":"2 · Choisissez vos ennemis","3 · Choose your faction — this begins the war":"3 · Choisissez votre faction — la guerre commence","Fog of War":"Brouillard de guerre","the map beyond your borders stays hidden (more realistic)":"la carte au-delà de vos frontières reste cachée (plus réaliste)",
+  "Click a highlighted tile to send this many.":"Cliquez sur une case surlignée pour en envoyer autant.","Amount is kept for every province.":"La quantité est conservée pour chaque province.",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"Sélectionnez cette case, réglez le curseur, puis cliquez sur un voisin lumineux pour marcher ou attaquer. Les ports ⚓ permettent de frapper les côtes au-delà de la mer.",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"Le domaine des pillards. Les côtes sont attaquées d'ici — construisez des ports et gardez des troupes sur le rivage.",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"Territoire inexploré, caché par le brouillard de guerre. Étendez-vous vers lui pour révéler ce qui s'y trouve.",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"Libre. Envoyez une armée depuis une case adjacente que vous possédez, ou 🚀 tirez-y un missile.","Held by":"Tenu par","Send an army from an adjacent tile you own, or 🚀 missile it.":"Envoyez une armée depuis une case adjacente que vous possédez, ou 🚀 tirez-y un missile.",
+  [TAGLINE]:"Un monde vivant de continents et d'îles éparses. Le temps ne s'arrête jamais : extrayez de l'or, levez des armées, naviguez et conquérez la Terre en temps réel, pendant que les puissances rivales font de même. Réglez le défi, puis choisissez votre peuple."
+ },
+ de:{
+  "Live World Conquest":"Live-Welteroberung","Gold":"Gold","Food":"Nahrung","Army":"Armee","Land":"Land","World held":"Welt","Crowns taken":"Kronen","win":"Ziel","capitals":"Hauptstädte","Rules":"Regeln","Leave":"Verlassen","Leave?":"Sicher?",
+  "Province":"Provinz","Click a province.":"Klicke eine Provinz an.","Open Sea":"Offene See","You":"Du","Unclaimed":"Herrenlos","Unknown Lands":"Unbekanntes Land","a rival":"ein Rivale",
+  "Terrain":"Gelände","Defense":"Verteidigung","Garrison":"Garnison","Special":"Spezial","Build slots":"Bauplätze","Deploy":"Entsenden","save":"merken","saved":"gemerkt","Recruit":"Rekrutieren","Recruit ×5":"Rekrutieren ×5","coast":"Küste",
+  "Victory":"Sieg","Defeat":"Niederlage","Play Again":"Nochmal spielen","Understood":"Verstanden","How to Play":"Spielanleitung",
+  "Factory":"Fabrik","Mine":"Mine","Market":"Markt","Bank":"Bank","Farm":"Bauernhof","Barracks":"Kaserne","Fort":"Fort","Watchtower":"Wachturm","Hospital":"Krankenhaus","Harbor":"Hafen","Lab":"Labor","Missile Silo":"Raketensilo","Air Defense":"Luftabwehr","Shield":"Schild",
+  "+1.2 gold/s":"+1.2 Gold/s","+0.8 gold/s":"+0.8 Gold/s","+0.6 gold/s":"+0.6 Gold/s","+1.6 gold/s":"+1.6 Gold/s","+1.0 food/s":"+1.0 Nahrung/s","+8 army cap":"+8 Armee-Kap.","+35% defense":"+35% Verteidigung","+15% def, adj too":"+15% Vert., auch angrenzend","heals troops":"heilt Truppen","invade by sea":"über See angreifen","+10% income":"+10% Einkommen","launch missiles":"Raketen starten","may shoot down missiles":"kann Raketen abschießen","blocks one attack, once":"blockt einen Angriff, einmal",
+  "Plains":"Ebene","Forest":"Wald","Mountains":"Berge","Desert":"Wüste","Tundra":"Tundra","Jungle":"Dschungel",
+  "Gold Vein":"Goldader","Oil Field":"Ölfeld","Fertile Delta":"Fruchtbares Delta","Ancient Ruins":"Alte Ruinen","Old Fortress":"Alte Festung","Rare Metals":"Seltene Metalle","Holy Site":"Heilige Stätte",
+  "Conquest":"Eroberung","Rule half the world":"Beherrsche die halbe Welt","Blitz":"Blitz","Fast, rich, brutal":"Schnell, reich, brutal","Regicide":"Königsmord","Take every capital":"Nimm jede Hauptstadt","Last Stand":"Letztes Gefecht","Outlast a stronger world":"Überlebe eine stärkere Welt",
+  "Peaceful":"Friedlich","Bots barely fight":"Bots kämpfen kaum","Easy":"Leicht","Passive, poor bots":"Passive, arme Bots","Medium":"Mittel","A fair fight":"Ein fairer Kampf","Hard":"Schwer","Rich & aggressive":"Reich & aggressiv","Nightmare":"Albtraum","Relentless. Nukes.":"Erbarmungslos. Atomwaffen.","Impossible":"Unmöglich","Everything, at once":"Alles, auf einmal",
+  "Industrialists":"Industrielle","Agrarians":"Agrarier","Warmongers":"Kriegstreiber","Fortifiers":"Befestiger","Rocketeers":"Raketentruppe","Seafarers":"Seefahrer",
+  "<b>+25% gold</b>.":"<b>+25% Gold</b>.","<b>+25% food</b>, cheap troops.":"<b>+25% Nahrung</b>, günstige Truppen.","armies <b>attack +20%</b>.":"Armeen <b>greifen +20%</b> an.","provinces <b>defend +20%</b>.":"Provinzen <b>verteidigen +20%</b>.","cheap missiles; <b>start w/ Silo</b>.":"günstige Raketen; <b>Start mit Silo</b>.","longer naval reach; coasts resist raids.":"größere Seereichweite; Küsten trotzen Überfällen.",
+  "1 · Choose a game mode":"1 · Wähle einen Spielmodus","2 · Choose your enemies":"2 · Wähle deine Feinde","3 · Choose your faction — this begins the war":"3 · Wähle deine Fraktion — der Krieg beginnt","Fog of War":"Kriegsnebel","the map beyond your borders stays hidden (more realistic)":"die Karte jenseits deiner Grenzen bleibt verborgen (realistischer)",
+  "Click a highlighted tile to send this many.":"Klicke ein markiertes Feld an, um so viele zu senden.","Amount is kept for every province.":"Die Menge bleibt für jede Provinz erhalten.",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"Wähle dieses Feld, stelle den Regler ein und klicke auf einen leuchtenden Nachbarn zum Marschieren oder Angreifen. Häfen ⚓ lassen dich Küsten über das Meer angreifen.",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"Das Reich der Räuber. Küsten werden von hier angegriffen — baue Häfen und halte Truppen an der Küste.",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"Unerforschtes Gebiet, vom Kriegsnebel verdeckt. Dehne dich dorthin aus, um es aufzudecken.",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"Herrenlos. Sende eine Armee von einem angrenzenden eigenen Feld, oder 🚀 beschieße es.","Held by":"Gehalten von","Send an army from an adjacent tile you own, or 🚀 missile it.":"Sende eine Armee von einem angrenzenden eigenen Feld, oder 🚀 beschieße es.",
+  [TAGLINE]:"Eine lebendige Welt aus Kontinenten und verstreuten Inseln. Die Zeit steht nie still — schürfe Gold, hebe Armeen aus, befahre die Meere und erobere die Erde in Echtzeit, während rivalisierende Mächte dasselbe tun. Wähle die Schwierigkeit und dann dein Volk."
+ },
+ pt:{
+  "Live World Conquest":"Conquista Mundial ao Vivo","Gold":"Ouro","Food":"Comida","Army":"Exército","Land":"Terras","World held":"Mundo","Crowns taken":"Coroas","win":"meta","capitals":"capitais","Rules":"Regras","Leave":"Sair","Leave?":"Sair?",
+  "Province":"Província","Click a province.":"Clique numa província.","Open Sea":"Mar Aberto","You":"Você","Unclaimed":"Sem dono","Unknown Lands":"Terras Desconhecidas","a rival":"um rival",
+  "Terrain":"Terreno","Defense":"Defesa","Garrison":"Guarnição","Special":"Especial","Build slots":"Espaços","Deploy":"Enviar","save":"salvar","saved":"salvo","Recruit":"Recrutar","Recruit ×5":"Recrutar ×5","coast":"costa",
+  "Victory":"Vitória","Defeat":"Derrota","Play Again":"Jogar de novo","Understood":"Entendi","How to Play":"Como jogar",
+  "Factory":"Fábrica","Mine":"Mina","Market":"Mercado","Bank":"Banco","Farm":"Fazenda","Barracks":"Quartel","Fort":"Forte","Watchtower":"Torre de Vigia","Hospital":"Hospital","Harbor":"Porto","Lab":"Laboratório","Missile Silo":"Silo de Mísseis","Air Defense":"Defesa Aérea","Shield":"Escudo",
+  "+1.2 gold/s":"+1.2 ouro/s","+0.8 gold/s":"+0.8 ouro/s","+0.6 gold/s":"+0.6 ouro/s","+1.6 gold/s":"+1.6 ouro/s","+1.0 food/s":"+1.0 comida/s","+8 army cap":"+8 cap. exército","+35% defense":"+35% defesa","+15% def, adj too":"+15% def, adjacentes também","heals troops":"cura tropas","invade by sea":"invadir por mar","+10% income":"+10% renda","launch missiles":"lançar mísseis","may shoot down missiles":"pode abater mísseis","blocks one attack, once":"bloqueia um ataque, uma vez",
+  "Plains":"Planície","Forest":"Floresta","Mountains":"Montanhas","Desert":"Deserto","Tundra":"Tundra","Jungle":"Selva",
+  "Gold Vein":"Veio de Ouro","Oil Field":"Campo Petrolífero","Fertile Delta":"Delta Fértil","Ancient Ruins":"Ruínas Antigas","Old Fortress":"Velha Fortaleza","Rare Metals":"Metais Raros","Holy Site":"Local Sagrado",
+  "Conquest":"Conquista","Rule half the world":"Domine metade do mundo","Blitz":"Blitz","Fast, rich, brutal":"Rápido, rico, brutal","Regicide":"Regicídio","Take every capital":"Tome cada capital","Last Stand":"Última Resistência","Outlast a stronger world":"Sobreviva a um mundo mais forte",
+  "Peaceful":"Pacífico","Bots barely fight":"Os bots mal lutam","Easy":"Fácil","Passive, poor bots":"Bots passivos e pobres","Medium":"Médio","A fair fight":"Um combate justo","Hard":"Difícil","Rich & aggressive":"Ricos e agressivos","Nightmare":"Pesadelo","Relentless. Nukes.":"Implacáveis. Nucleares.","Impossible":"Impossível","Everything, at once":"Tudo, de uma vez",
+  "Industrialists":"Industriais","Agrarians":"Agrários","Warmongers":"Belicistas","Fortifiers":"Fortificadores","Rocketeers":"Foguetes","Seafarers":"Navegantes",
+  "<b>+25% gold</b>.":"<b>+25% ouro</b>.","<b>+25% food</b>, cheap troops.":"<b>+25% comida</b>, tropas baratas.","armies <b>attack +20%</b>.":"exércitos <b>atacam +20%</b>.","provinces <b>defend +20%</b>.":"províncias <b>defendem +20%</b>.","cheap missiles; <b>start w/ Silo</b>.":"mísseis baratos; <b>começa com Silo</b>.","longer naval reach; coasts resist raids.":"maior alcance naval; costas resistem a ataques.",
+  "1 · Choose a game mode":"1 · Escolha um modo de jogo","2 · Choose your enemies":"2 · Escolha seus inimigos","3 · Choose your faction — this begins the war":"3 · Escolha sua facção — a guerra começa","Fog of War":"Névoa de Guerra","the map beyond your borders stays hidden (more realistic)":"o mapa além das suas fronteiras fica oculto (mais realista)",
+  "Click a highlighted tile to send this many.":"Clique numa casa destacada para enviar esta quantidade.","Amount is kept for every province.":"A quantidade é mantida para cada província.",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"Selecione esta casa, ajuste o controle e clique num vizinho brilhante para marchar ou atacar. Portos ⚓ permitem atacar costas do outro lado do mar.",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"O domínio dos saqueadores. As costas são atacadas daqui — construa Portos e mantenha tropas na costa.",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"Território inexplorado — oculto pela névoa de guerra. Expanda em direção a ele para revelar o que há aqui.",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"Sem dono. Envie um exército de uma casa adjacente sua, ou 🚀 mísseis nela.","Held by":"Controlado por","Send an army from an adjacent tile you own, or 🚀 missile it.":"Envie um exército de uma casa adjacente sua, ou 🚀 mísseis nela.",
+  [TAGLINE]:"Um mundo vivo de continentes e ilhas dispersas. O tempo nunca para — extraia ouro, forme exércitos, navegue os mares e conquiste a Terra em tempo real, enquanto potências rivais fazem o mesmo. Defina o desafio e escolha o seu povo."
+ },
+ it:{
+  "Live World Conquest":"Conquista del Mondo dal Vivo","Gold":"Oro","Food":"Cibo","Army":"Esercito","Land":"Terre","World held":"Mondo","Crowns taken":"Corone","win":"obiettivo","capitals":"capitali","Rules":"Regole","Leave":"Esci","Leave?":"Uscire?",
+  "Province":"Provincia","Click a province.":"Clicca una provincia.","Open Sea":"Mare Aperto","You":"Tu","Unclaimed":"Libera","Unknown Lands":"Terre Sconosciute","a rival":"un rivale",
+  "Terrain":"Terreno","Defense":"Difesa","Garrison":"Guarnigione","Special":"Speciale","Build slots":"Spazi","Deploy":"Schiera","save":"salva","saved":"salvato","Recruit":"Recluta","Recruit ×5":"Recluta ×5","coast":"costa",
+  "Victory":"Vittoria","Defeat":"Sconfitta","Play Again":"Rigioca","Understood":"Capito","How to Play":"Come si gioca",
+  "Factory":"Fabbrica","Mine":"Miniera","Market":"Mercato","Bank":"Banca","Farm":"Fattoria","Barracks":"Caserma","Fort":"Forte","Watchtower":"Torre di guardia","Hospital":"Ospedale","Harbor":"Porto","Lab":"Laboratorio","Missile Silo":"Silo missilistico","Air Defense":"Difesa aerea","Shield":"Scudo",
+  "+1.2 gold/s":"+1.2 oro/s","+0.8 gold/s":"+0.8 oro/s","+0.6 gold/s":"+0.6 oro/s","+1.6 gold/s":"+1.6 oro/s","+1.0 food/s":"+1.0 cibo/s","+8 army cap":"+8 cap. esercito","+35% defense":"+35% difesa","+15% def, adj too":"+15% dif, anche adiacenti","heals troops":"cura le truppe","invade by sea":"invadi via mare","+10% income":"+10% reddito","launch missiles":"lancia missili","may shoot down missiles":"può abbattere i missili","blocks one attack, once":"blocca un attacco, una volta",
+  "Plains":"Pianura","Forest":"Foresta","Mountains":"Montagne","Desert":"Deserto","Tundra":"Tundra","Jungle":"Giungla",
+  "Gold Vein":"Vena d'oro","Oil Field":"Giacimento petrolifero","Fertile Delta":"Delta fertile","Ancient Ruins":"Rovine antiche","Old Fortress":"Vecchia fortezza","Rare Metals":"Metalli rari","Holy Site":"Luogo sacro",
+  "Conquest":"Conquista","Rule half the world":"Domina metà del mondo","Blitz":"Blitz","Fast, rich, brutal":"Veloce, ricco, brutale","Regicide":"Regicidio","Take every capital":"Prendi ogni capitale","Last Stand":"Ultima Resistenza","Outlast a stronger world":"Sopravvivi a un mondo più forte",
+  "Peaceful":"Pacifico","Bots barely fight":"I bot combattono a malapena","Easy":"Facile","Passive, poor bots":"Bot passivi e poveri","Medium":"Medio","A fair fight":"Uno scontro equo","Hard":"Difficile","Rich & aggressive":"Ricchi e aggressivi","Nightmare":"Incubo","Relentless. Nukes.":"Implacabili. Atomiche.","Impossible":"Impossibile","Everything, at once":"Tutto, insieme",
+  "Industrialists":"Industriali","Agrarians":"Agrari","Warmongers":"Guerrafondai","Fortifiers":"Fortificatori","Rocketeers":"Missilisti","Seafarers":"Marinai",
+  "<b>+25% gold</b>.":"<b>+25% oro</b>.","<b>+25% food</b>, cheap troops.":"<b>+25% cibo</b>, truppe economiche.","armies <b>attack +20%</b>.":"gli eserciti <b>attaccano +20%</b>.","provinces <b>defend +20%</b>.":"le province <b>difendono +20%</b>.","cheap missiles; <b>start w/ Silo</b>.":"missili economici; <b>inizi con un Silo</b>.","longer naval reach; coasts resist raids.":"maggiore portata navale; le coste resistono alle incursioni.",
+  "1 · Choose a game mode":"1 · Scegli una modalità","2 · Choose your enemies":"2 · Scegli i tuoi nemici","3 · Choose your faction — this begins the war":"3 · Scegli la tua fazione — la guerra inizia","Fog of War":"Nebbia di Guerra","the map beyond your borders stays hidden (more realistic)":"la mappa oltre i tuoi confini resta nascosta (più realistico)",
+  "Click a highlighted tile to send this many.":"Clicca una casella evidenziata per inviarne questo numero.","Amount is kept for every province.":"La quantità è mantenuta per ogni provincia.",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"Seleziona questa casella, imposta il cursore, poi clicca un vicino luminoso per marciare o attaccare. I porti ⚓ ti permettono di colpire le coste oltre il mare.",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"Il dominio dei predoni. Le coste vengono attaccate da qui — costruisci Porti e tieni truppe sulla costa.",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"Territorio inesplorato — nascosto dalla nebbia di guerra. Espanditi verso di esso per rivelare cosa si cela qui.",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"Libera. Invia un esercito da una casella adiacente che possiedi, o 🚀 colpiscila con un missile.","Held by":"Controllata da","Send an army from an adjacent tile you own, or 🚀 missile it.":"Invia un esercito da una casella adiacente che possiedi, o 🚀 colpiscila con un missile.",
+  [TAGLINE]:"Un mondo vivo di continenti e isole sparse. Il tempo non si ferma mai — estrai oro, arruola eserciti, naviga i mari e conquista la Terra in tempo reale, mentre le potenze rivali fanno lo stesso. Imposta la sfida, poi scegli il tuo popolo."
+ },
+ ru:{
+  "Live World Conquest":"Живое покорение мира","Gold":"Золото","Food":"Еда","Army":"Армия","Land":"Земли","World held":"Мир","Crowns taken":"Короны","win":"цель","capitals":"столиц","Rules":"Правила","Leave":"Выйти","Leave?":"Выйти?",
+  "Province":"Провинция","Click a province.":"Нажмите на провинцию.","Open Sea":"Открытое море","You":"Вы","Unclaimed":"Ничья","Unknown Lands":"Неизвестные земли","a rival":"соперник",
+  "Terrain":"Местность","Defense":"Защита","Garrison":"Гарнизон","Special":"Особое","Build slots":"Слоты","Deploy":"Отправить","save":"сохр.","saved":"сохр.","Recruit":"Набрать","Recruit ×5":"Набрать ×5","coast":"берег",
+  "Victory":"Победа","Defeat":"Поражение","Play Again":"Играть снова","Understood":"Понятно","How to Play":"Как играть",
+  "Factory":"Завод","Mine":"Шахта","Market":"Рынок","Bank":"Банк","Farm":"Ферма","Barracks":"Казарма","Fort":"Форт","Watchtower":"Дозорная башня","Hospital":"Госпиталь","Harbor":"Гавань","Lab":"Лаборатория","Missile Silo":"Ракетная шахта","Air Defense":"ПВО","Shield":"Щит",
+  "+1.2 gold/s":"+1.2 золота/с","+0.8 gold/s":"+0.8 золота/с","+0.6 gold/s":"+0.6 золота/с","+1.6 gold/s":"+1.6 золота/с","+1.0 food/s":"+1.0 еды/с","+8 army cap":"+8 к лимиту армии","+35% defense":"+35% защиты","+15% def, adj too":"+15% защ., и соседям","heals troops":"лечит войска","invade by sea":"вторжение по морю","+10% income":"+10% дохода","launch missiles":"запуск ракет","may shoot down missiles":"может сбивать ракеты","blocks one attack, once":"блокирует одну атаку",
+  "Plains":"Равнины","Forest":"Лес","Mountains":"Горы","Desert":"Пустыня","Tundra":"Тундра","Jungle":"Джунгли",
+  "Gold Vein":"Золотая жила","Oil Field":"Нефтяное поле","Fertile Delta":"Плодородная дельта","Ancient Ruins":"Древние руины","Old Fortress":"Старая крепость","Rare Metals":"Редкие металлы","Holy Site":"Святыня",
+  "Conquest":"Завоевание","Rule half the world":"Правь половиной мира","Blitz":"Блиц","Fast, rich, brutal":"Быстро, богато, жестоко","Regicide":"Цареубийство","Take every capital":"Возьми все столицы","Last Stand":"Последний рубеж","Outlast a stronger world":"Продержись в более сильном мире",
+  "Peaceful":"Мирный","Bots barely fight":"Боты почти не воюют","Easy":"Лёгкий","Passive, poor bots":"Пассивные, слабые боты","Medium":"Средний","A fair fight":"Честный бой","Hard":"Сложный","Rich & aggressive":"Богатые и агрессивные","Nightmare":"Кошмар","Relentless. Nukes.":"Беспощадны. Ядерка.","Impossible":"Невозможно","Everything, at once":"Всё и сразу",
+  "Industrialists":"Индустриалисты","Agrarians":"Аграрии","Warmongers":"Милитаристы","Fortifiers":"Фортификаторы","Rocketeers":"Ракетчики","Seafarers":"Мореходы",
+  "<b>+25% gold</b>.":"<b>+25% золота</b>.","<b>+25% food</b>, cheap troops.":"<b>+25% еды</b>, дешёвые войска.","armies <b>attack +20%</b>.":"армии <b>атакуют +20%</b>.","provinces <b>defend +20%</b>.":"провинции <b>защищаются +20%</b>.","cheap missiles; <b>start w/ Silo</b>.":"дешёвые ракеты; <b>старт с шахтой</b>.","longer naval reach; coasts resist raids.":"больше морская дальность; берега стойки к набегам.",
+  "1 · Choose a game mode":"1 · Выберите режим","2 · Choose your enemies":"2 · Выберите врагов","3 · Choose your faction — this begins the war":"3 · Выберите фракцию — война начинается","Fog of War":"Туман войны","the map beyond your borders stays hidden (more realistic)":"карта за вашими границами скрыта (реалистичнее)",
+  "Click a highlighted tile to send this many.":"Нажмите на подсвеченную клетку, чтобы отправить столько.","Amount is kept for every province.":"Количество сохраняется для каждой провинции.",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"Выберите эту клетку, задайте ползунок, затем нажмите на светящегося соседа, чтобы двинуться или атаковать. Гавани ⚓ позволяют бить по берегам через море.",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"Владения налётчиков. Отсюда атакуют берега — стройте гавани и держите войска на побережье.",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"Неисследованная территория — скрыта туманом войны. Расширяйтесь к ней, чтобы раскрыть, что там.",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"Ничья. Отправьте армию с соседней своей клетки или 🚀 запустите ракету.","Held by":"Владеет","Send an army from an adjacent tile you own, or 🚀 missile it.":"Отправьте армию с соседней своей клетки или 🚀 запустите ракету.",
+  [TAGLINE]:"Живой мир из континентов и разбросанных островов. Время не останавливается — добывайте золото, набирайте армии, плавайте по морям и покоряйте Землю в реальном времени, пока соперничающие державы делают то же самое. Задайте вызов и выберите свой народ."
+ },
+ zh:{
+  "Live World Conquest":"实时世界征服","Gold":"金币","Food":"粮食","Army":"军队","Land":"领土","World held":"世界","Crowns taken":"王冠","win":"目标","capitals":"首都","Rules":"规则","Leave":"离开","Leave?":"确定离开？",
+  "Province":"省份","Click a province.":"点击一个省份。","Open Sea":"公海","You":"你","Unclaimed":"无主","Unknown Lands":"未知之地","a rival":"对手",
+  "Terrain":"地形","Defense":"防御","Garrison":"驻军","Special":"特殊","Build slots":"建筑槽","Deploy":"部署","save":"保存","saved":"已保存","Recruit":"招募","Recruit ×5":"招募 ×5","coast":"海岸",
+  "Victory":"胜利","Defeat":"失败","Play Again":"再玩一次","Understood":"明白了","How to Play":"游戏玩法",
+  "Factory":"工厂","Mine":"矿场","Market":"市场","Bank":"银行","Farm":"农场","Barracks":"兵营","Fort":"堡垒","Watchtower":"瞭望塔","Hospital":"医院","Harbor":"港口","Lab":"实验室","Missile Silo":"导弹发射井","Air Defense":"防空","Shield":"护盾",
+  "+1.2 gold/s":"+1.2 金币/秒","+0.8 gold/s":"+0.8 金币/秒","+0.6 gold/s":"+0.6 金币/秒","+1.6 gold/s":"+1.6 金币/秒","+1.0 food/s":"+1.0 粮食/秒","+8 army cap":"+8 军队上限","+35% defense":"+35% 防御","+15% def, adj too":"+15% 防御，邻格亦然","heals troops":"治疗部队","invade by sea":"渡海入侵","+10% income":"+10% 收入","launch missiles":"发射导弹","may shoot down missiles":"可能击落导弹","blocks one attack, once":"抵挡一次攻击",
+  "Plains":"平原","Forest":"森林","Mountains":"山地","Desert":"沙漠","Tundra":"苔原","Jungle":"丛林",
+  "Gold Vein":"金矿脉","Oil Field":"油田","Fertile Delta":"肥沃三角洲","Ancient Ruins":"古代遗迹","Old Fortress":"古堡","Rare Metals":"稀有金属","Holy Site":"圣地",
+  "Conquest":"征服","Rule half the world":"统治半个世界","Blitz":"闪电战","Fast, rich, brutal":"快速、富有、残酷","Regicide":"弑君","Take every capital":"攻占所有首都","Last Stand":"最后防线","Outlast a stronger world":"熬过更强的世界",
+  "Peaceful":"和平","Bots barely fight":"电脑几乎不战斗","Easy":"简单","Passive, poor bots":"被动、贫弱的电脑","Medium":"中等","A fair fight":"公平对战","Hard":"困难","Rich & aggressive":"富有且好战","Nightmare":"噩梦","Relentless. Nukes.":"无情。核弹。","Impossible":"不可能","Everything, at once":"一切，同时",
+  "Industrialists":"工业家","Agrarians":"农业家","Warmongers":"好战者","Fortifiers":"筑城者","Rocketeers":"火箭兵","Seafarers":"航海者",
+  "<b>+25% gold</b>.":"<b>+25% 金币</b>。","<b>+25% food</b>, cheap troops.":"<b>+25% 粮食</b>，招募更便宜。","armies <b>attack +20%</b>.":"军队<b>攻击 +20%</b>。","provinces <b>defend +20%</b>.":"省份<b>防御 +20%</b>。","cheap missiles; <b>start w/ Silo</b>.":"廉价导弹；<b>开局带发射井</b>。","longer naval reach; coasts resist raids.":"更远的海上范围；海岸抵御突袭。",
+  "1 · Choose a game mode":"1 · 选择游戏模式","2 · Choose your enemies":"2 · 选择你的敌人","3 · Choose your faction — this begins the war":"3 · 选择你的阵营 — 战争开始","Fog of War":"战争迷雾","the map beyond your borders stays hidden (more realistic)":"边界之外的地图保持隐藏（更真实）",
+  "Click a highlighted tile to send this many.":"点击高亮格子派出这么多兵力。","Amount is kept for every province.":"每个省份都保持该数量。",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"选择此格，调整滑块，然后点击发光的相邻格进军或进攻。港口 ⚓ 让你跨海攻击海岸。",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"掠夺者的领域。海岸会从这里遭到攻击 — 建造港口并在岸边驻军。",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"未探索的领土 — 被战争迷雾遮蔽。向它扩张以揭示其中的内容。",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"无主。从你拥有的相邻格派出军队，或用 🚀 导弹攻击它。","Held by":"占据者","Send an army from an adjacent tile you own, or 🚀 missile it.":"从你拥有的相邻格派出军队，或用 🚀 导弹攻击它。",
+  [TAGLINE]:"一个由大陆和散落岛屿组成的鲜活世界。时间永不停止 — 开采金币、组建军队、航行海洋，实时征服地球，而对手列强也在做同样的事。设定挑战，然后选择你的民族。"
+ },
+ ja:{
+  "Live World Conquest":"リアルタイム世界征服","Gold":"資金","Food":"食料","Army":"軍隊","Land":"領土","World held":"世界","Crowns taken":"王冠","win":"目標","capitals":"首都","Rules":"ルール","Leave":"退出","Leave?":"退出する？",
+  "Province":"州","Click a province.":"州をクリック。","Open Sea":"外洋","You":"あなた","Unclaimed":"無所属","Unknown Lands":"未知の地","a rival":"ライバル",
+  "Terrain":"地形","Defense":"防御","Garrison":"守備隊","Special":"特別","Build slots":"建設枠","Deploy":"派遣","save":"保存","saved":"保存済","Recruit":"徴兵","Recruit ×5":"徴兵 ×5","coast":"海岸",
+  "Victory":"勝利","Defeat":"敗北","Play Again":"もう一度","Understood":"了解","How to Play":"遊び方",
+  "Factory":"工場","Mine":"鉱山","Market":"市場","Bank":"銀行","Farm":"農場","Barracks":"兵舎","Fort":"要塞","Watchtower":"見張り塔","Hospital":"病院","Harbor":"港","Lab":"研究所","Missile Silo":"ミサイルサイロ","Air Defense":"防空","Shield":"シールド",
+  "+1.2 gold/s":"+1.2 資金/秒","+0.8 gold/s":"+0.8 資金/秒","+0.6 gold/s":"+0.6 資金/秒","+1.6 gold/s":"+1.6 資金/秒","+1.0 food/s":"+1.0 食料/秒","+8 army cap":"+8 軍隊上限","+35% defense":"+35% 防御","+15% def, adj too":"+15% 防御、隣接も","heals troops":"部隊を回復","invade by sea":"海から侵攻","+10% income":"+10% 収入","launch missiles":"ミサイル発射","may shoot down missiles":"ミサイルを撃墜する場合あり","blocks one attack, once":"攻撃を1回防ぐ",
+  "Plains":"平原","Forest":"森林","Mountains":"山地","Desert":"砂漠","Tundra":"ツンドラ","Jungle":"ジャングル",
+  "Gold Vein":"金鉱脈","Oil Field":"油田","Fertile Delta":"肥沃なデルタ","Ancient Ruins":"古代遺跡","Old Fortress":"古い要塞","Rare Metals":"希少金属","Holy Site":"聖地",
+  "Conquest":"征服","Rule half the world":"世界の半分を支配","Blitz":"電撃戦","Fast, rich, brutal":"速く、豊かで、残酷","Regicide":"王殺し","Take every capital":"すべての首都を占領","Last Stand":"背水の陣","Outlast a stronger world":"より強い世界を生き延びる",
+  "Peaceful":"平和","Bots barely fight":"ボットはほとんど戦わない","Easy":"かんたん","Passive, poor bots":"受動的で貧弱なボット","Medium":"ふつう","A fair fight":"互角の戦い","Hard":"むずかしい","Rich & aggressive":"豊かで攻撃的","Nightmare":"悪夢","Relentless. Nukes.":"容赦なし。核あり。","Impossible":"不可能","Everything, at once":"すべてを一度に",
+  "Industrialists":"産業家","Agrarians":"農業家","Warmongers":"主戦派","Fortifiers":"要塞化派","Rocketeers":"ロケット兵","Seafarers":"航海者",
+  "<b>+25% gold</b>.":"<b>+25% 資金</b>。","<b>+25% food</b>, cheap troops.":"<b>+25% 食料</b>、徴兵が安い。","armies <b>attack +20%</b>.":"軍隊の<b>攻撃 +20%</b>。","provinces <b>defend +20%</b>.":"州の<b>防御 +20%</b>。","cheap missiles; <b>start w/ Silo</b>.":"安いミサイル、<b>サイロ付きで開始</b>。","longer naval reach; coasts resist raids.":"海上到達距離が長い、海岸は襲撃に耐える。",
+  "1 · Choose a game mode":"1 · ゲームモードを選択","2 · Choose your enemies":"2 · 敵を選択","3 · Choose your faction — this begins the war":"3 · 勢力を選択 — 戦争開始","Fog of War":"戦争の霧","the map beyond your borders stays hidden (more realistic)":"国境の外の地図は隠されたまま（よりリアル）",
+  "Click a highlighted tile to send this many.":"ハイライトされたマスをクリックしてこの数を送る。","Amount is kept for every province.":"数はどの州でも保持されます。",
+  "Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.":"このマスを選び、スライダーを設定し、光る隣接マスをクリックして進軍または攻撃。港 ⚓ で海の向こうの海岸を攻撃できます。",
+  "The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.":"略奪者の領域。ここから海岸が攻撃されます — 港を建て、海岸に部隊を置きましょう。",
+  "Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.":"未探索の領土 — 戦争の霧に隠されています。そこへ拡張して中身を明らかにしましょう。",
+  "Unclaimed. Send an army from an adjacent tile you own, or 🚀 missile it.":"無所属。隣接する自分のマスから軍隊を送るか、🚀 ミサイルを撃ちましょう。","Held by":"支配者","Send an army from an adjacent tile you own, or 🚀 missile it.":"隣接する自分のマスから軍隊を送るか、🚀 ミサイルを撃ちましょう。",
+  [TAGLINE]:"大陸と点在する島々からなる生きた世界。時は止まらない — 資金を採掘し、軍を編成し、海を渡り、リアルタイムで地球を征服する。ライバル列強も同じことをする。難易度を設定し、民族を選ぼう。"
+ }
+};
+function t(s){ if(LANG==="en"||s==null)return s; const d=TR[LANG]; return (d&&d[s]!=null)?d[s]:s; }
+function setLang(l){ LANG=l; try{localStorage.setItem("dominion_lang",l);}catch(e){} const ls=document.getElementById("langSel"); if(ls)ls.value=l; applyStatic(); if(typeof S!=="undefined"&&S){renderPanel();updateHeader();updateModebar();} buildStart(); }
+function applyStatic(){
+  const sub=document.querySelector(".brand .sub"); if(sub)sub.textContent=t("Live World Conquest");
+  const rb=document.getElementById("rulesBtn"); if(rb)rb.textContent=t("Rules");
+  const tg=document.getElementById("startTagline"); if(tg)tg.textContent=t(TAGLINE);
+  const sl=document.querySelectorAll(".steplbl");
+  if(sl[0])sl[0].textContent=t("1 · Choose a game mode");
+  if(sl[1])sl[1].textContent=t("2 · Choose your enemies");
+  if(sl[2])sl[2].textContent=t("3 · Choose your faction — this begins the war");
+  const ft=document.getElementById("fogText"); if(ft)ft.innerHTML="<b>"+t("Fog of War")+"</b> — "+t("the map beyond your borders stays hidden (more realistic)");
+  const rt=document.getElementById("rulesTitle"); if(rt)rt.textContent=t("How to Play");
+  const ru=document.getElementById("rulesClose"); if(ru)ru.textContent=t("Understood");
+  const rp=document.getElementById("restartBtn"); if(rp)rp.textContent=t("Play Again");
+  const lb=document.getElementById("leaveBtn"); if(lb&&!leaveArmed)lb.textContent=t("Leave");
+}
+
+/* ===== STATE ===== */
+let S=null, ctx=null, off=null, offCtx=null, canvas=null;
+const byId=id=>S.map[id];
+const cellAt=(c,r)=>(c<0||r<0||c>=COLS||r>=ROWS)?null:S.grid[r][c];
+function neighbors(cell){ const o=cell.row%2?OFF_ODD:OFF_EVEN; return o.map(([dc,dr])=>cellAt(cell.col+dc,cell.row+dr)).filter(Boolean); }
+const isCoastal=cell=>cell.land&&neighbors(cell).some(n=>!n.land);
+const ownedCells=nat=>S.cells.filter(c=>c.land&&c.owner===nat);
+const totalLand=()=>S.landCount;
+const totalTroops=nat=>ownedCells(nat).reduce((a,c)=>a+c.troops,0);
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const perkOf=nat=>(S.nations[nat]||{}).perk||null;
+const hasBuilding=(nat,k)=>S.cells.some(c=>c.owner===nat&&c.b[k]);
+
+/* ===== WORLD GEN ===== */
+function genWorld(){
+  S.grid=[];S.cells=[];S.map={};
+  for(let r=0;r<ROWS;r++){S.grid[r]=[];for(let c=0;c<COLS;c++){ const ct=hexCenter(c,r);
+    const cell={id:c+"_"+r,col:c,row:r,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
+      land:false,cont:-1,terr:"Plains",owner:"sea",troops:0,b:{},site:null,cap:false};
+    S.grid[r][c]=cell;S.cells.push(cell);S.map[cell.id]=cell; }}
+  const conts=[]; let cid=0;
+  const landNbrs=cell=>neighbors(cell).filter(n=>n.land).length;
+  function grow(sc,sr,size){ const start=cellAt(sc,sr); if(!start)return;
+    const mine=[],front=[]; const add=cell=>{ if(!cell||cell.land)return false;
+      if(neighbors(cell).some(n=>n.land&&n.cont!==cid))return false;
+      cell.land=true;cell.cont=cid;mine.push(cell); neighbors(cell).forEach(n=>{if(!n.land)front.push(n);});return true; };
+    if(!add(start)){const alt=neighbors(start).find(n=>!n.land);if(alt)add(alt);}
+    let g=0; while(mine.length<size&&front.length&&g++<900){
+      const idx=Math.random()<0.5?front.reduce((bi,_,i,a)=>landNbrs(a[i])>landNbrs(a[bi])?i:bi,0):Math.floor(Math.random()*front.length);
+      add(front.splice(idx,1)[0]); }
+    if(mine.length>=5){conts.push({id:cid,cells:mine,size:mine.length});cid++;}
+    else mine.forEach(c=>{c.land=false;c.cont=-1;}); }
+  // 6 continents spread out
+  [[5,5,22],[22,4,20],[6,14,18],[24,14,17],[14,9,16],[15,16,14]].forEach(([c,r,s])=>grow(c,r,s));
+  // ~30 islands
+  let islands=0,tries=0;
+  while(islands<30&&tries++<1200){ const c=Math.floor(rnd(1,COLS-1)),r=Math.floor(rnd(1,ROWS-1)); const cell=cellAt(c,r);
+    if(cell&&!cell.land&&!neighbors(cell).some(n=>n.land)){ const sz=1+Math.floor(Math.random()*4);
+      cell.land=true;cell.cont=100+islands; let cur=[cell];
+      for(let k=1;k<sz;k++){ const opts=[]; cur.forEach(cc=>neighbors(cc).forEach(n=>{if(!n.land&&!neighbors(n).some(x=>x.land&&x.cont!==cell.cont))opts.push(n);}));
+        if(!opts.length)break; const pick=opts[Math.floor(Math.random()*opts.length)]; pick.land=true;pick.cont=cell.cont;cur.push(pick);}
+      islands++; } }
+  // terrain
+  S.cells.forEach(cell=>{ if(!cell.land)return; const f=cell.row/(ROWS-1); let t;
+    if(f<0.14||f>0.86)t="Tundra"; else if(f<0.3||f>0.72)t=Math.random()<0.5?"Forest":"Plains";
+    else if(f>0.42&&f<0.58)t=Math.random()<0.5?"Desert":"Jungle"; else t=Math.random()<0.6?"Plains":"Forest";
+    if(Math.random()<0.14)t="Mountains"; cell.terr=t; });
+  // special sites scattered on land (favor islands)
+  const siteKeys=Object.keys(SITES); const landCells=S.cells.filter(c=>c.land);
+  for(let k=0;k<14;k++){ const cell=landCells[Math.floor(Math.random()*landCells.length)];
+    if(cell&&!cell.site){ cell.site=siteKeys[Math.floor(Math.random()*siteKeys.length)]; } }
+  S.landCount=S.cells.filter(c=>c.land).length;
+  return conts.sort((a,b)=>b.size-a.size);
+}
+
+/* ===== SETUP ===== */
+function startGame(perk,diff,mode,fog){
+  mode=mode||"conquest";
+  S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
+     missileMode:false,over:false,time:0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:rnd(EVENT_MIN,EVENT_MAX),fogTimer:0,
+     cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,
+     visible:new Set(),explored:new Set(),landCount:0};
+  const conts=genWorld();
+  const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
+  const bigs=conts.slice(0,4); const pIdx=Math.floor(Math.random()*bigs.length);
+  const pCont=bigs[pIdx], aiConts=bigs.filter((_,i)=>i!==pIdx);
+  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0};
+  const pcap=nCap(pCont); pcap.owner="player";pcap.troops=8;pcap.cap=true;pcap.b.factory=true;pcap.b.barracks=true;
+  S.nations.player.capitalId=pcap.id; S.playerCapitalId=pcap.id; if(perk==="rocketeer")pcap.b.silo=true;
+  const cperks=["warmonger","fortifier",null];
+  aiConts.forEach((cont,i)=>{ const id="ai"+(i+1);
+    S.nations[id]={id,name:AI_NAMES[i%5],color:AI_COLORS[i%5],isPlayer:false,perk:cperks[i%3],
+      gold:30,think:rnd(1,DIFF[diff].think),missileCD:0};
+    const cap=nCap(cont); cap.owner=id;cap.troops=7;cap.cap=true;cap.b.factory=true;cap.b.barracks=true; S.nations[id].capitalId=cap.id;
+    // some modes hand bots a head start (extra bordering land + troops)
+    const extra=MODE[mode].botStart; if(extra){ cap.troops+=3; let ring=neighbors(cap).filter(x=>x.land&&x.owner==="sea");
+      for(let k=0;k<extra&&ring.length;k++){ const t=ring.splice(Math.floor(Math.random()*ring.length),1)[0]; t.owner=id; t.troops=4; } } });
+  S.nations.sea={id:"sea",color:"#33586e"}; S.nations.neutral={id:"neutral",name:"Unclaimed",color:"#c3b288"};
+  S.cells.forEach(c=>{ if(c.land&&c.owner==="sea"){c.owner="neutral";c.troops=1+Math.floor(Math.random()*3);} });
+  if(S.fog)computeFog();
+  S.selected=pcap.id; S.deploy=pcap.troops;
+  pushLog("The world awakens — "+MODE[mode].i+" "+MODE[mode].n+" · "+DIFF[diff].n+" · "+PERKS[perk].n+".","good");
+  document.getElementById("startOverlay").hidden=true; document.getElementById("app").hidden=false;
+  resizeCanvas(); worldDirty=true; renderPanel(); updateHeader(); syncPanel();
+  // camera: center capital in the visible area (left of the panel) — after layout so panel width is known
+  S.cam.scale=1.15; centerOn(pcap);
+  lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
+}
+function panelW(){ const a=document.querySelector("aside"); return (a&&window.innerWidth>720)?a.getBoundingClientRect().width:0; }
+function syncPanel(){ const a=document.querySelector("aside"); if(!a)return;
+  if(window.innerWidth<=720){ a.style.top=""; a.style.height=""; return; }
+  const hdr=document.querySelector("header.hud"), ftr=document.querySelector("footer.log");
+  const top=hdr?Math.round(hdr.getBoundingClientRect().bottom):52;
+  const bot=ftr?Math.round(ftr.getBoundingClientRect().top):window.innerHeight;
+  a.style.top=top+"px"; a.style.height=Math.max(120,bot-top)+"px"; }
+function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas.clientHeight:560, pw=panelW();
+  S.cam.x=(vw-pw)/2-cell.cx*S.cam.scale; S.cam.y=vh/2-cell.cy*S.cam.scale; }
+
+/* ===== ECONOMY (per second) ===== */
+function labCount(nat){ return ownedCells(nat).filter(c=>c.b.lab).length; }
+function playerRates(){ const n=S.nations.player,owned=ownedCells("player"); let g=0,f=0,cap=0;
+  owned.forEach(c=>{ g+=0.4;f+=0.4; for(const k in c.b){if(!c.b[k])continue;const d=B[k];if(d.gold)g+=d.gold;if(d.food)f+=d.food;if(d.cap)cap+=d.cap;}
+    if(c.site){const s=SITES[c.site];if(s.gold)g+=s.gold;if(s.food)f+=s.food;} });
+  let boost=1+0.10*labCount("player"); owned.forEach(c=>{if(c.site&&SITES[c.site].boost)boost+=SITES[c.site].boost;});
+  g*=boost;f*=boost; if(n.perk==="industrial")g*=1.25; if(n.perk==="agrarian")f*=1.25;
+  g*=S.econMul; f*=S.econMul;
+  const troops=totalTroops("player"); const armyCap=10+owned.length*2+cap;
+  return {gold:g,food:f,foodNet:f-troops*UPKEEP,troops,armyCap}; }
+function escMul(){ return 1+(MODE[S.mode].esc||0)*Math.min(2,S.time/240); }
+function computeFog(){ const vis=new Set();
+  ownedCells("player").forEach(c=>{ let r=2; if(c.b.tower)r=4; else if(c.b.interceptor)r=Math.max(r,3);
+    S.cells.forEach(t=>{ if(hexDist(t,c)<=r)vis.add(t.id); }); });
+  vis.forEach(id=>S.explored.add(id)); S.visible=vis; }
+function fogHidden(cell){ return S.fog && !S.visible.has(cell.id); }         // troops/details hidden
+function fogUnknown(cell){ return S.fog && !S.explored.has(cell.id); }        // never seen
+
+/* ===== COMBAT ===== */
+function defBonus(cell){ let b=TERR[cell.terr].def; if(cell.b.fort)b+=B.fort.def;
+  if(cell.b.tower)b+=B.tower.defAdj; else if(neighbors(cell).some(n=>n.owner===cell.owner&&n.b.tower))b+=B.tower.defAdj;
+  if(cell.site&&SITES[cell.site].def)b+=SITES[cell.site].def; if(perkOf(cell.owner)==="fortifier")b+=0.2; return b; }
+function resolve(amount,attNat,target,extra){ if(target.troops<=0)return{win:true,att:amount,def:0};
+  let am=(extra||1)*(perkOf(attNat)==="warmonger"?1.2:1);
+  const ap=amount*am*rnd(.85,1.15), dp=target.troops*(1+defBonus(target))*rnd(.85,1.15);
+  if(ap>=dp){const lr=dp/ap;return{win:true,att:Math.max(1,Math.round(amount*(1-0.75*lr))),def:0};}
+  const lr=ap/dp;return{win:false,att:0,def:Math.max(1,Math.round(target.troops*(1-0.75*lr)))}; }
+
+/* ===== ARMIES ===== */
+const TERR_SPEED={Plains:0.8,Desert:1.0,Tundra:1.2,Forest:1.35,Jungle:1.4,Mountains:1.7};
+function sendArmy(src,tgt,amount,extra){ amount=Math.min(amount,src.troops); if(amount<1)return;
+  src.troops-=amount; worldDirty=true;
+  const terr=TERR_SPEED[tgt.terr]||1, naval=neighbors(src).some(x=>x.id===tgt.id)?1:1.3;
+  const dur=Math.max(0.5,hexDist(src,tgt)*0.5*terr*naval);
+  S.armies.push({owner:src.owner,count:amount,fromId:src.id,toId:tgt.id,ox:src.cx,oy:src.cy,tx:tgt.cx,ty:tgt.cy,t:0,dur,extra:extra||1}); }
+function arriveArmy(a){ const tgt=byId(a.toId); if(!tgt)return;
+  if(tgt.owner===a.owner){ tgt.troops+=a.count; addFx("merge",tgt.cx,tgt.cy,a.owner); worldDirty=true; return; }
+  if(tgt.b.shield){ delete tgt.b.shield; addFx("shield",tgt.cx,tgt.cy,tgt.owner);
+    if(tgt.owner==="player")pushLog("🔰 Your shield repelled the assault on "+pName(tgt)+"!","good");
+    else if(a.owner==="player")pushLog("🔰 "+pName(tgt)+"'s shield blocked your attack!","bad");
+    worldDirty=true; return; }
+  const res=resolve(a.count,a.owner,tgt,a.extra); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
+  if(res.win){ const prev=tgt.owner; tgt.owner=a.owner;tgt.troops=res.att;tgt.cap=tgt.cap&&false;
+    if(a.owner==="player")pushLog("Captured "+pName(tgt)+".","good"); else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad"); }
+  else { tgt.troops=res.def; if(a.owner==="player")pushLog("Attack on "+pName(tgt)+" failed.","bad"); }
+  worldDirty=true; }
+function pName(cell){ return (cell.site?SITES[cell.site].n:cell.terr)+" "+cell.col+"·"+cell.row+(cell.cap?" ★":""); }
+
+/* ===== MISSILES ===== */
+function missileCost(){ return perkOf("player")==="rocketeer"?Math.round(MISSILE_COST*.5):MISSILE_COST; }
+function launchMissile(from,target,owner,extra){
+  const dOwner=target.owner; let intercepted=false,interceptT=1;
+  if(dOwner!==owner&&dOwner!=="neutral"){ const guard=S.cells.some(c=>c.owner===dOwner&&c.b.interceptor&&hexDist(c,target)<=INT_RANGE);
+    if(guard&&Math.random()<INT_CHANCE){ intercepted=true; interceptT=rnd(.55,.8); } }
+  if(S.nations[owner])S.nations[owner].missileCD=MISSILE_COOLDOWN;
+  S.missiles.push({owner,toId:target.id,ox:from.cx,oy:from.cy,tx:target.cx,ty:target.cy,t:0,dur:Math.max(.8,hexDist(from,target)*0.16),extra,intercepted,interceptT}); }
+function missileHit(m){ const center=byId(m.toId); if(!center)return;
+  addFx("boom",center.cx,center.cy,m.owner);
+  S.cells.filter(c=>c.land&&hexDist(c,center)<=MISSILE_BLAST).forEach(t=>{
+    if(t.cap)return;                                   // capitals are immune to missile damage
+    if(t.b.shield){ delete t.b.shield; addFx("shield",t.cx,t.cy,t.owner); if(t.owner==="player")pushLog("🔰 Shield absorbed the blast at "+pName(t)+"!","good"); worldDirty=true; return; }
+    const d=hexDist(t,center);
+    if(d===0){ const prev=t.owner; t.troops=0;
+      const bl=Object.keys(t.b).filter(k=>t.b[k]); for(let i=0;i<2&&bl.length;i++)delete t.b[bl.splice(Math.floor(Math.random()*bl.length),1)[0]];
+      if(prev!==m.owner){ const adj=neighbors(t).some(nb=>nb.owner===m.owner);
+        if(adj){ t.owner=m.owner; t.troops=1; if(m.owner==="player")pushLog("🚀 Missile seized "+pName(t)+"!","boom"); else pushLog("🚀 "+S.nations[m.owner].name+" nuked "+pName(t)+"!","boom"); }
+        else { t.owner="neutral"; if(m.owner==="player")pushLog("🚀 Missile leveled "+t.col+"·"+t.row+".","boom"); else pushLog("🚀 Incoming strike hit "+pName(t)+"!","bad"); } }
+    } else if(t.owner!==m.owner){                       // splash on surrounding tiles
+      addFx("clash",t.cx,t.cy,m.owner);
+      const frac=d===1?0.6:0.3, loss=Math.max(1,Math.round(t.troops*frac)+(d===1?1:0));
+      t.troops=Math.max(0,t.troops-loss);
+      if(d===1&&Math.random()<0.4){ const bl=Object.keys(t.b).filter(k=>t.b[k]); if(bl.length)delete t.b[bl[0]]; }
+    }
+  });
+  worldDirty=true; }
+
+/* ===== EFFECTS ===== */
+function addFx(type,x,y,owner,val){ S.fx.push({type,x,y,owner,val,age:0,life:type==="boom"?1.0:type==="clash"?0.7:type==="shield"?0.65:type==="flak"?0.5:0.5}); }
+
+/* ===== UPDATE LOOP ===== */
+function update(dt){ if(S.over)return; S.time+=dt;
+  const n=S.nations.player, pr=playerRates();
+  n.missileCD=Math.max(0,(n.missileCD||0)-dt);
+  n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt;
+  if(n.food<0){ n.food=0; // starve slowly
+    if(Math.random()<dt*0.4){ const pool=ownedCells("player").filter(c=>c.troops>0).sort((a,b)=>b.troops-a.troops); if(pool[0]){pool[0].troops--;worldDirty=true;pushLog("A regiment starved!","bad");} } }
+  ownedCells("player").forEach(c=>{ if(c.b.hospital){c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
+  // population growth: provinces slowly raise a local militia up to a cap
+  S.cells.forEach(c=>{ if(!c.land||(c.owner!=="player"&&!c.owner.startsWith("ai")))return;
+    const popCap=3+(c.b.barracks?4:0)+(c.cap?6:0);
+    if(c.troops<popCap){ c.popAcc=(c.popAcc||0)+dt*POP_RATE*(c.cap?1.5:1); if(c.popAcc>=1){c.troops++;c.popAcc-=1;worldDirty=true;} } });
+  // armies
+  for(let i=S.armies.length-1;i>=0;i--){ const a=S.armies[i]; a.t+=dt/a.dur; if(a.t>=1){arriveArmy(a);S.armies.splice(i,1);} }
+  // missiles (with interception)
+  for(let i=S.missiles.length-1;i>=0;i--){ const m=S.missiles[i]; m.t+=dt/m.dur;
+    if(m.intercepted&&m.t>=m.interceptT){ const x=m.ox+(m.tx-m.ox)*m.t, y=m.oy+(m.ty-m.oy)*m.t-Math.sin(m.t*Math.PI)*40;
+      addFx("flak",x,y,"good"); const tg=byId(m.toId); if(tg&&tg.owner==="player")pushLog("🛰 Air defense shot down an incoming missile!","good"); S.missiles.splice(i,1); continue; }
+    if(m.t>=1){ missileHit(m); S.missiles.splice(i,1); } }
+  // fx
+  for(let i=S.fx.length-1;i>=0;i--){ S.fx[i].age+=dt; if(S.fx[i].age>=S.fx[i].life)S.fx.splice(i,1); }
+  // AI
+  const d=DIFF[S.diff]; const threat=ownedCells("player").length/totalLand()*100;
+  ["ai1","ai2","ai3"].forEach(id=>{ const nat=S.nations[id]; if(!nat)return; const owned=ownedCells(id); if(!owned.length)return;
+    nat.gold+=(owned.length*0.5+1)*d.econ*S.econMul*escMul()*dt; nat.missileCD=Math.max(0,(nat.missileCD||0)-dt); nat.think-=dt; if(nat.think>0)return; nat.think=d.think*rnd(.8,1.2);
+    aiAct(id,nat,owned,d,threat); });
+  // sea raiders
+  S.raidTimer-=dt; if(S.raidTimer<=0){ S.raidTimer=rnd(3,6); seaRaid(); }
+  // world events
+  S.eventTimer-=dt; if(S.eventTimer<=0){ S.eventTimer=rnd(EVENT_MIN,EVENT_MAX); fireEvent(); }
+  // fog of war reveal
+  if(S.fog){ S.fogTimer-=dt; if(S.fogTimer<=0){ S.fogTimer=0.4; computeFog(); worldDirty=true; } }
+  // win/lose
+  S.winTimer-=dt; if(S.winTimer<=0){ S.winTimer=1; checkGameOver(); }
+}
+function fireEvent(){ const land=S.cells.filter(c=>c.land); if(!land.length)return;
+  const roll=Math.floor(Math.random()*5);
+  if(roll===0){ const t=land[Math.floor(Math.random()*land.length)]; if(!t.cap&&!t.site){ t.site="metals"; addFx("build",t.cx,t.cy,"player");
+      pushLog("💰 Gold Rush! Rare Metals surface at "+t.col+"·"+t.row+".","good"); worldDirty=true; } }
+  else if(roll===1){ const c0=land[Math.floor(Math.random()*land.length)]; let hit=0;
+      S.cells.forEach(t=>{ if(t.land&&!t.cap&&t.troops>0&&hexDist(t,c0)<=2){ t.troops=Math.max(0,t.troops-Math.ceil(t.troops*0.4)); addFx("raid",t.cx,t.cy,"sea"); hit++; } });
+      if(hit){ pushLog("☠ A plague sweeps the lands near "+c0.col+"·"+c0.row+" — garrisons wither.","bad"); worldDirty=true; } }
+  else if(roll===2){ const nt=land.filter(c=>c.owner==="neutral"&&!c.cap); if(nt.length){ const t=nt[Math.floor(Math.random()*nt.length)]; t.troops+=5;
+      addFx("clash",t.cx,t.cy,"neutral"); pushLog("⚔ Rebels rise at "+t.col+"·"+t.row+" — its garrison surges.","bad"); worldDirty=true; } }
+  else if(roll===3){ S.nations.player.food+=25; ["ai1","ai2","ai3"].forEach(id=>{ if(S.nations[id])S.nations[id].gold+=20; });
+      pushLog("🌾 A bumper harvest fills granaries across the world.","good"); }
+  else { const mine=ownedCells("player"); if(mine.length){ const t=mine[Math.floor(Math.random()*mine.length)]; t.troops+=4; addFx("merge",t.cx,t.cy,"player");
+      pushLog("👥 Settlers arrive at "+pName(t)+" — +4 troops.","good"); worldDirty=true; } }
+}
+function aiAct(id,nat,owned,d,threat){
+  // build
+  if(Math.random()<d.build){ const spot=owned[Math.floor(Math.random()*owned.length)];
+    if(Object.values(spot.b).filter(Boolean).length<MAXB){
+      let pool=isCoastal(spot)&&d.harbor&&Math.random()<0.4?["harbor","factory","farm","fort","barracks"]:["factory","farm","fort","barracks","mine","fort"];
+      if(d.missile)pool=pool.concat(["interceptor","shield","silo"]); else if(d.edge>1.05)pool=pool.concat(["interceptor","shield"]);
+      const k=pool[Math.floor(Math.random()*pool.length)]; if(nat.gold>=B[k].c&&!spot.b[k]){ nat.gold-=B[k].c;spot.b[k]=true;addFx("build",spot.cx,spot.cy,id);worldDirty=true; } } }
+  // recruit
+  const cap=byId(nat.capitalId); const spot=(cap&&cap.owner===id)?cap:owned[0];
+  if(nat.gold>=6&&totalTroops(id)<owned.length*7*escMul()+8){ nat.gold-=4; spot.troops+=Math.max(2,Math.round(2*escMul())); worldDirty=true; }
+  // missile (nightmare)
+  if(d.missile&&(nat.missileCD||0)<=0&&Math.random()<0.25&&nat.gold>=40){ const tg=S.cells.filter(c=>c.land&&c.owner==="player"&&!c.cap); if(tg.length){ nat.gold-=40; launchMissile(cap||spot,tg[Math.floor(Math.random()*tg.length)],id,d.edge); } }
+  // attack / expand
+  owned.sort((a,b)=>b.troops-a.troops);
+  for(const cell of owned){ if(cell.troops<3)continue;
+    let tg=neighbors(cell).filter(n=>n.land&&n.owner!==id);
+    if(!tg.length&&cell.b.harbor&&d.harbor){ tg=S.cells.filter(c=>c.land&&c.owner!==id&&isCoastal(c)&&hexDist(cell,c)<=3); }
+    if(!tg.length)continue;
+    if(threat>35&&Math.random()<Math.min(1,d.aggr+(MODE[S.mode].aggr||0))){ const pt=tg.filter(t=>t.owner==="player"); if(pt.length)tg=pt; }
+    tg.sort((a,b)=>(a.troops*(1+defBonus(a)))-(b.troops*(1+defBonus(b))));
+    const t=tg[0], commit=cell.troops-1, eff=t.troops*(1+defBonus(t));
+    if(commit*d.edge>=eff*0.8){ sendArmy(cell,t,commit,d.edge); break; } } // one push per think
+}
+function seaRaid(){ const coasts=S.cells.filter(c=>c.land&&isCoastal(c)&&!c.cap&&(c.owner==="player"||c.owner.startsWith("ai")));
+  if(!coasts.length)return; const cell=coasts[Math.floor(Math.random()*coasts.length)];
+  let chance=0.6; if(cell.b.harbor)chance-=0.35; if(perkOf(cell.owner)==="seafarer")chance-=0.2;
+  if(Math.random()>chance)return; const sea=neighbors(cell).find(n=>!n.land)||cell;
+  addFx("ship",sea.cx,sea.cy,"sea"); addFx("raid",cell.cx,cell.cy,"sea");
+  if(cell.troops>0){ cell.troops=Math.max(0,cell.troops-(1+(Math.random()<.5?1:0))); if(cell.owner==="player")pushLog("Sea raiders hit "+pName(cell)+".","sea"); }
+  else{ const bl=Object.keys(cell.b).filter(k=>cell.b[k]); if(bl.length&&Math.random()<.4){delete cell.b[bl[0]]; if(cell.owner==="player")pushLog("Raiders razed your coast.","sea");} }
+  worldDirty=true; }
+function checkGameOver(){ const cap=byId(S.playerCapitalId); const pl=ownedCells("player").length,tot=totalLand();
+  if(!cap||cap.owner!=="player")return endGame(false,"Your capital has fallen. The Dominion is broken.");
+  if(pl===0)return endGame(false,"You hold no land. Your empire is gone.");
+  const aisAlive=["ai1","ai2","ai3"].some(id=>S.nations[id]&&ownedCells(id).length>0);
+  if(!aisAlive)return endGame(true,"Every rival has been crushed. The world is yours!");
+  if(MODE[S.mode].capOnly){ const allCaps=["ai1","ai2","ai3"].every(id=>{const nn=S.nations[id]; return !nn||byId(nn.capitalId).owner!==id;});
+    if(allCaps)return endGame(true,"Every rival crown has fallen — Regicide complete!"); }
+  else if(pl/tot>=S.winFrac)return endGame(true,"You rule "+Math.round(pl/tot*100)+"% of the Earth!"); }
+
+/* ===== PLAYER ACTIONS ===== */
+function doBuild(k){ const c=byId(S.selected),n=S.nations.player; if(!c||c.owner!=="player"||c.b[k])return;
+  if(Object.values(c.b).filter(Boolean).length>=MAXB||n.gold<B[k].c)return;
+  n.gold-=B[k].c;c.b[k]=true;addFx("build",c.cx,c.cy,"player");pushLog("Built "+B[k].n+".","");worldDirty=true;renderPanel();paint(); }
+function doRecruit(num){ const c=byId(S.selected),n=S.nations.player,pr=playerRates(); if(!c||c.owner!=="player")return;
+  const cost=n.perk==="agrarian"?2:3; let did=0; for(let i=0;i<num;i++){ if(n.gold<cost||pr.troops+did>=pr.armyCap)break; n.gold-=cost;c.troops++;did++; }
+  if(did){worldDirty=true;S.deploy=c.troops;} renderPanel();paint(); }
+function toggleMissile(){ if(!hasBuilding("player","silo")||S.nations.player.gold<missileCost()||S.nations.player.missileCD>0)return; S.missileMode=!S.missileMode; updateModebar(); paint(); }
+function onPick(cell){ if(S.over||!cell)return;
+  if(S.missileMode){ if(cell.land&&cell.owner!=="player"){
+      if(cell.cap){ pushLog("Capitals are shielded from missiles — assault it with an army instead.","bad"); paint(); return; }
+      const silo=ownedCells("player").find(c=>c.b.silo)||byId(S.playerCapitalId);
+      S.nations.player.gold-=missileCost(); launchMissile(silo,cell,"player",1); pushLog("🚀 Missile launched!","boom"); }
+    S.missileMode=false; updateModebar(); paint(); return; }
+  const src=byId(S.selected);
+  if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)){ sendArmy(src,cell,Math.min(S.deploy,src.troops),1);
+    if(!S.deployLock)S.deploy=byId(S.selected).troops; renderPanel(); paint(); return; }
+  S.selected=cell.id;
+  if(cell.owner==="player"){ if(!S.deployLock)S.deploy=cell.troops; else S.deploy=Math.max(1,Math.min(S.deploy||cell.troops,cell.troops)); }
+  renderPanel(); openDrawer(); paint(); }
+function validTarget(src,cell){ if(!cell.land||cell.id===src.id)return false;
+  if(neighbors(src).some(n=>n.id===cell.id))return true;
+  if(src.b.harbor&&isCoastal(cell)&&hexDist(src,cell)<=(perkOf("player")==="seafarer"?4:3))return true; return false; }
+
+/* ===== RENDER ===== */
+let worldDirty=true, rafOn=false, lastT=0, uiAcc=0;
+function drawStatic(){ if(!off)return; offCtx.clearRect(0,0,WORLD_W,WORLD_H); const fog=S.fog;
+  // ocean subtle grid
+  S.cells.forEach(c=>{ if(c.land)return;
+    if(fog&&fogUnknown(c)){ offCtx.beginPath();poly(offCtx,c.poly);offCtx.fillStyle="#0e1b24";offCtx.fill(); return; }
+    offCtx.beginPath(); poly(offCtx,c.poly);
+    offCtx.fillStyle=(c.col+c.row)%2?"rgba(51,88,110,.35)":"rgba(40,72,92,.35)"; offCtx.fill();
+    offCtx.strokeStyle="rgba(20,40,52,.4)";offCtx.lineWidth=.5;offCtx.stroke();
+    if(fog&&fogHidden(c)){ offCtx.beginPath();poly(offCtx,c.poly);offCtx.fillStyle="rgba(10,20,28,.5)";offCtx.fill(); } });
+  S.cells.forEach(c=>{ if(!c.land)return;
+    if(fog&&fogUnknown(c)){ offCtx.beginPath();poly(offCtx,c.poly);offCtx.fillStyle="#132430";offCtx.fill();
+      offCtx.strokeStyle="rgba(255,255,255,.05)";offCtx.lineWidth=.5;offCtx.stroke(); return; }
+    const nat=S.nations[c.owner],base=nat?nat.color:"#c3b288";
+    offCtx.beginPath(); poly(offCtx,c.poly);
+    // ownership fill blended with terrain tint
+    offCtx.fillStyle=base; offCtx.fill(); offCtx.globalAlpha=.28; offCtx.fillStyle=TERR[c.terr].tint; offCtx.fill(); offCtx.globalAlpha=1;
+    offCtx.strokeStyle="#efe3c6";offCtx.lineWidth=1;offCtx.stroke();
+    if(c.cap){ offCtx.fillStyle="#ffe9a8";offCtx.font="12px serif";offCtx.textAlign="center";offCtx.fillText("★",c.cx,c.cy-8); }
+    // buildings marks (little icons under center)
+    const bl=Object.keys(c.b).filter(k=>c.b[k]); if(bl.length){ offCtx.font="8px serif";offCtx.textAlign="center";
+      const w=Math.min(bl.length,5); bl.slice(0,5).forEach((k,i)=>{ offCtx.fillText(B[k].i, c.cx-(w-1)*5+i*10, c.cy+16); }); }
+    if(c.site){ offCtx.font="12px serif";offCtx.textAlign="center";offCtx.fillText(SITES[c.site].i,c.cx,c.cy-8+(c.cap?0:2)); }
+    if(fog&&fogHidden(c)){ offCtx.beginPath();poly(offCtx,c.poly);offCtx.fillStyle="rgba(14,24,32,.5)";offCtx.fill(); } });
+  worldDirty=false; }
+function poly(g,pts){ g.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<6;i++)g.lineTo(pts[i][0],pts[i][1]); g.closePath(); }
+function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
+  const nw=Math.round(canvas.clientWidth*dpr), nh=Math.round(canvas.clientHeight*dpr);
+  if(nw>0&&nh>0&&(canvas.width!==nw||canvas.height!==nh)){ canvas.width=nw; canvas.height=nh; }
+  ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+  if(worldDirty)drawStatic();
+  ctx.save(); ctx.translate(S.cam.x,S.cam.y); ctx.scale(S.cam.scale,S.cam.scale);
+  ctx.drawImage(off,0,0);
+  const src=byId(S.selected), targets=(src&&src.owner==="player"&&src.troops>0)?S.cells.filter(c=>validTarget(src,c)):[];
+  // highlights
+  targets.forEach(c=>{ ctx.beginPath();poly(ctx,c.poly); ctx.strokeStyle=c.owner==="player"?"#7fc0f0":"#e64a3a";ctx.lineWidth=2.4;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]); });
+  if(S.missileMode)S.cells.filter(c=>c.land&&c.owner!=="player"&&!c.cap).forEach(c=>{ ctx.beginPath();poly(ctx,c.poly);ctx.strokeStyle="#ff9a3c";ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]); });
+  if(src){ ctx.beginPath();poly(ctx,src.poly);ctx.strokeStyle="#ffd873";ctx.lineWidth=3;ctx.stroke(); }
+  // troop tokens
+  S.cells.forEach(c=>{ if(!c.land||c.troops<=0||fogHidden(c))return; ctx.beginPath();ctx.arc(c.cx,c.cy+1,9,0,7);ctx.fillStyle="#f4ead0";ctx.fill();ctx.strokeStyle="#4a3a20";ctx.lineWidth=1.1;ctx.stroke();
+    ctx.fillStyle="#352b1a";ctx.font="bold 11px Spectral,serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(c.troops,c.cx,c.cy+1); });
+  ctx.textBaseline="alphabetic";
+  // armies
+  S.armies.forEach(a=>{ const x=a.ox+(a.tx-a.ox)*a.t,y=a.oy+(a.ty-a.oy)*a.t; const col=S.nations[a.owner].color;
+    const bob=Math.sin(S.time*10+a.ox)*1.5;
+    ctx.beginPath();ctx.arc(x,y+bob,7,0,7);ctx.fillStyle=col;ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=1.4;ctx.stroke();
+    ctx.fillStyle="#fff";ctx.font="bold 9px Spectral,serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(a.count,x,y+bob);
+    // trail arrow
+    ctx.strokeStyle="rgba(255,255,255,.35)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(a.ox,a.oy);ctx.lineTo(x,y);ctx.stroke(); });
+  ctx.textBaseline="alphabetic";
+  // missiles
+  S.missiles.forEach(m=>{ const x=m.ox+(m.tx-m.ox)*m.t, y=m.oy+(m.ty-m.oy)*m.t-Math.sin(m.t*Math.PI)*40;
+    ctx.fillStyle="#ffd36b";ctx.beginPath();ctx.arc(x,y,4,0,7);ctx.fill();
+    ctx.strokeStyle="rgba(255,150,60,.5)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(m.ox,m.oy);ctx.lineTo(x,y);ctx.stroke(); });
+  // fx
+  S.fx.forEach(fx=>{ const p=fx.age/fx.life;
+    if(fx.type==="boom"){ const r=8+p*88; ctx.strokeStyle="rgba(255,120,30,"+(1-p)+")";ctx.lineWidth=5;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke();
+      ctx.strokeStyle="rgba(255,80,20,"+(0.8*(1-p))+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r*0.75,0,7);ctx.stroke();
+      ctx.fillStyle="rgba(255,210,90,"+(0.55*(1-p))+")";ctx.beginPath();ctx.arc(fx.x,fx.y,r*.5,0,7);ctx.fill(); }
+    else if(fx.type==="shield"){ const r=6+p*22; ctx.strokeStyle="rgba(120,180,240,"+(1-p)+")";ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke();
+      ctx.fillStyle="rgba(150,200,255,"+(0.3*(1-p))+")";ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.fill(); }
+    else if(fx.type==="flak"){ for(let k=0;k<8;k++){const a=k/8*7;ctx.fillStyle="rgba(255,235,150,"+(1-p)+")";ctx.beginPath();ctx.arc(fx.x+Math.cos(a)*p*15,fx.y+Math.sin(a)*p*15,1.9,0,7);ctx.fill();} }
+    else if(fx.type==="clash"){ const r=4+p*22; ctx.strokeStyle="rgba(230,74,58,"+(1-p)+")";ctx.lineWidth=3;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke();
+      for(let k=0;k<6;k++){const a=k/6*7+p*3;ctx.fillStyle="rgba(255,220,120,"+(1-p)+")";ctx.beginPath();ctx.arc(fx.x+Math.cos(a)*r,fx.y+Math.sin(a)*r,1.6,0,7);ctx.fill();} }
+    else if(fx.type==="build"){ const r=4+p*16;ctx.strokeStyle="rgba(120,180,90,"+(1-p)+")";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); }
+    else if(fx.type==="merge"){ const r=3+p*12;ctx.strokeStyle="rgba(127,192,240,"+(1-p)+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); }
+    else if(fx.type==="ship"){ ctx.fillStyle="#20323d";ctx.fillRect(fx.x-5,fx.y-2,10,4); }
+    else if(fx.type==="raid"){ const r=3+p*14;ctx.strokeStyle="rgba(224,145,127,"+(1-p)+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); } });
+  ctx.restore(); }
+function paint(){ if(ctx&&S)render(); }
+function openDrawer(){ const a=document.querySelector('aside'); if(a)a.classList.add('open'); }
+function loop(now){ const raw=(now-lastT)/1000; lastT=now; const dt=Math.min(0.05,raw)*S.speed;
+  if(!S.over&&S.speed>0)update(dt); render();
+  uiAcc+=raw; if(uiAcc>=0.2){uiAcc=0;updateHeader();updatePanelLive();syncPanel();}
+  if(rafOn)requestAnimationFrame(loop); }
+
+/* ===== HEADER / PANEL DOM ===== */
+function fmt(x){return Math.floor(x);}
+function capsTotal(){ return ["ai1","ai2","ai3"].filter(id=>S.nations[id]).length; }
+function capsTaken(){ return ["ai1","ai2","ai3"].filter(id=>S.nations[id]&&byId(S.nations[id].capitalId).owner!==id).length; }
+function winProgress(){ if(MODE[S.mode].capOnly){ const t=capsTotal(); return t?Math.round(capsTaken()/t*100):0; }
+  const pl=ownedCells("player").length,tot=totalLand(); return Math.min(100,Math.round(pl/tot*100/S.winFrac)); }
+const setT=(id,v)=>{const e=document.getElementById(id); if(e&&e.textContent!==v)e.textContent=v;};
+function updateHeader(){ if(!S)return; const n=S.nations.player,pr=playerRates(),pl=ownedCells("player").length,tot=totalLand(),th=Math.round(pl/tot*100);
+  const nc=x=>x>0?"pos":x<0?"neg":"",sg=x=>(x>0?"+":"")+x.toFixed(1);
+  const stats=document.getElementById("stats");
+  if(stats.dataset.lang!==LANG){ stats.dataset.lang=LANG;   // build the shell once per language (no per-frame rebuild)
+    stats.innerHTML=`
+      <div class="stat"><span class="lbl">${t("Gold")}</span><span class="val" id="hGold">0</span><span class="net pos" id="hGoldN"></span></div>
+      <div class="stat"><span class="lbl">${t("Food")}</span><span class="val" id="hFood">0</span><span class="net" id="hFoodN"></span></div>
+      <div class="stat"><span class="lbl">${t("Army")}</span><span class="val" id="hArmy">0</span><span class="net" id="hArmyN"></span></div>
+      <div class="stat"><span class="lbl">${t("Land")}</span><span class="val" id="hLand">0</span><span class="net" id="hLandN"></span></div>
+      <div class="stat threatwrap"><span class="lbl" id="hWLbl"></span><div class="threatbar"><i id="hBar"></i></div><span class="net" id="hWNet"></span></div>`;
+  }
+  setT("hGold",fmt(n.gold)); setT("hGoldN","+"+pr.gold.toFixed(1)+"/s");
+  setT("hFood",fmt(n.food)); const fn=document.getElementById("hFoodN"); if(fn){setT("hFoodN",sg(pr.foodNet)+"/s"); const cl="net "+nc(pr.foodNet); if(fn.className!==cl)fn.className=cl;}
+  setT("hArmy",String(pr.troops)); setT("hArmyN","/"+pr.armyCap);
+  setT("hLand",String(pl)); setT("hLandN","/"+tot);
+  setT("hWLbl", MODE[S.mode].capOnly?t("Crowns taken"):t("World held"));
+  const bar=document.getElementById("hBar"); if(bar){const w=winProgress()+"%"; if(bar.style.width!==w)bar.style.width=w;}
+  setT("hWNet", MODE[S.mode].capOnly?capsTaken()+"/"+capsTotal()+" "+t("capitals"):th+"% · "+t("win")+" "+Math.round(S.winFrac*100)+"%");
+  const dc=document.getElementById("diffchip"),dcv=MODE[S.mode].i+" "+t(MODE[S.mode].n)+" · "+t(DIFF[S.diff].n); if(dc.textContent!==dcv)dc.textContent=dcv;
+  const bc=document.getElementById("buffchip"),bcv=PERKS[n.perk].i+" "+t(PERKS[n.perk].n); if(bc.dataset.v!==bcv){bc.dataset.v=bcv;bc.innerHTML=bcv;}
+  const mb=document.getElementById("missileBtn"); const cd=Math.ceil(n.missileCD||0);
+  const dis=!(hasBuilding("player","silo")&&n.gold>=missileCost()&&cd<=0); if(mb.disabled!==dis)mb.disabled=dis;
+  const mbt=cd>0?("🚀 "+cd+"s"):"🚀"; if(mb.textContent!==mbt)mb.textContent=mbt;
+  mb.title=!hasBuilding("player","silo")?"Build a Missile Silo first":cd>0?("Reloading: "+cd+"s"):("Launch missile ("+missileCost()+"g)");
+  const mh=document.getElementById("maphud"),mhv="Drag to pan · scroll to zoom · "+S.armies.length+" armies marching"; if(mh.innerHTML!==mhv)mh.innerHTML=mhv;
+}
+function updateModebar(){ const mb=document.getElementById("modebar");
+  if(S.missileMode){mb.hidden=false;mb.innerHTML=`🚀 <b>Missile armed</b> — click any enemy tile except a ★ capital (${missileCost()}g) <button id="mcancel">Cancel</button>`;}
+  else mb.hidden=true; }
+function renderPanel(){ const title=document.getElementById("ppTitle"),tag=document.getElementById("ppTag"),body=document.getElementById("ppBody");
+  const c=S.selected?byId(S.selected):null;
+  if(!c){title.textContent=t("Province");tag.textContent="";body.innerHTML=`<div class="muted">${t("Click a province.")}</div>`;return;}
+  if(!c.land){title.textContent=t("Open Sea");tag.innerHTML=`<span style="color:var(--sea-2)">⚔</span>`;body.innerHTML=`<div class="muted">${t("The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.")}</div>`;return;}
+  if(fogUnknown(c)){title.textContent=t("Unknown Lands");tag.innerHTML="";body.innerHTML=`<div class="muted">${t("Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.")}</div>`;return;}
+  const n=S.nations[c.owner];
+  title.textContent=(c.site?t(SITES[c.site].n):t(c.terr))+" "+c.col+"·"+c.row+(c.cap?" ★":""); tag.innerHTML=`<span><span class="ownerdot" style="background:${n?n.color:'#c3b288'}"></span>${c.owner==='player'?t("You"):(n?n.name:t("Unclaimed"))}</span>`;
+  const bl=Object.keys(c.b).filter(k=>c.b[k]);
+  let h=`<div class="prow"><span class="k">${t("Terrain")}</span><span class="v">${t(c.terr)}${isCoastal(c)?' · '+t("coast"):''}</span></div>
+    <div class="prow"><span class="k">${t("Defense")}</span><span class="v">+${Math.round(defBonus(c)*100)}%</span></div>
+    <div class="prow"><span class="k">${t("Garrison")}</span><span class="v">${fogHidden(c)&&c.owner!=='player'?'?':c.troops}</span></div>`;
+  if(c.site)h+=`<div class="prow"><span class="k">${t("Special")}</span><span class="v">${SITES[c.site].i} ${t(SITES[c.site].n)}</span></div>`;
+  if(bl.length)h+=`<div class="built">${bl.map(k=>`<span class="btag">${B[k].i} ${t(B[k].n)}</span>`).join("")}</div>`;
+  if(c.owner==="player"){ const nn=S.nations.player,pr=playerRates(),rc=nn.perk==="agrarian"?2:3,slots=MAXB-bl.length;
+    const eff=Math.min(S.deploy||c.troops,c.troops)||1;
+    h+=`<div class="deploy"><div class="amt"><span>${t("Deploy")} <button class="lockbtn ${S.deployLock?'on':''}" data-lock="1">${S.deployLock?'🔒 '+t("saved"):'🔓 '+t("save")}</button></span><b id="depVal">${eff}</b></div>
+      <input type="range" id="depSlider" min="1" max="${Math.max(1,c.troops)}" value="${eff}">
+      <div class="muted" style="font-size:10px;margin-top:3px">${t("Click a highlighted tile to send this many.")}${S.deployLock?' <b>'+t("Amount is kept for every province.")+'</b>':''}</div></div>`;
+    h+=`<div class="prow" style="margin-top:8px"><span class="k">${t("Build slots")}</span><span class="v">${bl.length}/${MAXB}</span></div><div class="buildgrid" id="bgrid">`;
+    BORDER.forEach(k=>{ if(c.b[k])return; const d=B[k],ok=slots>0&&nn.gold>=d.c;
+      h+=`<button class="bbtn" data-bk="${k}" ${ok?'':'disabled'}><span class="bt">${d.i} ${t(d.n)}</span><small>${t(d.d)}</small><span class="cost">${d.c}g</span></button>`; });
+    h+=`</div><div class="buildgrid" style="margin-top:5px">
+      <button class="bbtn full" data-rec="1" ${nn.gold>=rc&&pr.troops<pr.armyCap?'':'disabled'} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">➕ ${t("Recruit")}</span><span class="cost">${rc}g</span></button>
+      <button class="bbtn full" data-rec="5" ${nn.gold>=rc*5&&pr.troops<pr.armyCap?'':'disabled'} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">➕ ${t("Recruit ×5")}</span><span class="cost">${rc*5}g</span></button></div>`;
+    h+=`<div class="hint">${t("Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.")}</div>`;
+  } else { h+=`<div class="hint" style="border-color:var(--crimson);background:rgba(152,40,31,.08);color:var(--crimson)">${c.owner==='neutral'?t("Unclaimed")+'.':t("Held by")+' '+(n?n.name:t("a rival"))+'.'} ${t("Send an army from an adjacent tile you own, or 🚀 missile it.")}</div>`; }
+  body.innerHTML=h; }
+function updatePanelLive(){ const c=S.selected?byId(S.selected):null; if(!c||c.owner!=="player")return;
+  const nn=S.nations.player,pr=playerRates(),slots=MAXB-Object.keys(c.b).filter(k=>c.b[k]).length;
+  document.querySelectorAll("#bgrid .bbtn").forEach(btn=>{ const k=btn.dataset.bk; btn.disabled=!(slots>0&&nn.gold>=B[k].c); });
+  const rc=nn.perk==="agrarian"?2:3;
+  const r1=document.querySelector('[data-rec="1"]'),r5=document.querySelector('[data-rec="5"]');
+  if(r1)r1.disabled=!(nn.gold>=rc&&pr.troops<pr.armyCap); if(r5)r5.disabled=!(nn.gold>=rc*5&&pr.troops<pr.armyCap); }
+function pushLog(m,cls){ S.log.unshift({t:Math.floor(S.time),m,cls:cls||""}); if(S.log.length>20)S.log.pop();
+  document.getElementById("logfeed").innerHTML=S.log.slice(0,10).map(l=>`<span class="logline ${l.cls}"><span class="tag">${l.t}s</span>${l.m}</span>`).join(""); }
+
+/* ===== END / BOOT ===== */
+let leaveArmed=false, leaveTimer=null;
+function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
+  if(!leaveArmed){ leaveArmed=true; b.classList.add("armed"); b.textContent=t("Leave?");
+    clearTimeout(leaveTimer); leaveTimer=setTimeout(()=>{leaveArmed=false;b.classList.remove("armed");b.textContent=t("Leave");},2500); return; }
+  clearTimeout(leaveTimer); leaveArmed=false; b.classList.remove("armed"); b.textContent=t("Leave");
+  if(S)S.over=true;
+  document.getElementById("endOverlay").hidden=true;
+  document.getElementById("app").hidden=true;
+  document.getElementById("startOverlay").hidden=false; }
+function endGame(win,text){ S.over=true; document.getElementById("endTitle").textContent=win?t("Victory"):t("Defeat");
+  document.getElementById("endTitle").style.color=win?"var(--good)":"var(--crimson)";
+  document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false; return true; }
+
+/* ===== CANVAS / INPUT ===== */
+function resizeCanvas(){ if(!canvas)return; const dpr=window.devicePixelRatio||1;
+  const nw=Math.round(canvas.clientWidth*dpr), nh=Math.round(canvas.clientHeight*dpr);
+  if(nw>0&&nh>0&&(canvas.width!==nw||canvas.height!==nh)){ canvas.width=nw; canvas.height=nh; paint(); } }
+function screenToWorld(sx,sy){ return {x:(sx-S.cam.x)/S.cam.scale, y:(sy-S.cam.y)/S.cam.scale}; }
+function pickCell(sx,sy){ const w=screenToWorld(sx,sy); let best=null,bd=SIZE*SIZE;
+  for(const c of S.cells){ const dx=c.cx-w.x,dy=c.cy-w.y,d=dx*dx+dy*dy; if(d<bd){bd=d;best=c;} } return best; }
+function initInput(){ let down=false,moved=false,sx=0,sy=0,px=0,py=0;
+  const getXY=e=>{const r=canvas.getBoundingClientRect();const t=e.touches?e.touches[0]:e;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+  canvas.addEventListener("pointerdown",e=>{down=true;moved=false;const p=getXY(e);sx=px=p.x;sy=py=p.y;canvas.classList.add("grabbing");});
+  canvas.addEventListener("pointermove",e=>{ if(!down)return; const p=getXY(e); const dx=p.x-px,dy=p.y-py; if(Math.abs(p.x-sx)+Math.abs(p.y-sy)>5)moved=true;
+    if(moved){S.cam.x+=dx;S.cam.y+=dy;} px=p.x;py=p.y; });
+  const end=e=>{ if(down&&!moved){const p=getXY(e);onPick(pickCell(p.x,p.y));} down=false;canvas.classList.remove("grabbing"); };
+  canvas.addEventListener("pointerup",end); canvas.addEventListener("pointerleave",()=>{down=false;canvas.classList.remove("grabbing");});
+  canvas.addEventListener("wheel",e=>{ e.preventDefault(); const p=getXY(e); const w=screenToWorld(p.x,p.y);
+    const f=e.deltaY<0?1.12:1/1.12; S.cam.scale=Math.max(0.45,Math.min(2.4,S.cam.scale*f));
+    S.cam.x=p.x-w.x*S.cam.scale; S.cam.y=p.y-w.y*S.cam.scale; },{passive:false});
+}
+function zoomBtn(f){ const vw=(canvas.clientWidth-panelW())/2,vh=canvas.clientHeight/2,w=screenToWorld(vw,vh);
+  S.cam.scale=Math.max(0.45,Math.min(2.4,S.cam.scale*f)); S.cam.x=vw-w.x*S.cam.scale; S.cam.y=vh-w.y*S.cam.scale; }
+
+let selDiff="medium", selMode="conquest";
+function buildStart(){
+  document.getElementById("modePick").innerHTML=Object.keys(MODE).map(k=>`<button class="dchip ${k===selMode?'sel':''}" data-m="${k}"><div class="dn">${MODE[k].i} ${t(MODE[k].n)}</div><div class="dd">${t(MODE[k].d)}</div></button>`).join("");
+  document.querySelectorAll("#modePick .dchip").forEach(b=>b.addEventListener("click",()=>{selMode=b.dataset.m;buildStart();}));
+  document.getElementById("diffPick").innerHTML=Object.keys(DIFF).map(k=>`<button class="dchip ${k===selDiff?'sel':''}" data-d="${k}"><div class="dn">${t(DIFF[k].n)}</div><div class="dd">${t(DIFF[k].d)}</div></button>`).join("");
+  document.querySelectorAll("#diffPick .dchip").forEach(b=>b.addEventListener("click",()=>{selDiff=b.dataset.d;buildStart();}));
+  document.getElementById("factionPick").innerHTML=Object.keys(PERKS).map(k=>`<button class="fcard" data-p="${k}"><div class="fn"><span class="fi">${PERKS[k].i}</span>${t(PERKS[k].n)}</div><div class="fb">${t(PERKS[k].d)}</div></button>`).join("");
+  document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked)));
+}
+function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2d");
+  off=document.createElement("canvas"); off.width=WORLD_W; off.height=WORLD_H; offCtx=off.getContext("2d");
+  initInput();
+  window.addEventListener("resize",()=>{resizeCanvas();syncPanel();});
+  document.getElementById("missileBtn").addEventListener("click",toggleMissile);
+  document.getElementById("rulesBtn").addEventListener("click",()=>document.getElementById("rulesOverlay").hidden=false);
+  document.getElementById("rulesClose").addEventListener("click",()=>document.getElementById("rulesOverlay").hidden=true);
+  document.getElementById("zin").addEventListener("click",()=>zoomBtn(1.2));
+  document.getElementById("zout").addEventListener("click",()=>zoomBtn(1/1.2));
+  document.getElementById("speed").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||!S)return;
+    S.speed=+b.dataset.s; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x===b)); });
+  const pp=document.getElementById("ppBody");
+  pp.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled||!S)return;
+    if(b.dataset.bk)doBuild(b.dataset.bk); else if(b.dataset.rec)doRecruit(+b.dataset.rec);
+    else if(b.dataset.lock){ S.deployLock=!S.deployLock; renderPanel(); } });
+  pp.addEventListener("input",e=>{ if(!S)return; if(e.target.id==="depSlider"){ S.deploy=+e.target.value; const dv=document.getElementById("depVal"); if(dv)dv.textContent=e.target.value; } });
+  document.getElementById("modebar").addEventListener("click",e=>{ if(S&&e.target.closest("button"))toggleMissile(); });
+  const ahd=document.querySelector("aside > .phead"); if(ahd)ahd.addEventListener("click",()=>document.querySelector("aside").classList.toggle("open"));
+  // draggable panel width
+  const mainEl=document.querySelector("main"), resizer=document.getElementById("resizer");
+  try{ const sv=parseInt(localStorage.getItem("dominion_asidew"),10); if(sv>=240&&sv<=520)mainEl.style.setProperty("--aside-w",sv+"px"); else localStorage.removeItem("dominion_asidew"); }catch(e){}
+  if(resizer){ let rz=false, moved=false, startX=0;
+    const applyW=cx=>{ const r=mainEl.getBoundingClientRect(); if(!r.width)return null; let w=r.right-cx; if(!isFinite(w))return null;
+      w=Math.round(Math.max(240,Math.min(520,w))); mainEl.style.setProperty("--aside-w",w+"px"); paint(); return w; };
+    const onMove=e=>{ if(!rz)return; if(e.buttons===0){ onUp(e); return; } if(Math.abs(e.clientX-startX)>5)moved=true; if(moved){ e.preventDefault(); applyW(e.clientX); } };
+    const onUp=e=>{ if(!rz)return; rz=false; resizer.classList.remove("drag"); document.body.style.cursor="";
+      window.removeEventListener("pointermove",onMove); window.removeEventListener("pointerup",onUp); window.removeEventListener("pointercancel",onUp);
+      if(moved){ const w=applyW(e.clientX); if(w!=null){ try{localStorage.setItem("dominion_asidew",w);}catch(_){} } } };
+    resizer.addEventListener("pointerdown",e=>{ rz=true; moved=false; startX=e.clientX; resizer.classList.add("drag"); document.body.style.cursor="col-resize"; e.preventDefault();
+      window.addEventListener("pointermove",onMove); window.addEventListener("pointerup",onUp); window.addEventListener("pointercancel",onUp); });
+    resizer.addEventListener("dblclick",()=>{ mainEl.style.removeProperty("--aside-w"); try{localStorage.removeItem("dominion_asidew");}catch(_){} paint(); });
+  }
+  document.getElementById("restartBtn").addEventListener("click",()=>{document.getElementById("endOverlay").hidden=true;document.getElementById("app").hidden=true;document.getElementById("startOverlay").hidden=false;});
+  document.getElementById("leaveBtn").addEventListener("click",leaveGame);
+  const ls=document.getElementById("langSel");
+  ls.innerHTML=LANGS.map(([code,name])=>`<option value="${code}" ${code===LANG?"selected":""}>${name}</option>`).join("");
+  ls.addEventListener("change",e=>setLang(e.target.value));
+  applyStatic();
+  buildStart();
+}
+boot();
+</script>
