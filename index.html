@@ -263,6 +263,8 @@
     <div class="tagline" id="startTagline">A living world of continents and scattered isles. Time never stops — mine gold, raise armies, sail the seas and take the Earth in real time, while rival powers do the same. Set the challenge, then choose your people.</div>
     <div class="steplbl">1 · Choose a game mode</div>
     <div class="diffs" id="modePick"></div>
+    <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);margin:-10px 0 8px">World size</div>
+    <div class="diffs" id="sizePick" style="margin-bottom:16px"></div>
     <div class="steplbl">2 · Choose your enemies</div>
     <div class="diffs" id="diffPick"></div>
     <label class="fogtoggle"><input type="checkbox" id="fogChk"> <span id="fogText"><b>Fog of War</b> — the map beyond your borders stays hidden (more realistic)</span></label>
@@ -273,6 +275,7 @@
       <button class="qlink" id="continueBtn" hidden>▶ Continue Saved Game</button>
       <button class="qlink" id="campaignBtn">📖 Campaign</button>
       <button class="qlink" id="historyBtn">📜 History &amp; Stats</button>
+      <button class="qlink" id="achievementsBtn">🏆 Achievements</button>
     </div>
   </div>
 </div>
@@ -282,7 +285,29 @@
     <h2 style="font-size:24px">📜 History &amp; Stats</h2>
     <div class="statsummary" id="histSummary"></div>
     <div class="histlist" id="histList"></div>
+    <div class="steplbl" style="margin-top:16px">Share your stats — no accounts, just a code</div>
+    <div class="codebox"><input id="statCodeOut" readonly style="font-size:11px;letter-spacing:0;text-transform:none;flex:2"><button class="btn ghost" id="statCodeCopyBtn">📋 Copy</button></div>
+    <div class="codebox"><input id="statCodeIn" placeholder="Paste a friend's code…" style="font-size:11px;letter-spacing:0;text-transform:none"><button class="btn ghost" id="statCodeCmpBtn">Compare</button></div>
+    <div id="statCodeCompare"></div>
     <div class="closebar"><button class="btn ghost" id="histClearBtn">Clear History</button><button class="btn primary" id="histCloseBtn">Close</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="replayOverlay" hidden>
+  <div class="modal" style="width:min(560px,100%)">
+    <h2 style="font-size:22px">▶ Replay</h2>
+    <div class="tagline" style="margin-bottom:8px">Land held over time (not a full re-simulation).</div>
+    <canvas id="replayCanvas" width="500" height="220" style="width:100%;height:auto;border:1px solid var(--line-soft);border-radius:8px;background:var(--parchment)"></canvas>
+    <div id="replayLegend" style="margin-top:8px;text-align:center"></div>
+    <div class="closebar"><button class="btn primary" id="replayCloseBtn">Close</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="achievementsOverlay" hidden>
+  <div class="modal" style="width:min(560px,100%)">
+    <h2 style="font-size:24px">🏆 Achievements</h2>
+    <div class="missionlist" id="achList"></div>
+    <div class="closebar"><button class="btn primary" id="achCloseBtn">Close</button></div>
   </div>
 </div>
 
@@ -313,6 +338,11 @@
       <div class="diffs" id="mpModePick"></div>
       <div class="steplbl" id="mpStep3">Bot difficulty (fills empty slots)</div>
       <div class="diffs" id="mpDiffPick"></div>
+      <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);margin:-8px 0 8px">World size</div>
+      <div class="diffs" id="mpSizePick" style="margin-bottom:14px"></div>
+      <div style="text-align:center;font-size:10.5px;color:var(--ink-soft);margin:-8px 0 8px">Starting gold</div>
+      <div class="diffs" id="mpGoldPick" style="margin-bottom:14px"></div>
+      <label class="fogtoggle"><input type="checkbox" id="mpFogChk"> <span><b>Fog of War</b> for everyone in this room</span></label>
       <button class="btn primary full" id="mpCreateBtn" style="display:block;width:100%;padding:12px;margin-top:6px">Create Room</button>
     </div>
 
@@ -392,8 +422,9 @@ const B={
   fort:{n:"Fort",i:"🏰",c:30,def:.35,d:"+35% defense"}, tower:{n:"Watchtower",i:"🗼",c:20,defAdj:.15,d:"+15% def, adj too"},
   hospital:{n:"Hospital",i:"⛑",c:28,regen:.4,d:"heals troops"}, harbor:{n:"Harbor",i:"⚓",c:28,harbor:true,d:"invade by sea"},
   lab:{n:"Lab",i:"🔬",c:40,boost:.10,d:"+10% income"}, silo:{n:"Missile Silo",i:"🚀",c:55,silo:true,d:"launch missiles"},
-  interceptor:{n:"Air Defense",i:"🛰",c:34,intercept:true,d:"may shoot down missiles"}, shield:{n:"Shield",i:"🔰",c:24,shield:true,d:"blocks one attack, once"}};
-const BORDER=["factory","mine","market","bank","farm","barracks","fort","tower","hospital","harbor","lab","silo","interceptor","shield"];
+  interceptor:{n:"Air Defense",i:"🛰",c:34,intercept:true,d:"may shoot down missiles"}, shield:{n:"Shield",i:"🔰",c:24,shield:true,d:"blocks one attack, once"},
+  shipyard:{n:"Shipyard",i:"🛳",c:42,navalDef:.5,d:"+50% defense vs naval attacks"}};
+const BORDER=["factory","mine","market","bank","farm","barracks","fort","tower","hospital","harbor","lab","silo","interceptor","shield","shipyard"];
 const MAXB=5;
 const PERKS={ industrial:{n:"Industrialists",i:"🏭",d:"<b>+25% gold</b>."}, agrarian:{n:"Agrarians",i:"🌾",d:"<b>+25% food</b>, cheap troops."},
   warmonger:{n:"Warmongers",i:"⚔",d:"armies <b>attack +20%</b>."}, fortifier:{n:"Fortifiers",i:"🛡",d:"provinces <b>defend +20%</b>."},
@@ -410,7 +441,50 @@ const DIFF={ peaceful:{n:"Peaceful",d:"Bots barely fight",econ:.5,think:6,aggr:.
 const MODE={ conquest:{n:"Conquest",d:"Rule half the world",i:"🌍",win:.5,econ:1,aggr:0,esc:0,botStart:0,capOnly:false},
   blitz:{n:"Blitz",d:"Fast, rich, brutal",i:"⚡",win:.4,econ:1.7,aggr:.15,esc:0,botStart:0,capOnly:false},
   regicide:{n:"Regicide",d:"Take every capital",i:"👑",win:1.1,econ:1,aggr:.1,esc:0,botStart:0,capOnly:true},
-  laststand:{n:"Last Stand",d:"Outlast a stronger world",i:"🛡",win:.45,econ:1,aggr:.35,esc:1,botStart:2,capOnly:false} };
+  laststand:{n:"Last Stand",d:"Outlast a stronger world",i:"🛡",win:.45,econ:1,aggr:.35,esc:1,botStart:2,capOnly:false},
+  sandbox:{n:"Sandbox",d:"No win or lose — just build",i:"🧪",win:99,econ:1,aggr:0,esc:0,botStart:0,capOnly:false,sandbox:true} };
+const AI_PERSONALITIES={
+  turtle:{n:"Turtle",i:"🐢",buildMul:1.5,aggrMul:.45},
+  rusher:{n:"Rusher",i:"⚔",buildMul:.7,aggrMul:1.7},
+  economist:{n:"Economist",i:"💰",buildMul:1.25,aggrMul:.6},
+  raider:{n:"Raider",i:"🏴",buildMul:1,aggrMul:1.25} };
+function pickPersonality(){ const ks=Object.keys(AI_PERSONALITIES); return ks[Math.floor(Math.random()*ks.length)]; }
+const ACHIEVEMENTS={
+  firstwin:{n:"First Blood",i:"🩸",d:"Win any match."},
+  impossible:{n:"Against All Odds",i:"💀",d:"Win on Impossible difficulty."},
+  pacifist:{n:"Pacifist",i:"🕊",d:"Win without ever attacking another nation."},
+  regicide:{n:"Kingslayer",i:"👑",d:"Win a Regicide match."},
+  laststand:{n:"Unbreakable",i:"🛡",d:"Win a Last Stand match."},
+  blitz:{n:"Speedrunner",i:"⚡",d:"Win a Blitz match in under 5 minutes."},
+  campaign:{n:"War Hero",i:"📖",d:"Complete all 5 campaign missions."},
+  techmaster:{n:"Renaissance",i:"🔬",d:"Research every technology in one match."},
+  hoarder:{n:"Hoarder",i:"💎",d:"Hold 500 gold at once."},
+  online:{n:"Comrades in Arms",i:"🌐",d:"Win a multiplayer match."} };
+function getAchievements(){ try{return JSON.parse(localStorage.getItem("dominion_achievements")||"{}");}catch(e){return {};} }
+function unlockAchievement(id){ const a=getAchievements(); if(a[id])return; a[id]=Date.now();
+  try{localStorage.setItem("dominion_achievements",JSON.stringify(a));}catch(e){}
+  showToast("🏆 Achievement unlocked: "+ACHIEVEMENTS[id].n); }
+function checkAchievements(win){
+  if(!S)return;
+  if(S.nations.player.gold>=500)unlockAchievement("hoarder");
+  if(!win)return;
+  unlockAchievement("firstwin");
+  if(S.diff==="impossible")unlockAchievement("impossible");
+  if(!S.everAttacked)unlockAchievement("pacifist");
+  if(S.mode==="regicide")unlockAchievement("regicide");
+  if(S.mode==="laststand")unlockAchievement("laststand");
+  if(S.mode==="blitz"&&S.time<300)unlockAchievement("blitz");
+  if(S.mp)unlockAchievement("online");
+  const nt=S.nations.player.tech||{}; if(Object.keys(TECH).every(k=>nt[k]))unlockAchievement("techmaster");
+  if(S.campaignId){ const prog=getCampaignProgress(); if(MISSIONS.every(m=>m.id===S.campaignId||prog[m.id]))unlockAchievement("campaign"); }
+}
+function buildAchievementsModal(){
+  const a=getAchievements();
+  document.getElementById("achList").innerHTML=Object.keys(ACHIEVEMENTS).map(k=>{ const d=ACHIEVEMENTS[k], got=a[k];
+    return `<div class="missioncard ${got?'':'locked'}"><span class="mnum" style="font-size:22px">${d.i}</span>
+      <span style="flex:1"><span class="mtitle">${d.n}</span><br><span class="mdesc">${d.d}</span></span>
+      ${got?'<span class="mcheck">✓</span>':'<span class="mcheck" style="color:var(--ink-soft)">🔒</span>'}</div>`; }).join("");
+}
 const TECH={
   logistics:{n:"Logistics Corps",i:"🐎",c:60,d:"+15% army speed"},
   siege:{n:"Siege Engineering",i:"💣",c:70,d:"+10% attack power"},
@@ -630,7 +704,8 @@ const perkOf=nat=>(S.nations[nat]||{}).perk||null;
 const hasBuilding=(nat,k)=>S.cells.some(c=>c.owner===nat&&c.b[k]);
 
 /* ===== WORLD GEN ===== */
-function genWorld(){
+const WORLD_SIZES={small:{conts:3,islands:15},medium:{conts:4,islands:30},large:{conts:6,islands:45}};
+function genWorld(islandCount){
   S.grid=[];S.cells=[];S.map={};
   for(let r=0;r<ROWS;r++){S.grid[r]=[];for(let c=0;c<COLS;c++){ const ct=hexCenter(c,r);
     const cell={id:c+"_"+r,col:c,row:r,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
@@ -648,11 +723,11 @@ function genWorld(){
       add(front.splice(idx,1)[0]); }
     if(mine.length>=5){conts.push({id:cid,cells:mine,size:mine.length});cid++;}
     else mine.forEach(c=>{c.land=false;c.cont=-1;}); }
-  // up to 8 continents spread out (solo only ever uses the first 4; multiplayer up to 8 for 4v4)
+  // up to 8 continents spread out (solo only ever uses the first N per world-size setting; multiplayer up to 8 for 4v4)
   [[5,5,22],[22,4,20],[6,14,18],[24,14,17],[14,9,16],[15,16,14],[2,10,13],[27,9,13]].forEach(([c,r,s])=>grow(c,r,s));
-  // ~30 islands
-  let islands=0,tries=0;
-  while(islands<30&&tries++<1200){ const c=Math.floor(rnd(1,COLS-1)),r=Math.floor(rnd(1,ROWS-1)); const cell=cellAt(c,r);
+  // islands (count varies with world-size setting)
+  let islands=0,tries=0,islandTarget=islandCount||30;
+  while(islands<islandTarget&&tries++<1200){ const c=Math.floor(rnd(1,COLS-1)),r=Math.floor(rnd(1,ROWS-1)); const cell=cellAt(c,r);
     if(cell&&!cell.land&&!neighbors(cell).some(n=>n.land)){ const sz=1+Math.floor(Math.random()*4);
       cell.land=true;cell.cont=100+islands; let cur=[cell];
       for(let k=1;k<sz;k++){ const opts=[]; cur.forEach(cc=>neighbors(cc).forEach(n=>{if(!n.land&&!neighbors(n).some(x=>x.land&&x.cont!==cell.cont))opts.push(n);}));
@@ -672,29 +747,30 @@ function genWorld(){
 }
 
 /* ===== SETUP ===== */
-function startGame(perk,diff,mode,fog,campaignId){
+function startGame(perk,diff,mode,fog,campaignId,worldSize){
   clearSave();
   if(campaignId){ const m=MISSIONS.find(x=>x.id===campaignId); const orig=Math.random; Math.random=mulberry32(m.seed);
-    try{ startGameInner(perk,diff,mode,fog); S.campaignId=campaignId; } finally{ Math.random=orig; } }
-  else { startGameInner(perk,diff,mode,fog); S.campaignId=null; }
+    try{ startGameInner(perk,diff,mode,fog,worldSize); S.campaignId=campaignId; } finally{ Math.random=orig; } }
+  else { startGameInner(perk,diff,mode,fog,worldSize); S.campaignId=null; }
 }
-function startGameInner(perk,diff,mode,fog){
+function startGameInner(perk,diff,mode,fog,worldSize){
   mode=mode||"conquest";
+  const wsz=WORLD_SIZES[worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:rnd(EVENT_MIN,EVENT_MAX),fogTimer:0,
-     cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,
-     visible:new Set(),explored:new Set(),landCount:0,pacts:{}};
-  const conts=genWorld();
+     cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,everAttacked:false,
+     visible:new Set(),explored:new Set(),landCount:0,pacts:{},trades:{},spyReveal:{},replaySnaps:[],lastSnapT:null};
+  const conts=genWorld(wsz.islands);
   const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
-  const bigs=conts.slice(0,4); const pIdx=Math.floor(Math.random()*bigs.length);
+  const bigs=conts.slice(0,wsz.conts); const pIdx=Math.floor(Math.random()*bigs.length);
   const pCont=bigs[pIdx], aiConts=bigs.filter((_,i)=>i!==pIdx);
-  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0,tech:{}};
+  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0,spyCD:0,hero:null,tech:{}};
   const pcap=nCap(pCont); pcap.owner="player";pcap.troops=8;pcap.cap=true;pcap.b.factory=true;pcap.b.barracks=true;
   S.nations.player.capitalId=pcap.id; S.playerCapitalId=pcap.id; if(perk==="rocketeer")pcap.b.silo=true;
   const cperks=["warmonger","fortifier",null];
   aiConts.forEach((cont,i)=>{ const id="ai"+(i+1);
-    S.nations[id]={id,name:AI_NAMES[i%5],color:AI_COLORS[i%5],isPlayer:false,perk:cperks[i%3],
-      gold:30,think:rnd(1,DIFF[diff].think),missileCD:0};
+    S.nations[id]={id,name:AI_NAMES[i%5],color:AI_COLORS[i%5],isPlayer:false,perk:cperks[i%3],personality:pickPersonality(),
+      gold:30,think:rnd(1,DIFF[diff].think),missileCD:0,spyCD:0};
     const cap=nCap(cont); cap.owner=id;cap.troops=7;cap.cap=true;cap.b.factory=true;cap.b.barracks=true; S.nations[id].capitalId=cap.id;
     // some modes hand bots a head start (extra bordering land + troops)
     const extra=MODE[mode].botStart; if(extra){ cap.troops+=3; let ring=neighbors(cap).filter(x=>x.land&&x.owner==="sea");
@@ -722,29 +798,30 @@ function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas
 
 /* ===== MULTIPLAYER SETUP (host builds the match; guest deserializes it) ===== */
 function startMultiplayerHost(lobby){
-  const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog;
+  const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog, goldMul=lobby.goldMul||1;
+  const wsz=WORLD_SIZES[lobby.worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:rnd(EVENT_MIN,EVENT_MAX),fogTimer:0,
-     cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,
-     visible:new Set(),explored:new Set(),landCount:0,pacts:{}};
-  const conts=genWorld();
+     cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,everAttacked:false,
+     visible:new Set(),explored:new Set(),landCount:0,pacts:{},trades:{},spyReveal:{},replaySnaps:[],lastSnapT:null};
+  const conts=genWorld(Math.max(wsz.islands,30));
   const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
   const total=lobby.teamSize*2;
-  const bigs=conts.slice(0,total);
+  const bigs=conts.slice(0,Math.max(total,wsz.conts));
   // shuffle which continent each slot gets (fair placement)
   const contOrder=bigs.slice(); for(let i=contOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[contOrder[i],contOrder[j]]=[contOrder[j],contOrder[i]];}
   const humans=lobby.players; // [{rid,name,team,peerId,isHost,perk}]
   const teamOf={}, allHumanRealIds=[], allAiIds=[];
   humans.forEach((p,i)=>{ teamOf[p.rid]=p.team;
     const isMe=p.rid==="player"; const chosenPerk=(p.perk&&PERKS[p.perk])?p.perk:pickAiPerk();
-    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50,food:45,missileCD:0,human:true,tech:{}};
+    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50*goldMul,food:45,missileCD:0,spyCD:0,hero:null,human:true,tech:{}};
     const cap=nCap(contOrder[i]); cap.owner=p.rid;cap.troops=8;cap.cap=true;cap.b.factory=true;cap.b.barracks=true;
     S.nations[p.rid].capitalId=cap.id; if(isMe){S.playerCapitalId=cap.id;} if(S.nations[p.rid].perk==="rocketeer")cap.b.silo=true;
     allHumanRealIds.push(p.rid); });
   const cperks=["warmonger","fortifier",null]; let aiCount=0;
   for(let i=humans.length;i<total;i++){ const id="ai"+(++aiCount);
     const teamLetter = i<lobby.teamSize?"A":"B"; teamOf[id]=teamLetter;
-    S.nations[id]={id,name:AI_NAMES[aiCount%5],color:AI_COLORS[(aiCount+2)%5],isPlayer:false,perk:cperks[aiCount%3],gold:30,think:rnd(1,DIFF[diff].think),missileCD:0};
+    S.nations[id]={id,name:AI_NAMES[aiCount%5],color:AI_COLORS[(aiCount+2)%5],isPlayer:false,perk:cperks[aiCount%3],personality:pickPersonality(),gold:30*goldMul,think:rnd(1,DIFF[diff].think),missileCD:0,spyCD:0};
     const cap=nCap(contOrder[i]); cap.owner=id;cap.troops=7;cap.cap=true;cap.b.factory=true;cap.b.barracks=true; S.nations[id].capitalId=cap.id;
     allAiIds.push(id); }
   S.nations.sea={id:"sea",color:"#33586e"}; S.nations.neutral={id:"neutral",name:"Unclaimed",color:"#c3b288"};
@@ -770,7 +847,7 @@ function mpRemapId(id,forRealId){ if(!forRealId)return id; if(id===forRealId)ret
 function mpSerializeInit(forRealId){
   const cells=S.cells.map(c=>c.land?{col:c.col,row:c.row,land:1,terr:c.terr,site:c.site,cap:c.cap,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b}:{col:c.col,row:c.row,land:0});
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
-    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,human:!!n.human,tech:n.tech||{},capitalId:null}; });
+    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,personality:n.personality||null,human:!!n.human,tech:n.tech||{},capitalId:null}; });
   // fix capitalId references after id remap (capitalId is a CELL id, unaffected — cells keep their own col_row ids)
   Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const rid=mpRemapId(id,forRealId); nations[rid].capitalId=S.nations[id].capitalId; });
   const teamOf={}; Object.keys(S.mp.teamOf).forEach(id=>{ teamOf[mpRemapId(id,forRealId)]=S.mp.teamOf[id]; });
@@ -781,8 +858,8 @@ function mpSerializeInit(forRealId){
 function initMultiplayerGuest(p){
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:p.time||0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:99999,fogTimer:0,
-     cam:{x:0,y:0,scale:1},diff:p.diff,mode:p.mode,fog:!!p.fog,winFrac:p.winFrac,econMul:p.econMul,
-     visible:new Set(),explored:new Set(),landCount:p.landCount};
+     cam:{x:0,y:0,scale:1},diff:p.diff,mode:p.mode,fog:!!p.fog,winFrac:p.winFrac,econMul:p.econMul,everAttacked:false,
+     visible:new Set(),explored:new Set(),landCount:p.landCount,pacts:{},trades:{},spyReveal:{},replaySnaps:[],lastSnapT:null};
   for(let r=0;r<ROWS;r++){S.grid[r]=[];}
   p.cells.forEach(pc=>{ const ct=hexCenter(pc.col,pc.row);
     const cell={id:pc.col+"_"+pc.row,col:pc.col,row:pc.row,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
@@ -814,6 +891,8 @@ function mpApplyOrder(actingNat,order){
   else if(order.kind==="missile"){ const tgt=byId(order.targetId); const nat=S.nations[actingNat];
     if(tgt&&nat&&!tgt.cap){ const {silo,cost}=launchMissileFor(actingNat); if(nat.gold>=cost&&nat.missileCD<=0){ nat.gold-=cost; launchMissile(silo,tgt,actingNat,1); } } }
   else if(order.kind==="tech"){ buyTech(actingNat,order.key); }
+  else if(order.kind==="spy"){ doSpyCore(actingNat,order.targetId); }
+  else if(order.kind==="hero"){ doHeroCore(actingNat); }
   worldDirty=true;
 }
 // ---- state broadcast (host → guests), called from the main loop every ~350ms ----
@@ -825,7 +904,7 @@ function mpBroadcastState(){ if(!S.mp||S.mp.role!=="host")return;
 function mpSerializeState(forRealId){
   const cells=S.cells.filter(c=>c.land).map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap}));
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
-    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0,tech:n.tech||{}}; });
+    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,tech:n.tech||{}}; });
   const armies=S.armies.map(a=>({owner:mpRemapId(a.owner,forRealId),count:a.count,fromId:a.fromId,toId:a.toId,ox:a.ox,oy:a.oy,tx:a.tx,ty:a.ty,t:a.t,dur:a.dur,extra:a.extra,formation:a.formation}));
   const missiles=S.missiles.map(m=>({owner:mpRemapId(m.owner,forRealId),toId:m.toId,ox:m.ox,oy:m.oy,tx:m.tx,ty:m.ty,t:m.t,dur:m.dur,intercepted:m.intercepted,interceptT:m.interceptT}));
   return {cells,nations,armies,missiles,time:S.time,over:S.over};
@@ -835,6 +914,7 @@ function mpApplyState(p){ if(!S)return;
   Object.keys(p.nations).forEach(id=>{ const n=S.nations[id]; if(n)Object.assign(n,p.nations[id]); });
   S.armies=p.armies; S.missiles=p.missiles; S.time=p.time;
   if(S.fog){ computeFog(); worldDirty=true; }
+  recordSnap();
   renderPanel(); updateHeader(); paint(); }
 // ---- lobby: send an order from guest to host ----
 function mpSendOrder(order){ if(MPLOBBY.conn){ try{MPLOBBY.conn.send({type:"order",order});}catch(e){} } }
@@ -856,6 +936,7 @@ function computeFog(){ const vis=new Set();
   const visionIds = S.mp ? Object.keys(S.mp.teamOf).filter(id=>S.mp.teamOf[id]===S.mp.myTeam) : ["player"];
   visionIds.forEach(id=>{ ownedCells(id).forEach(c=>{ let r=2; if(c.b.tower)r=4; else if(c.b.interceptor)r=Math.max(r,3);
     S.cells.forEach(t=>{ if(hexDist(t,c)<=r)vis.add(t.id); }); }); });
+  if(S.spyReveal){ const now=S.time; Object.keys(S.spyReveal).forEach(cid=>{ if(S.spyReveal[cid]>now)vis.add(cid); else delete S.spyReveal[cid]; }); }
   vis.forEach(id=>S.explored.add(id)); S.visible=vis; }
 function fogHidden(cell){ return S.fog && !S.visible.has(cell.id); }         // troops/details hidden
 function fogUnknown(cell){ return S.fog && !S.explored.has(cell.id); }        // never seen
@@ -864,12 +945,14 @@ function fogUnknown(cell){ return S.fog && !S.explored.has(cell.id); }        //
 function defBonus(cell){ let b=TERR[cell.terr].def; if(cell.b.fort)b+=B.fort.def;
   if(cell.b.tower)b+=B.tower.defAdj; else if(neighbors(cell).some(n=>n.owner===cell.owner&&n.b.tower))b+=B.tower.defAdj;
   if(cell.site&&SITES[cell.site].def)b+=SITES[cell.site].def; if(perkOf(cell.owner)==="fortifier")b+=0.2; return b; }
-function resolve(amount,attNat,target,extra,formation){ if(target.troops<=0)return{win:true,att:amount,def:0};
-  const attTech=(S.nations[attNat]||{}).tech;
+function resolve(amount,attNat,target,extra,formation,naval){ if(target.troops<=0)return{win:true,att:amount,def:0};
+  const attNatObj=S.nations[attNat], attTech=(attNatObj||{}).tech;
   let am=(extra||1)*(perkOf(attNat)==="warmonger"?1.2:1)*(attTech&&attTech.siege?1.1:1);
+  if(attNatObj&&attNatObj.hero)am*=1+0.03*attNatObj.hero.level;
   const fort=defBonus(target);
+  let navalDef=0; if(naval){ if(target.b.shipyard)navalDef+=B.shipyard.navalDef; else if(neighbors(target).some(n=>n.owner===target.owner&&n.b.shipyard))navalDef+=B.shipyard.navalDef*0.5; }
   if(formation==="cavalry")am*=1.2; else if(formation==="artillery")am*=(fort>=0.15?1.5:0.85);
-  const ap=amount*am*rnd(.85,1.15), dp=target.troops*(1+fort)*rnd(.85,1.15);
+  const ap=amount*am*rnd(.85,1.15), dp=target.troops*(1+fort+navalDef)*rnd(.85,1.15);
   if(ap>=dp){const lr=dp/ap;return{win:true,att:Math.max(1,Math.round(amount*(1-0.75*lr))),def:0};}
   const lr=ap/dp;return{win:false,att:0,def:Math.max(1,Math.round(target.troops*(1-0.75*lr)))}; }
 
@@ -888,15 +971,17 @@ function sendArmy(src,tgt,amount,extra,formation){ amount=Math.min(amount,src.tr
   const terr=TERR_SPEED[tgt.terr]||1, navalMul=naval?1.3:1;
   const srcTech=(S.nations[src.owner]||{}).tech, techSpeed=srcTech&&srcTech.logistics?0.87:1;
   const dur=Math.max(0.5,hexDist(src,tgt)*0.5*terr*navalMul*techSpeed*FORMATIONS[form].durMul);
-  S.armies.push({owner:src.owner,count:amount,fromId:src.id,toId:tgt.id,ox:src.cx,oy:src.cy,tx:tgt.cx,ty:tgt.cy,t:0,dur,extra:extra||1,formation:form}); }
+  if(tgt.owner!==src.owner&&src.owner==="player")S.everAttacked=true;
+  S.armies.push({owner:src.owner,count:amount,fromId:src.id,toId:tgt.id,ox:src.cx,oy:src.cy,tx:tgt.cx,ty:tgt.cy,t:0,dur,extra:extra||1,formation:form,naval}); }
 function arriveArmy(a){ const tgt=byId(a.toId); if(!tgt)return;
   if(tgt.owner===a.owner){ tgt.troops+=a.count; addFx("merge",tgt.cx,tgt.cy,a.owner); worldDirty=true; return; }
   if(tgt.b.shield){ delete tgt.b.shield; addFx("shield",tgt.cx,tgt.cy,tgt.owner);
     if(tgt.owner==="player")pushLog("🔰 Your shield repelled the assault on "+pName(tgt)+"!","good");
     else if(a.owner==="player")pushLog("🔰 "+pName(tgt)+"'s shield blocked your attack!","bad");
     worldDirty=true; return; }
-  const res=resolve(a.count,a.owner,tgt,a.extra,a.formation); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
+  const res=resolve(a.count,a.owner,tgt,a.extra,a.formation,a.naval); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
   if(res.win){ const prev=tgt.owner; tgt.owner=a.owner;tgt.troops=res.att;tgt.cap=tgt.cap&&false;
+    const attNatObj=S.nations[a.owner]; if(attNatObj&&attNatObj.hero){ attNatObj.hero.xp+=10; attNatObj.hero.level=1+Math.floor(attNatObj.hero.xp/100); }
     if(a.owner==="player"){pushLog("Captured "+pName(tgt)+".","good");sndCapture();} else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad"); }
   else { tgt.troops=res.def; if(a.owner==="player")pushLog("Attack on "+pName(tgt)+" failed.","bad"); }
   worldDirty=true; }
@@ -931,14 +1016,14 @@ function missileHit(m){ const center=byId(m.toId); if(!center)return;
   worldDirty=true; }
 
 /* ===== EFFECTS ===== */
-function addFx(type,x,y,owner,val){ const base=type==="boom"?1.0:type==="clash"?0.7:type==="shield"?0.65:type==="flak"?0.5:0.5;
+function addFx(type,x,y,owner,val){ const base=type==="boom"?1.0:type==="ping"?1.8:type==="clash"?0.7:type==="shield"?0.65:type==="flak"?0.5:0.5;
   S.fx.push({type,x,y,owner,val,age:0,life:SETTINGS.reduceMotion?base*0.4:base}); }
 
 /* ===== UPDATE LOOP ===== */
 function update(dt){ if(S.over)return; S.time+=dt;
   const humanIds = S.mp ? S.mp.allHumanRealIds : ["player"];
   humanIds.forEach(id=>{ const n=S.nations[id]; if(!n)return; const pr=ratesFor(id);
-    n.missileCD=Math.max(0,(n.missileCD||0)-dt);
+    n.missileCD=Math.max(0,(n.missileCD||0)-dt); n.spyCD=Math.max(0,(n.spyCD||0)-dt);
     n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt;
     if(n.food<0){ n.food=0; // starve slowly
       if(Math.random()<dt*0.4){ const pool=ownedCells(id).filter(c=>c.troops>0).sort((a,b)=>b.troops-a.troops); if(pool[0]){pool[0].troops--;worldDirty=true; if(id==="player")pushLog("A regiment starved!","bad");} } }
@@ -966,6 +1051,8 @@ function update(dt){ if(S.over)return; S.time+=dt;
                          : ownedCells("player").length/totalLand()*100;
     nat.gold+=(owned.length*0.5+1)*d.econ*S.econMul*escMul()*dt; nat.missileCD=Math.max(0,(nat.missileCD||0)-dt); nat.think-=dt; if(nat.think>0)return; nat.think=d.think*rnd(.8,1.2);
     aiAct(id,nat,owned,d,threat); });
+  // trade routes (solo/campaign: passive mutual income while a trade pact is active)
+  if(S.trades){ Object.keys(S.trades).forEach(id=>{ if(S.nations[id]){ S.nations.player.gold+=0.3*dt; S.nations[id].gold+=0.3*dt; } }); }
   // sea raiders
   S.raidTimer-=dt; if(S.raidTimer<=0){ S.raidTimer=rnd(3,6); seaRaid(); }
   // world events
@@ -974,9 +1061,10 @@ function update(dt){ if(S.over)return; S.time+=dt;
   if(S.fog){ S.fogTimer-=dt; if(S.fogTimer<=0){ S.fogTimer=0.4; computeFog(); worldDirty=true; } }
   // win/lose
   S.winTimer-=dt; if(S.winTimer<=0){ S.winTimer=1; checkGameOver(); }
+  recordSnap();
 }
 function fireEvent(){ const land=S.cells.filter(c=>c.land); if(!land.length)return;
-  const roll=Math.floor(Math.random()*5);
+  const roll=Math.floor(Math.random()*7);
   if(roll===0){ const t=land[Math.floor(Math.random()*land.length)]; if(!t.cap&&!t.site){ t.site="metals"; addFx("build",t.cx,t.cy,"player");
       pushLog("💰 Gold Rush! Rare Metals surface at "+t.col+"·"+t.row+".","good"); worldDirty=true; } }
   else if(roll===1){ const c0=land[Math.floor(Math.random()*land.length)]; let hit=0;
@@ -987,12 +1075,23 @@ function fireEvent(){ const land=S.cells.filter(c=>c.land); if(!land.length)retu
   else if(roll===3){ (S.mp?S.mp.allHumanRealIds:["player"]).forEach(id=>{ if(S.nations[id])S.nations[id].food+=25; });
       (S.mp?S.mp.allAiIds:["ai1","ai2","ai3"]).forEach(id=>{ if(S.nations[id])S.nations[id].gold+=20; });
       pushLog("🌾 A bumper harvest fills granaries across the world.","good"); }
-  else { const mine=ownedCells("player"); if(mine.length){ const t=mine[Math.floor(Math.random()*mine.length)]; t.troops+=4; addFx("merge",t.cx,t.cy,"player");
+  else if(roll===4){ const mine=ownedCells("player"); if(mine.length){ const t=mine[Math.floor(Math.random()*mine.length)]; t.troops+=4; addFx("merge",t.cx,t.cy,"player");
       pushLog("👥 Settlers arrive at "+pName(t)+" — +4 troops.","good"); worldDirty=true; } }
+  else if(roll===5){ const mtn=land.filter(c=>c.terr==="Mountains"&&!c.cap); if(mtn.length){ const c0=mtn[Math.floor(Math.random()*mtn.length)]; let hit=false;
+      S.cells.filter(c=>c.land&&!c.cap&&hexDist(c,c0)<=1).forEach(t=>{ if(t.troops>0){t.troops=Math.max(0,t.troops-Math.ceil(t.troops*0.3));hit=true;}
+        const bl=Object.keys(t.b).filter(k=>t.b[k]); if(bl.length&&Math.random()<0.5){delete t.b[bl[Math.floor(Math.random()*bl.length)]];hit=true;}
+        addFx("raid",t.cx,t.cy,"sea"); });
+      if(hit)pushLog("🌋 An earthquake shakes the mountains near "+c0.col+"·"+c0.row+" — buildings and garrisons damaged.","bad"); worldDirty=true; } }
+  else { const coasts=land.filter(c=>isCoastal(c)&&!c.cap); if(coasts.length){ const c0=coasts[Math.floor(Math.random()*coasts.length)]; let hit=false;
+      S.cells.filter(c=>c.land&&isCoastal(c)&&!c.cap&&hexDist(c,c0)<=2).forEach(t=>{ if(t.b.harbor&&Math.random()<0.6){delete t.b.harbor;hit=true;}
+        if(t.troops>0){t.troops=Math.max(0,t.troops-1);} addFx("ship",t.cx,t.cy,"sea"); });
+      if(hit)pushLog("🌀 A hurricane batters the coast near "+c0.col+"·"+c0.row+" — harbors destroyed.","bad");
+      else pushLog("🌀 A hurricane lashes the coast near "+c0.col+"·"+c0.row+".","bad"); worldDirty=true; } }
 }
 function aiAct(id,nat,owned,d,threat){
+  const pers=AI_PERSONALITIES[nat.personality]||AI_PERSONALITIES.turtle;
   // build
-  if(Math.random()<d.build){ const spot=owned[Math.floor(Math.random()*owned.length)];
+  if(Math.random()<d.build*pers.buildMul){ const spot=owned[Math.floor(Math.random()*owned.length)];
     if(Object.values(spot.b).filter(Boolean).length<MAXB){
       let pool=isCoastal(spot)&&d.harbor&&Math.random()<0.4?["harbor","factory","farm","fort","barracks"]:["factory","farm","fort","barracks","mine","fort"];
       if(d.missile)pool=pool.concat(["interceptor","shield","silo"]); else if(d.edge>1.05)pool=pool.concat(["interceptor","shield"]);
@@ -1013,7 +1112,7 @@ function aiAct(id,nat,owned,d,threat){
     let tg=neighbors(cell).filter(n=>n.land&&n.owner!==id&&isEnemyOwner(n.owner));
     if(!tg.length&&cell.b.harbor&&d.harbor){ tg=S.cells.filter(c=>c.land&&c.owner!==id&&isEnemyOwner(c.owner)&&isCoastal(c)&&hexDist(cell,c)<=3); }
     if(!tg.length)continue;
-    if(threat>35&&Math.random()<Math.min(1,d.aggr+(MODE[S.mode].aggr||0))){ const humanIds=S.mp?S.mp.allHumanRealIds:["player"]; const pt=tg.filter(t=>humanIds.includes(t.owner)); if(pt.length)tg=pt; }
+    if(threat>35&&Math.random()<Math.min(1,d.aggr*pers.aggrMul+(MODE[S.mode].aggr||0))){ const humanIds=S.mp?S.mp.allHumanRealIds:["player"]; const pt=tg.filter(t=>humanIds.includes(t.owner)); if(pt.length)tg=pt; }
     tg.sort((a,b)=>(a.troops*(1+defBonus(a)))-(b.troops*(1+defBonus(b))));
     const t=tg[0], commit=cell.troops-1, eff=t.troops*(1+defBonus(t));
     if(commit*d.edge>=eff*0.8){ sendArmy(cell,t,commit,d.edge); break; } } // one push per think
@@ -1024,6 +1123,36 @@ function buyTech(natId,key){ const nat=S.nations[natId]; if(!nat||!TECH[key])ret
   nat.gold-=TECH[key].c; nat.tech[key]=true; if(natId==="player")pushLog("🔬 Researched "+TECH[key].n+".","good"); worldDirty=true; }
 function doTech(key){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"tech",key}); return; }
   buyTech("player",key); renderPanel(); paint(); }
+/* ===== ESPIONAGE ===== */
+const SPY_COST=25, SPY_CD=15;
+function doSpyCore(natId,targetId){ const nat=S.nations[natId]; const tgt=byId(targetId);
+  if(!nat||!tgt||!tgt.land||tgt.owner===natId||tgt.owner==="neutral"||tgt.owner==="sea")return;
+  if((nat.spyCD||0)>0||nat.gold<SPY_COST)return;
+  nat.gold-=SPY_COST; nat.spyCD=SPY_CD;
+  const success=Math.random()<0.65;
+  if(!success){ if(natId==="player")pushLog("🕵 Your spy was caught infiltrating "+pName(tgt)+"!","bad");
+    else if(tgt.owner==="player")pushLog("🕵 A foreign spy was caught near "+pName(tgt)+".","good");
+    worldDirty=true; return; }
+  const roll = S.mp ? (1+Math.floor(Math.random()*2)) : Math.floor(Math.random()*3); // MP skips the fog-scout outcome (not synced)
+  if(roll===0){ S.spyReveal=S.spyReveal||{}; S.cells.forEach(c=>{ if(hexDist(c,tgt)<=3)S.spyReveal[c.id]=S.time+25; });
+    if(natId==="player")pushLog("🕵 Spy scouted the area around "+pName(tgt)+".","good"); }
+  else if(roll===1){ const bl=Object.keys(tgt.b).filter(k=>tgt.b[k]);
+    if(bl.length){ delete tgt.b[bl[Math.floor(Math.random()*bl.length)]];
+      if(natId==="player")pushLog("🕵 Spy sabotaged a building at "+pName(tgt)+"!","good");
+      else if(tgt.owner==="player")pushLog("🕵 A spy sabotaged a building at "+pName(tgt)+"!","bad"); }
+    else if(natId==="player")pushLog("🕵 Spy found nothing worth sabotaging.",""); }
+  else { const tgtNat=S.nations[tgt.owner]; const steal=Math.round((tgtNat.gold||0)*0.15); tgtNat.gold=Math.max(0,tgtNat.gold-steal); nat.gold+=steal;
+    if(natId==="player")pushLog("🕵 Spy stole "+steal+"g from "+(tgtNat.name||tgt.owner)+"!","good");
+    else if(tgt.owner==="player")pushLog("🕵 A spy stole "+steal+"g from you!","bad"); }
+  worldDirty=true; }
+function doSpy(targetId){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"spy",targetId}); return; }
+  doSpyCore("player",targetId); renderPanel(); paint(); }
+/* ===== HERO COMMANDER ===== */
+const HERO_COST=80;
+function doHeroCore(natId){ const nat=S.nations[natId]; if(!nat||nat.hero||nat.gold<HERO_COST)return;
+  nat.gold-=HERO_COST; nat.hero={xp:0,level:1}; if(natId==="player")pushLog("🎖 A Commander joins your ranks!","good"); worldDirty=true; }
+function doHero(){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"hero"}); return; }
+  doHeroCore("player"); renderPanel(); paint(); }
 /* ===== DIPLOMACY (solo/campaign: player <-> AI non-aggression pacts) ===== */
 function proposePeace(nationId){ const nat=S.nations[nationId]; if(!nat)return;
   if(S.pacts&&S.pacts[nationId]){ delete S.pacts[nationId]; pushLog("💔 You broke the peace with "+nat.name+".","bad"); renderPanel(); return; }
@@ -1031,6 +1160,11 @@ function proposePeace(nationId){ const nat=S.nations[nationId]; if(!nat)return;
   const accept=Math.random() < Math.max(0.1, 1-threat/70);
   if(accept){ S.pacts[nationId]=true; showToast("🤝 "+nat.name+" accepts your peace offer."); pushLog("🤝 Peace made with "+nat.name+".","good"); }
   else { showToast("❌ "+nat.name+" rejects your offer."); pushLog(nat.name+" rejected your peace offer.","bad"); }
+  renderPanel(); }
+function proposeTrade(nationId){ if(!S.pacts||!S.pacts[nationId])return; const nat=S.nations[nationId]; if(!nat)return;
+  S.trades=S.trades||{};
+  if(S.trades[nationId]){ delete S.trades[nationId]; pushLog("📦 Trade route with "+nat.name+" closed.",""); }
+  else { S.trades[nationId]=true; pushLog("📦 Trade route opened with "+nat.name+".","good"); }
   renderPanel(); }
 function seaRaid(){ const coasts=S.cells.filter(c=>c.land&&isCoastal(c)&&!c.cap&&(c.owner==="player"||c.owner.startsWith("ai")));
   if(!coasts.length)return; const cell=coasts[Math.floor(Math.random()*coasts.length)];
@@ -1041,6 +1175,7 @@ function seaRaid(){ const coasts=S.cells.filter(c=>c.land&&isCoastal(c)&&!c.cap&
   else{ const bl=Object.keys(cell.b).filter(k=>cell.b[k]); if(bl.length&&Math.random()<.4){delete cell.b[bl[0]]; if(cell.owner==="player")pushLog("Raiders razed your coast.","sea");} }
   worldDirty=true; }
 function checkGameOver(){
+  if(MODE[S.mode].sandbox)return;
   if(!S.mp){
     const cap=byId(S.playerCapitalId); const pl=ownedCells("player").length,tot=totalLand();
     if(!cap||cap.owner!=="player")return endGame(false,"Your capital has fallen. The Dominion is broken.");
@@ -1100,7 +1235,7 @@ function onPick(cell){ if(S.over||!cell)return;
       clearTimeout(S.attackConfirmTimer); S.attackConfirmTimer=setTimeout(()=>{S.attackConfirmId=null;},4000);
       showToast("⚔ Click "+pName(cell)+" again to confirm the attack"); paint(); return; }
     S.attackConfirmId=null;
-    if(isAttack&&S.pacts&&S.pacts[cell.owner]){ delete S.pacts[cell.owner]; pushLog("💔 Peace with "+S.nations[cell.owner].name+" is broken!","bad"); }
+    if(isAttack&&S.pacts&&S.pacts[cell.owner]){ delete S.pacts[cell.owner]; if(S.trades)delete S.trades[cell.owner]; pushLog("💔 Peace with "+S.nations[cell.owner].name+" is broken!","bad"); }
     const amount=Math.min(S.deploy,src.troops), formation=S.deployFormation||"standard";
     if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"deploy",fromId:src.id,toId:cell.id,amount,formation}); }
     else { sendArmy(src,cell,amount,1,formation); if(!S.deployLock)S.deploy=byId(S.selected).troops; }
@@ -1181,6 +1316,8 @@ function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
       for(let k=0;k<6;k++){const a=k/6*7+p*3;ctx.fillStyle="rgba(255,220,120,"+(1-p)+")";ctx.beginPath();ctx.arc(fx.x+Math.cos(a)*r,fx.y+Math.sin(a)*r,1.6,0,7);ctx.fill();} }
     else if(fx.type==="build"){ const r=4+p*16;ctx.strokeStyle="rgba(120,180,90,"+(1-p)+")";ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); }
     else if(fx.type==="merge"){ const r=3+p*12;ctx.strokeStyle="rgba(127,192,240,"+(1-p)+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); }
+    else if(fx.type==="ping"){ const r=6+p*30; ctx.strokeStyle="rgba(255,216,115,"+(1-p)*0.9+")";ctx.lineWidth=3;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke();
+      ctx.font="14px serif";ctx.textAlign="center";ctx.globalAlpha=1-p;ctx.fillText("📢",fx.x,fx.y-r-4);ctx.globalAlpha=1; }
     else if(fx.type==="ship"){ ctx.fillStyle="#20323d";ctx.fillRect(fx.x-5,fx.y-2,10,4); }
     else if(fx.type==="raid"){ const r=3+p*14;ctx.strokeStyle="rgba(224,145,127,"+(1-p)+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); } });
   ctx.restore(); renderMinimap(); }
@@ -1279,21 +1416,32 @@ function renderPanel(){ const title=document.getElementById("ppTitle"),tag=docum
         h+=`<button class="bbtn ${owned?'owned':''}" data-tech="${k}" ${owned||nn.gold<td.c?'disabled':''}>
           <span class="bt">${td.i} ${td.n}${owned?' ✓':''}</span><small>${td.d}</small><span class="cost">${owned?'Researched':td.c+'g'}</span></button>`; });
       h+=`</div>`;
+      h+=`<div class="prow" style="margin-top:10px"><span class="k">🎖 Commander</span><span class="v"></span></div>`;
+      if(nn.hero)h+=`<div class="prow"><span class="k">Level ${nn.hero.level} (+${nn.hero.level*3}% attack)</span><span class="v">${nn.hero.xp%100}/100 xp</span></div>`;
+      else h+=`<div class="buildgrid"><button class="bbtn full" data-hero="1" ${nn.gold<HERO_COST?'disabled':''} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">🎖 Recruit Commander</span><span class="cost">${HERO_COST}g</span></button></div>`;
     }
   } else { h+=`<div class="hint" style="border-color:var(--crimson);background:rgba(152,40,31,.08);color:var(--crimson)">${c.owner==='neutral'?t("Unclaimed")+'.':t("Held by")+' '+(n?n.name:t("a rival"))+'.'} ${t("Send an army from an adjacent tile you own, or 🚀 missile it.")}</div>`;
+    if(n&&n.personality&&AI_PERSONALITIES[n.personality])h+=`<div class="prow"><span class="k">Disposition</span><span class="v">${AI_PERSONALITIES[n.personality].i} ${AI_PERSONALITIES[n.personality].n}</span></div>`;
     if(!S.mp&&!iAmSpectator&&c.owner&&c.owner.startsWith("ai")){
       const atPeace=S.pacts&&S.pacts[c.owner];
       h+=atPeace ? `<button class="btn full" style="margin-top:8px;width:100%" data-diplo="${c.owner}">💔 Break Peace with ${n.name}</button>`
                  : `<button class="btn full" style="margin-top:8px;width:100%" data-diplo="${c.owner}">🤝 Propose Peace with ${n.name}</button>`;
+      if(atPeace)h+=`<button class="btn full" style="margin-top:6px;width:100%" data-trade="${c.owner}">${S.trades&&S.trades[c.owner]?'📦 Close Trade Route':'📦 Open Trade Route'}</button>`;
+    }
+    if(!iAmSpectator&&c.owner&&c.owner!=="neutral"){ const myN=S.nations.player, spyCd=Math.ceil(myN.spyCD||0);
+      h+=`<button class="btn full" style="margin-top:6px;width:100%" data-spy="${c.id}" ${(myN.gold<SPY_COST||spyCd>0)?'disabled':''}>🕵 Send Spy (${SPY_COST}g)${spyCd>0?' — '+spyCd+'s':''}</button>`;
     } }
   body.innerHTML=h; }
-function updatePanelLive(){ const c=S.selected?byId(S.selected):null; if(!c||c.owner!=="player")return;
+function updatePanelLive(){ const c=S.selected?byId(S.selected):null;
+  document.querySelectorAll("[data-spy]").forEach(btn=>{ btn.disabled=S.nations.player.gold<SPY_COST||(S.nations.player.spyCD||0)>0; });
+  if(!c||c.owner!=="player")return;
   const nn=S.nations.player,pr=playerRates(),slots=MAXB-Object.keys(c.b).filter(k=>c.b[k]).length;
   document.querySelectorAll("#bgrid .bbtn").forEach(btn=>{ const k=btn.dataset.bk; btn.disabled=!(slots>0&&nn.gold>=B[k].c); });
   const rc=nn.perk==="agrarian"?2:3;
   const r1=document.querySelector('[data-rec="1"]'),r5=document.querySelector('[data-rec="5"]');
   if(r1)r1.disabled=!(nn.gold>=rc&&pr.troops<pr.armyCap); if(r5)r5.disabled=!(nn.gold>=rc*5&&pr.troops<pr.armyCap);
-  document.querySelectorAll("[data-tech]").forEach(btn=>{ const k=btn.dataset.tech; if(!(nn.tech&&nn.tech[k]))btn.disabled=nn.gold<TECH[k].c; }); }
+  document.querySelectorAll("[data-tech]").forEach(btn=>{ const k=btn.dataset.tech; if(!(nn.tech&&nn.tech[k]))btn.disabled=nn.gold<TECH[k].c; });
+  const heroBtn=document.querySelector("[data-hero]"); if(heroBtn)heroBtn.disabled=nn.gold<HERO_COST; }
 function pushLog(m,cls){ S.log.unshift({t:Math.floor(S.time),m,cls:cls||""}); if(S.log.length>20)S.log.pop();
   document.getElementById("logfeed").innerHTML=S.log.slice(0,10).map(l=>`<span class="logline ${l.cls}"><span class="tag">${l.t}s</span>${l.m}</span>`).join(""); }
 
@@ -1312,12 +1460,15 @@ function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
 function endGame(win,text){ S.over=true; document.getElementById("endTitle").textContent=win?t("Victory"):t("Defeat");
   document.getElementById("endTitle").style.color=win?"var(--good)":"var(--crimson)";
   document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false;
-  recordHistory(win); if(win&&S.campaignId)setCampaignComplete(S.campaignId); clearSave(); return true; }
+  recordHistory(win); if(win&&S.campaignId)setCampaignComplete(S.campaignId); checkAchievements(win); clearSave(); return true; }
 function recordHistory(win){ try{
   const hist=JSON.parse(localStorage.getItem("dominion_history")||"[]");
-  hist.unshift({date:Date.now(),win,mode:S.mode,diff:S.diff,perk:S.nations.player.perk,mp:!!S.mp,teamSize:S.mp?Math.max(1,Object.values(S.mp.teamOf).filter(t=>t===S.mp.myTeam).length):0,duration:Math.round(S.time)});
+  hist.unshift({date:Date.now(),win,mode:S.mode,diff:S.diff,perk:S.nations.player.perk,mp:!!S.mp,teamSize:S.mp?Math.max(1,Object.values(S.mp.teamOf).filter(t=>t===S.mp.myTeam).length):0,duration:Math.round(S.time),replay:(S.replaySnaps||[]).slice(-40)});
   localStorage.setItem("dominion_history",JSON.stringify(hist.slice(0,50)));
 }catch(e){} }
+function recordSnap(){ if(!S)return; if(S.lastSnapT!=null&&S.time-S.lastSnapT<14)return; S.lastSnapT=S.time;
+  const land={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; land[id]=ownedCells(id).length; });
+  S.replaySnaps=S.replaySnaps||[]; S.replaySnaps.push({t:Math.round(S.time),land}); if(S.replaySnaps.length>40)S.replaySnaps.shift(); }
 
 /* ===== SETTINGS ===== */
 const SETTINGS_DEFAULT={sound:true,volume:70,reduceMotion:false,autoPause:true,confirmAttack:false};
@@ -1363,7 +1514,8 @@ function saveGameState(){ if(!S||S.mp||S.over)return;
       time:S.time,mode:S.mode,diff:S.diff,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,
       visible:S.fog?Array.from(S.visible):[],explored:S.fog?Array.from(S.explored):[],
       raidTimer:S.raidTimer,eventTimer:S.eventTimer,log:S.log,deploy:S.deploy,selected:S.selected,deployLock:S.deployLock,
-      campaignId:S.campaignId||null,pacts:S.pacts||{},savedAt:Date.now()};
+      campaignId:S.campaignId||null,pacts:S.pacts||{},trades:S.trades||{},spyReveal:S.spyReveal||{},everAttacked:!!S.everAttacked,
+      replaySnaps:S.replaySnaps||[],lastSnapT:S.lastSnapT,savedAt:Date.now()};
     localStorage.setItem("dominion_save",JSON.stringify(data));
   }catch(e){} }
 function clearSave(){ try{localStorage.removeItem("dominion_save");}catch(e){} }
@@ -1375,7 +1527,8 @@ function loadGameState(){
      selected:data.selected,deploy:data.deploy||0,deployLock:!!data.deployLock,missileMode:false,over:false,
      time:data.time||0,speed:1,log:data.log||[],raidTimer:data.raidTimer||4,winTimer:1,eventTimer:data.eventTimer||30,fogTimer:0,
      cam:{x:0,y:0,scale:1},diff:data.diff,mode:data.mode,fog:!!data.fog,winFrac:data.winFrac,econMul:data.econMul,
-     visible:new Set(data.visible||[]),explored:new Set(data.explored||[]),landCount:data.landCount,campaignId:data.campaignId||null,pacts:data.pacts||{}};
+     visible:new Set(data.visible||[]),explored:new Set(data.explored||[]),landCount:data.landCount,campaignId:data.campaignId||null,pacts:data.pacts||{},
+     trades:data.trades||{},spyReveal:data.spyReveal||{},everAttacked:!!data.everAttacked,replaySnaps:data.replaySnaps||[],lastSnapT:data.lastSnapT!=null?data.lastSnapT:null};
   for(let r=0;r<ROWS;r++)S.grid[r]=[];
   data.cells.forEach(pc=>{ const ct=hexCenter(pc.col,pc.row);
     const cell={id:pc.col+"_"+pc.row,col:pc.col,row:pc.row,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
@@ -1403,11 +1556,43 @@ function buildHistoryModal(){
     <div class="spod"><b>${total?Math.round(wins/total*100):0}%</b><span>Win Rate</span></div>
     <div class="spod"><b>${favMode&&MODE[favMode]?MODE[favMode].i:'–'}</b><span>Top Mode</span></div>
     <div class="spod"><b>${favPerk&&PERKS[favPerk]?PERKS[favPerk].i:'–'}</b><span>Top Faction</span></div>`;
-  document.getElementById("histList").innerHTML = hist.length ? hist.map(h=>`<div class="histrow"><span class="hw ${h.win?'win':'loss'}"></span>
+  document.getElementById("histList").innerHTML = hist.length ? hist.map((h,i)=>`<div class="histrow"><span class="hw ${h.win?'win':'loss'}"></span>
     <span class="hmode">${MODE[h.mode]?MODE[h.mode].i:''} ${MODE[h.mode]?t(MODE[h.mode].n):h.mode}${h.mp?' 🌐 '+h.teamSize+'v'+h.teamSize:''}</span>
-    <span class="hmeta">${DIFF[h.diff]?t(DIFF[h.diff].n):h.diff} · ${PERKS[h.perk]?PERKS[h.perk].i:''} · ${fmtDuration(h.duration)} · ${new Date(h.date).toLocaleDateString()}</span></div>`).join("")
+    <span class="hmeta">${DIFF[h.diff]?t(DIFF[h.diff].n):h.diff} · ${PERKS[h.perk]?PERKS[h.perk].i:''} · ${fmtDuration(h.duration)} · ${new Date(h.date).toLocaleDateString()}</span>
+    ${h.replay&&h.replay.length>1?`<button class="btn ghost" style="padding:3px 8px;font-size:10.5px" data-replay="${i}">▶</button>`:''}</div>`).join("")
     : `<div class="muted" style="text-align:center;padding:20px">No games played yet.</div>`;
+  document.querySelectorAll("#histList [data-replay]").forEach(b=>b.addEventListener("click",()=>{
+    openReplay(hist[+b.dataset.replay].replay); }));
+  const code=myStatsCode(); const inp=document.getElementById("statCodeOut"); if(inp)inp.value=code;
 }
+/* ===== SHAREABLE STATS CODE (no accounts — a personal bragging-rights export) ===== */
+function myStatsCode(){
+  let hist=[]; try{hist=JSON.parse(localStorage.getItem("dominion_history")||"[]");}catch(e){}
+  const wins=hist.filter(h=>h.win).length;
+  const fastest=hist.filter(h=>h.win).reduce((m,h)=>Math.min(m,h.duration),Infinity);
+  const data={v:1,games:hist.length,wins,fastest:isFinite(fastest)?fastest:0};
+  try{ return btoa(encodeURIComponent(JSON.stringify(data))); }catch(e){ return ""; } }
+function decodeStatsCode(code){ try{ return JSON.parse(decodeURIComponent(atob(code.trim()))); }catch(e){ return null; } }
+function compareStatsCode(){ const raw=(document.getElementById("statCodeIn").value||"").trim(); const out=document.getElementById("statCodeCompare");
+  if(!raw){ out.textContent=""; return; }
+  const theirs=decodeStatsCode(raw); if(!theirs||theirs.v!==1){ out.textContent="Not a valid stats code."; return; }
+  const mine=decodeStatsCode(myStatsCode());
+  out.innerHTML=`<div class="statsummary" style="margin-top:8px">
+    <div class="spod"><b>${mine.games} / ${theirs.games}</b><span>Games (you/them)</span></div>
+    <div class="spod"><b>${mine.wins} / ${theirs.wins}</b><span>Wins (you/them)</span></div>
+    <div class="spod"><b>${mine.fastest||'–'} / ${theirs.fastest||'–'}</b><span>Fastest win (s)</span></div></div>`; }
+/* ===== REPLAY VIEWER (land-count-over-time graph, not a full re-simulation) ===== */
+function openReplay(snaps){ drawReplay(snaps); document.getElementById("replayOverlay").hidden=false; }
+function drawReplay(snaps){ const cv=document.getElementById("replayCanvas"); if(!cv)return; const g=cv.getContext("2d"); const w=cv.width,h=cv.height;
+  g.clearRect(0,0,w,h); if(!snaps||!snaps.length){ document.getElementById("replayLegend").innerHTML=""; return; }
+  const ids=Object.keys(snaps[snaps.length-1].land);
+  const maxLand=Math.max(1,...snaps.flatMap(s=>ids.map(id=>s.land[id]||0)));
+  const others=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const palette={player:PLAYER_COLOR}; let oi=0;
+  ids.forEach(id=>{ if(!palette[id])palette[id]=others[(oi++)%others.length]; });
+  ids.forEach(id=>{ g.beginPath(); snaps.forEach((s,i)=>{ const x=i/Math.max(1,snaps.length-1)*(w-20)+10, y=h-10-(s.land[id]||0)/maxLand*(h-20);
+      if(i===0)g.moveTo(x,y); else g.lineTo(x,y); }); g.strokeStyle=palette[id]; g.lineWidth=2.2; g.stroke(); });
+  document.getElementById("replayLegend").innerHTML=ids.map(id=>`<span style="display:inline-flex;align-items:center;gap:4px;margin-right:10px;font-size:11px">
+    <span style="width:9px;height:9px;border-radius:50%;background:${palette[id]};display:inline-block"></span>${id==='player'?'You':id}</span>`).join(""); }
 
 /* ===== CAMPAIGN (fixed, curated maps via a seeded RNG) ===== */
 function mulberry32(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
@@ -1433,7 +1618,7 @@ function buildCampaignModal(){
 }
 
 /* ===== MULTIPLAYER: room codes, lobby, PeerJS wiring ===== */
-const MPLOBBY={role:null,code:null,name:"",teamSize:1,mode:"conquest",diff:"medium",fog:false,
+const MPLOBBY={role:null,code:null,name:"",teamSize:1,mode:"conquest",diff:"medium",fog:false,worldSize:"medium",goldMul:1,
   players:[],peer:null,conns:new Map(),peerToRid:new Map(),conn:null,myRid:null,started:false,
   spectators:[],specConns:new Map(),spectating:false};
 function genRoomCode(){ const CH="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<4;i++)s+=CH[Math.floor(Math.random()*CH.length)]; return s; }
@@ -1520,7 +1705,7 @@ function mpHostOnData(conn,data){
 }
 function mpHostStart(){
   MPLOBBY.started=true;
-  const lobby={teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,perk:p.perk}))};
+  const lobby={teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,worldSize:MPLOBBY.worldSize,goldMul:MPLOBBY.goldMul,players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,perk:p.perk}))};
   startMultiplayerHost(lobby);
 }
 function mpGuestJoin(code,name,spectate){
@@ -1607,7 +1792,7 @@ function sendTeamPing(text){ if(!S||!S.mp||S.mp.role==="spectator")return; const
   if(S.mp.role==="guest"){ try{S.mp.conn.send({type:"chat",text,cellId});}catch(e){} }
   else { mpHostRelayChat(null,{text,cellId}); } }
 function showPing(fromName,text,cellId){ showToast("📢 "+fromName+": "+text); beep(740,0.08);
-  if(cellId){ const c=byId(cellId); if(c)addFx("clash",c.cx,c.cy,"player"); } }
+  if(cellId){ const c=byId(cellId); if(c)addFx("ping",c.cx,c.cy,"player"); } }
 
 /* ===== CANVAS / INPUT ===== */
 function resizeCanvas(){ if(!canvas)return; const dpr=window.devicePixelRatio||1;
@@ -1630,7 +1815,8 @@ function initInput(){ let down=false,moved=false,sx=0,sy=0,px=0,py=0;
 function zoomBtn(f){ const vw=(canvas.clientWidth-panelW())/2,vh=canvas.clientHeight/2,w=screenToWorld(vw,vh);
   S.cam.scale=Math.max(0.45,Math.min(2.4,S.cam.scale*f)); S.cam.x=vw-w.x*S.cam.scale; S.cam.y=vh-w.y*S.cam.scale; }
 
-let mpSelSize=1, mpSelMode="conquest", mpSelDiff="medium";
+let mpSelSize=1, mpSelMode="conquest", mpSelDiff="medium", mpSelWorldSize="medium", mpSelGold=1;
+const GOLD_PRESETS={0.5:"Poor",1:"Normal",2:"Rich"};
 function buildMpHostOptions(){
   document.getElementById("mpTeamSizes").innerHTML=[1,2,3,4].map(n=>`<button class="tschip ${n===mpSelSize?'sel':''}" data-n="${n}">${n}v${n}<small>${n*2} players</small></button>`).join("");
   document.querySelectorAll("#mpTeamSizes .tschip").forEach(b=>b.addEventListener("click",()=>{mpSelSize=+b.dataset.n;buildMpHostOptions();}));
@@ -1638,6 +1824,10 @@ function buildMpHostOptions(){
   document.querySelectorAll("#mpModePick .dchip").forEach(b=>b.addEventListener("click",()=>{mpSelMode=b.dataset.m;buildMpHostOptions();}));
   document.getElementById("mpDiffPick").innerHTML=Object.keys(DIFF).map(k=>`<button class="dchip ${k===mpSelDiff?'sel':''}" data-d="${k}"><div class="dn">${t(DIFF[k].n)}</div><div class="dd">${t(DIFF[k].d)}</div></button>`).join("");
   document.querySelectorAll("#mpDiffPick .dchip").forEach(b=>b.addEventListener("click",()=>{mpSelDiff=b.dataset.d;buildMpHostOptions();}));
+  document.getElementById("mpSizePick").innerHTML=Object.keys(WORLD_SIZES).map(k=>`<button class="dchip ${k===mpSelWorldSize?'sel':''}" data-sz="${k}" style="min-width:90px;padding:6px 10px"><div class="dn" style="font-size:12px;text-transform:capitalize">${k}</div></button>`).join("");
+  document.querySelectorAll("#mpSizePick .dchip").forEach(b=>b.addEventListener("click",()=>{mpSelWorldSize=b.dataset.sz;buildMpHostOptions();}));
+  document.getElementById("mpGoldPick").innerHTML=Object.keys(GOLD_PRESETS).map(k=>`<button class="dchip ${+k===mpSelGold?'sel':''}" data-g="${k}" style="min-width:90px;padding:6px 10px"><div class="dn" style="font-size:12px">${GOLD_PRESETS[k]}</div></button>`).join("");
+  document.querySelectorAll("#mpGoldPick .dchip").forEach(b=>b.addEventListener("click",()=>{mpSelGold=+b.dataset.g;buildMpHostOptions();}));
 }
 function mpShowTab(tab){
   document.querySelectorAll("#mpTabs .mptab").forEach(b=>b.classList.toggle("sel",b.dataset.t===tab));
@@ -1649,14 +1839,16 @@ function mpShowTab(tab){
 function mpGetName(){ const inp=document.getElementById("mpNameInput"); let name=(inp.value||"").trim().slice(0,16);
   if(!name){name="Player"+Math.floor(rnd(100,999));} try{localStorage.setItem("dominion_mpname",name);}catch(e){} return name; }
 
-let selDiff="medium", selMode="conquest";
+let selDiff="medium", selMode="conquest", selWorldSize="medium";
 function buildStart(){
   document.getElementById("modePick").innerHTML=Object.keys(MODE).map(k=>`<button class="dchip ${k===selMode?'sel':''}" data-m="${k}"><div class="dn">${MODE[k].i} ${t(MODE[k].n)}</div><div class="dd">${t(MODE[k].d)}</div></button>`).join("");
   document.querySelectorAll("#modePick .dchip").forEach(b=>b.addEventListener("click",()=>{selMode=b.dataset.m;buildStart();}));
+  document.getElementById("sizePick").innerHTML=Object.keys(WORLD_SIZES).map(k=>`<button class="dchip ${k===selWorldSize?'sel':''}" data-sz="${k}" style="min-width:90px;padding:6px 10px"><div class="dn" style="font-size:12px;text-transform:capitalize">${k}</div></button>`).join("");
+  document.querySelectorAll("#sizePick .dchip").forEach(b=>b.addEventListener("click",()=>{selWorldSize=b.dataset.sz;buildStart();}));
   document.getElementById("diffPick").innerHTML=Object.keys(DIFF).map(k=>`<button class="dchip ${k===selDiff?'sel':''}" data-d="${k}"><div class="dn">${t(DIFF[k].n)}</div><div class="dd">${t(DIFF[k].d)}</div></button>`).join("");
   document.querySelectorAll("#diffPick .dchip").forEach(b=>b.addEventListener("click",()=>{selDiff=b.dataset.d;buildStart();}));
   document.getElementById("factionPick").innerHTML=Object.keys(PERKS).map(k=>`<button class="fcard" data-p="${k}"><div class="fn"><span class="fi">${PERKS[k].i}</span>${t(PERKS[k].n)}</div><div class="fb">${t(PERKS[k].d)}</div></button>`).join("");
-  document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked)));
+  document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked,null,selWorldSize)));
   const cb=document.getElementById("continueBtn"); if(cb)cb.hidden=!hasSave();
 }
 function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2d");
@@ -1679,6 +1871,9 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
     if(b.dataset.bk)doBuild(b.dataset.bk); else if(b.dataset.rec)doRecruit(+b.dataset.rec);
     else if(b.dataset.lock){ S.deployLock=!S.deployLock; renderPanel(); }
     else if(b.dataset.diplo)proposePeace(b.dataset.diplo);
+    else if(b.dataset.trade)proposeTrade(b.dataset.trade);
+    else if(b.dataset.spy)doSpy(b.dataset.spy);
+    else if(b.dataset.hero)doHero();
     else if(b.dataset.tech)doTech(b.dataset.tech);
     else if(b.dataset.form){ S.deployFormation=b.dataset.form; renderPanel(); } });
   pp.addEventListener("input",e=>{ if(!S)return; if(e.target.id==="depSlider"){ S.deploy=+e.target.value; const dv=document.getElementById("depVal"); if(dv)dv.textContent=e.target.value; } });
@@ -1715,6 +1910,12 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
   document.getElementById("histClearBtn").addEventListener("click",()=>{ try{localStorage.removeItem("dominion_history");}catch(e){} buildHistoryModal(); });
   document.getElementById("campaignBtn").addEventListener("click",()=>{ document.getElementById("startOverlay").hidden=true; buildCampaignModal(); document.getElementById("campaignOverlay").hidden=false; });
   document.getElementById("campBackBtn").addEventListener("click",()=>{ document.getElementById("campaignOverlay").hidden=true; document.getElementById("startOverlay").hidden=false; });
+  document.getElementById("achievementsBtn").addEventListener("click",()=>{ buildAchievementsModal(); document.getElementById("achievementsOverlay").hidden=false; });
+  document.getElementById("achCloseBtn").addEventListener("click",()=>document.getElementById("achievementsOverlay").hidden=true);
+  document.getElementById("replayCloseBtn").addEventListener("click",()=>document.getElementById("replayOverlay").hidden=true);
+  document.getElementById("statCodeCopyBtn").addEventListener("click",()=>{ const inp=document.getElementById("statCodeOut");
+    inp.select(); try{ navigator.clipboard.writeText(inp.value); showToast("📋 Stats code copied!"); }catch(e){ try{document.execCommand("copy");showToast("📋 Stats code copied!");}catch(e2){} } });
+  document.getElementById("statCodeCmpBtn").addEventListener("click",compareStatsCode);
 
   // ---- multiplayer entry / lobby ----
   document.getElementById("mpEnterBtn").addEventListener("click",()=>{
@@ -1727,7 +1928,8 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
     document.getElementById("mpOverlay").hidden=true; document.getElementById("startOverlay").hidden=false; });
   document.getElementById("mpTabs").addEventListener("click",e=>{ const b=e.target.closest(".mptab"); if(b)mpShowTab(b.dataset.t); });
   document.getElementById("mpCreateBtn").addEventListener("click",()=>{
-    MPLOBBY.name=mpGetName(); MPLOBBY.teamSize=mpSelSize; MPLOBBY.mode=mpSelMode; MPLOBBY.diff=mpSelDiff; MPLOBBY.fog=false;
+    MPLOBBY.name=mpGetName(); MPLOBBY.teamSize=mpSelSize; MPLOBBY.mode=mpSelMode; MPLOBBY.diff=mpSelDiff;
+    MPLOBBY.fog=document.getElementById("mpFogChk").checked; MPLOBBY.worldSize=mpSelWorldSize; MPLOBBY.goldMul=mpSelGold;
     mpHostCreate(); });
   document.getElementById("mpJoinBtn").addEventListener("click",()=>{
     const code=(document.getElementById("mpCodeInput").value||"").trim();
