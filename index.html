@@ -3,6 +3,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Spectral:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <style>
   :root{
     --parchment:#e7d9ba; --parchment-2:#f2e8cf; --parchment-3:#ddcca6; --inset:#d3c099;
@@ -141,6 +142,49 @@
     .maphud{display:none;} footer.log{padding:5px 10px 7px;}
   }
   @media(max-width:430px){ .factions{grid-template-columns:1fr;} .diffs{flex-direction:column;align-items:stretch;} .modal{padding:18px 16px;} .modal h2{font-size:24px;} }
+
+  /* ---- settings / gear ---- */
+  #settingsBtn{width:38px;flex:none;text-align:center;padding-left:0;padding-right:0;font-size:15px;}
+  .setgrid{display:flex;flex-direction:column;gap:14px;margin:4px 0 6px;}
+  .setrow{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:10px 12px;border:1px solid var(--line-soft);border-radius:8px;background:var(--parchment);}
+  .setrow .sl{font-size:13.5px;font-weight:600;} .setrow .sd{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+  .toggle{position:relative;width:42px;height:24px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--inset);cursor:pointer;}
+  .toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3);transition:left .15s;}
+  .toggle.on{background:var(--crimson);border-color:#7a2019;} .toggle.on::after{left:20px;}
+  .setrow input[type=range]{width:110px;accent-color:var(--crimson);}
+  .langgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
+  .langbtn{border:1.5px solid var(--line);border-radius:8px;padding:7px 5px;background:var(--parchment);font-size:12px;text-align:center;}
+  .langbtn.sel{border-color:var(--crimson);background:#fff2e2;}
+
+  /* ---- multiplayer ---- */
+  .mplink{display:block;text-align:center;font-size:12.5px;color:var(--sea-2);text-decoration:underline;cursor:pointer;margin:2px 0 14px;background:none;border:0;width:100%;font-family:inherit;}
+  .mptabs{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+  .mptab{border:1.5px solid var(--line);border-radius:8px;padding:7px 20px;background:var(--parchment);font-family:'Cinzel',serif;font-size:12.5px;letter-spacing:.06em;}
+  .mptab.sel{border-color:var(--crimson);background:#fff2e2;color:var(--crimson);}
+  .teamsizes{display:flex;gap:9px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;}
+  .tschip{border:1.5px solid var(--line);border-radius:9px;padding:9px 16px;background:var(--parchment);font-family:'Cinzel',serif;font-size:14px;}
+  .tschip.sel{border-color:var(--crimson);background:#fff2e2;box-shadow:var(--shadow);}
+  .tschip small{display:block;font-family:'Spectral',serif;font-size:10px;color:var(--ink-soft);margin-top:2px;}
+  .mpname{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-family:inherit;font-size:13.5px;background:var(--parchment);margin-bottom:12px;box-sizing:border-box;}
+  .codebox{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
+  .codebox input{flex:1;max-width:220px;padding:10px 12px;border:1.5px solid var(--line);border-radius:8px;font-family:'Cinzel',serif;font-size:20px;letter-spacing:.3em;text-align:center;text-transform:uppercase;background:var(--parchment);}
+  .roomcode{text-align:center;font-family:'Cinzel',serif;font-size:34px;letter-spacing:.35em;color:var(--crimson);margin:6px 0 4px;}
+  .roomhint{text-align:center;font-size:12px;color:var(--ink-soft);margin-bottom:14px;}
+  .lobbylist{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:220px;overflow-y:auto;}
+  .lobbyrow{display:flex;align-items:center;gap:10px;padding:8px 11px;border:1px solid var(--line-soft);border-radius:8px;background:var(--parchment);}
+  .lobbyrow .ldot{width:11px;height:11px;border-radius:50%;flex:none;border:1px solid rgba(0,0,0,.3);}
+  .lobbyrow .lname{flex:1;font-size:13px;font-weight:600;}
+  .lobbyrow .lteam{font-size:11px;padding:3px 9px;border-radius:12px;border:1px solid var(--line);cursor:pointer;font-weight:600;}
+  .lobbyrow .lteam.A{background:#dbe9f5;color:#2e5e8c;} .lobbyrow .lteam.B{background:#f5dbdb;color:#98281f;}
+  .lobbyrow .lyou{font-size:10px;color:var(--ink-soft);}
+  .mpstatus{text-align:center;font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;min-height:16px;}
+  .mpstatus.err{color:var(--crimson);font-weight:600;}
+  .mpback{position:absolute;left:22px;top:20px;font-size:12px;}
+  .toastwrap{position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
+  .toast{background:rgba(28,49,64,.94);color:#f4ead0;padding:10px 18px;border-radius:9px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.15);animation:toastIn .25s ease-out;}
+  @keyframes toastIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+  .discbanner{position:fixed;top:0;left:0;right:0;z-index:90;background:var(--crimson);color:#f6ecd2;text-align:center;padding:10px;font-size:13px;font-weight:600;}
 </style>
 
 <div class="app" id="app" hidden>
@@ -154,7 +198,7 @@
         <button data-s="0">⏸</button><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="3">3×</button>
       </div>
       <button class="btn warn" id="missileBtn">🚀</button>
-      <select class="langsel" id="langSel" title="Language"></select>
+      <button class="btn ghost" id="settingsBtn" title="Settings">⚙</button>
       <button class="btn ghost" id="rulesBtn">Rules</button>
       <button class="btn ghost" id="leaveBtn" title="Leave game">Leave</button>
     </div>
@@ -170,6 +214,8 @@
   </main>
   <footer class="log"><div class="logfeed" id="logfeed"></div></footer>
 </div>
+<div class="toastwrap" id="toastwrap"></div>
+<div class="discbanner" id="discbanner" hidden></div>
 
 <div class="overlay" id="startOverlay">
   <div class="modal">
@@ -182,6 +228,60 @@
     <label class="fogtoggle"><input type="checkbox" id="fogChk"> <span id="fogText"><b>Fog of War</b> — the map beyond your borders stays hidden (more realistic)</span></label>
     <div class="steplbl">3 · Choose your faction — this begins the war</div>
     <div class="factions" id="factionPick"></div>
+    <button class="mplink" id="mpEnterBtn">🌐 Play Online with a Room Code (1v1 / 2v2 / 3v3 / 4v4) →</button>
+  </div>
+</div>
+
+<div class="overlay" id="mpOverlay" hidden>
+  <div class="modal" style="position:relative">
+    <button class="btn ghost mpback" id="mpBackBtn">← Back</button>
+    <h2 style="font-size:26px">🌐 Multiplayer</h2>
+    <div class="tagline" id="mpTagline">Play a real, live-synced match with friends using a short room code — no accounts needed.</div>
+    <div class="mptabs" id="mpTabs">
+      <button class="mptab sel" data-t="host">Host a Match</button>
+      <button class="mptab" data-t="join">Join with Code</button>
+    </div>
+    <input class="mpname" id="mpNameInput" maxlength="16" placeholder="Your name">
+
+    <div id="mpHostPane">
+      <div class="steplbl" id="mpStep1">Team size</div>
+      <div class="teamsizes" id="mpTeamSizes"></div>
+      <div class="steplbl" id="mpStep2">Choose a game mode</div>
+      <div class="diffs" id="mpModePick"></div>
+      <div class="steplbl" id="mpStep3">Bot difficulty (fills empty slots)</div>
+      <div class="diffs" id="mpDiffPick"></div>
+      <button class="btn primary full" id="mpCreateBtn" style="display:block;width:100%;padding:12px;margin-top:6px">Create Room</button>
+    </div>
+
+    <div id="mpJoinPane" hidden>
+      <div class="steplbl">Enter room code</div>
+      <div class="codebox"><input id="mpCodeInput" maxlength="4" placeholder="ABCD"></div>
+      <button class="btn primary full" id="mpJoinBtn" style="display:block;width:100%;padding:12px">Join Room</button>
+    </div>
+
+    <div id="mpLobbyPane" hidden>
+      <div class="roomcode" id="mpRoomCode"></div>
+      <div class="roomhint" id="mpRoomHint">Share this code — friends pick "Join with Code"</div>
+      <div class="lobbylist" id="mpLobbyList"></div>
+      <button class="btn primary full" id="mpStartBtn" style="display:block;width:100%;padding:12px" hidden>Start Match</button>
+    </div>
+    <div class="mpstatus" id="mpStatus"></div>
+  </div>
+</div>
+
+<div class="overlay" id="settingsOverlay" hidden>
+  <div class="modal" style="width:min(560px,100%)">
+    <h2 style="font-size:24px" id="settingsTitle">Settings</h2>
+    <div class="steplbl" id="setLangLbl">Language</div>
+    <div class="langgrid" id="setLangGrid"></div>
+    <div class="setgrid">
+      <div class="setrow"><div><div class="sl" id="setSoundLbl">Sound</div><div class="sd" id="setSoundDesc">Beeps for joins, captures, missiles</div></div>
+        <div style="display:flex;align-items:center;gap:10px"><input type="range" id="setVolume" min="0" max="100" value="70"><div class="toggle on" id="setSoundToggle"></div></div></div>
+      <div class="setrow"><div><div class="sl" id="setMotionLbl">Reduce Motion</div><div class="sd" id="setMotionDesc">Fewer animated effects</div></div><div class="toggle" id="setMotionToggle"></div></div>
+      <div class="setrow"><div><div class="sl" id="setPauseLbl">Auto-Pause</div><div class="sd" id="setPauseDesc">Pause when you switch tabs</div></div><div class="toggle on" id="setPauseToggle"></div></div>
+      <div class="setrow"><div><div class="sl" id="setConfirmLbl">Confirm Attacks</div><div class="sd" id="setConfirmDesc">Extra tap before attacking a tile</div></div><div class="toggle" id="setConfirmToggle"></div></div>
+    </div>
+    <div class="closebar"><button class="btn primary" id="settingsClose">Done</button></div>
   </div>
 </div>
 
@@ -427,7 +527,8 @@ const TR={
  }
 };
 function t(s){ if(LANG==="en"||s==null)return s; const d=TR[LANG]; return (d&&d[s]!=null)?d[s]:s; }
-function setLang(l){ LANG=l; try{localStorage.setItem("dominion_lang",l);}catch(e){} const ls=document.getElementById("langSel"); if(ls)ls.value=l; applyStatic(); if(typeof S!=="undefined"&&S){renderPanel();updateHeader();updateModebar();} buildStart(); }
+function setLang(l){ LANG=l; try{localStorage.setItem("dominion_lang",l);}catch(e){} applyStatic(); if(typeof S!=="undefined"&&S){renderPanel();updateHeader();updateModebar();}
+  buildStart(); if(document.getElementById("mpTeamSizes"))buildMpHostOptions(); if(!document.getElementById("settingsOverlay").hidden)buildSettingsModal(); }
 function applyStatic(){
   const sub=document.querySelector(".brand .sub"); if(sub)sub.textContent=t("Live World Conquest");
   const rb=document.getElementById("rulesBtn"); if(rb)rb.textContent=t("Rules");
@@ -475,8 +576,8 @@ function genWorld(){
       add(front.splice(idx,1)[0]); }
     if(mine.length>=5){conts.push({id:cid,cells:mine,size:mine.length});cid++;}
     else mine.forEach(c=>{c.land=false;c.cont=-1;}); }
-  // 6 continents spread out
-  [[5,5,22],[22,4,20],[6,14,18],[24,14,17],[14,9,16],[15,16,14]].forEach(([c,r,s])=>grow(c,r,s));
+  // up to 8 continents spread out (solo only ever uses the first 4; multiplayer up to 8 for 4v4)
+  [[5,5,22],[22,4,20],[6,14,18],[24,14,17],[14,9,16],[15,16,14],[2,10,13],[27,9,13]].forEach(([c,r,s])=>grow(c,r,s));
   // ~30 islands
   let islands=0,tries=0;
   while(islands<30&&tries++<1200){ const c=Math.floor(rnd(1,COLS-1)),r=Math.floor(rnd(1,ROWS-1)); const cell=cellAt(c,r);
@@ -541,16 +642,129 @@ function syncPanel(){ const a=document.querySelector("aside"); if(!a)return;
 function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas.clientHeight:560, pw=panelW();
   S.cam.x=(vw-pw)/2-cell.cx*S.cam.scale; S.cam.y=vh/2-cell.cy*S.cam.scale; }
 
+/* ===== MULTIPLAYER SETUP (host builds the match; guest deserializes it) ===== */
+function startMultiplayerHost(lobby){
+  const perk=pickAiPerk();
+  const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog;
+  S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
+     missileMode:false,over:false,time:0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:rnd(EVENT_MIN,EVENT_MAX),fogTimer:0,
+     cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,
+     visible:new Set(),explored:new Set(),landCount:0};
+  const conts=genWorld();
+  const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
+  const total=lobby.teamSize*2;
+  const bigs=conts.slice(0,total);
+  // shuffle which continent each slot gets (fair placement)
+  const contOrder=bigs.slice(); for(let i=contOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[contOrder[i],contOrder[j]]=[contOrder[j],contOrder[i]];}
+  const humans=lobby.players; // [{rid,name,team,peerId,isHost}]
+  const teamOf={}, allHumanRealIds=[], allAiIds=[];
+  humans.forEach((p,i)=>{ teamOf[p.rid]=p.team;
+    const isMe=p.rid==="player";
+    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:isMe?perk:pickAiPerk(),gold:50,food:45,missileCD:0,human:true};
+    const cap=nCap(contOrder[i]); cap.owner=p.rid;cap.troops=8;cap.cap=true;cap.b.factory=true;cap.b.barracks=true;
+    S.nations[p.rid].capitalId=cap.id; if(isMe){S.playerCapitalId=cap.id;} if(S.nations[p.rid].perk==="rocketeer")cap.b.silo=true;
+    allHumanRealIds.push(p.rid); });
+  const cperks=["warmonger","fortifier",null]; let aiCount=0;
+  for(let i=humans.length;i<total;i++){ const id="ai"+(++aiCount);
+    const teamLetter = i<lobby.teamSize?"A":"B"; teamOf[id]=teamLetter;
+    S.nations[id]={id,name:AI_NAMES[aiCount%5],color:AI_COLORS[(aiCount+2)%5],isPlayer:false,perk:cperks[aiCount%3],gold:30,think:rnd(1,DIFF[diff].think),missileCD:0};
+    const cap=nCap(contOrder[i]); cap.owner=id;cap.troops=7;cap.cap=true;cap.b.factory=true;cap.b.barracks=true; S.nations[id].capitalId=cap.id;
+    allAiIds.push(id); }
+  S.nations.sea={id:"sea",color:"#33586e"}; S.nations.neutral={id:"neutral",name:"Unclaimed",color:"#c3b288"};
+  S.cells.forEach(c=>{ if(c.land&&c.owner==="sea"){c.owner="neutral";c.troops=1+Math.floor(Math.random()*3);} });
+  const myTeam=teamOf.player;
+  S.mp={role:"host",myTeam,teamOf,allHumanRealIds,allAiIds,conns:MPLOBBY.conns,broadcastAcc:0,roomCode:lobby.code};
+  if(S.fog)computeFog();
+  S.selected=S.playerCapitalId; S.deploy=byId(S.playerCapitalId).troops;
+  pushLog("The world awakens — 🌐 "+lobby.teamSize+"v"+lobby.teamSize+" · "+MODE[mode].i+" "+t(MODE[mode].n)+" · "+t(DIFF[diff].n)+".","good");
+  document.getElementById("mpOverlay").hidden=true; document.getElementById("startOverlay").hidden=true; document.getElementById("app").hidden=false;
+  resizeCanvas(); worldDirty=true; renderPanel(); updateHeader(); syncPanel(); applyMpUiVisibility();
+  S.cam.scale=1.15; centerOn(byId(S.playerCapitalId));
+  // send each guest their own remapped init payload
+  MPLOBBY.conns.forEach((conn,peerId)=>{ const rid=MPLOBBY.peerToRid.get(peerId); if(!rid)return;
+    try{ conn.send({type:"init",payload:mpSerializeInit(rid)}); }catch(e){} });
+  lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
+}
+function pickAiPerk(){ const ks=Object.keys(PERKS); return ks[Math.floor(Math.random()*ks.length)]; }
+// Build the static (send-once) + dynamic (per-tick) payload from the HOST's own canonical id-space,
+// remapped so that `forRealId` becomes "player" for the RECIPIENT, and the host's own id becomes "__host__".
+function mpRemapId(id,forRealId){ if(id===forRealId)return "player"; if(id==="player")return "__host__"; return id; }
+function mpSerializeInit(forRealId){
+  const cells=S.cells.map(c=>c.land?{col:c.col,row:c.row,land:1,terr:c.terr,site:c.site,cap:c.cap,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b}:{col:c.col,row:c.row,land:0});
+  const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
+    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,human:!!n.human,capitalId:null}; });
+  // fix capitalId references after id remap (capitalId is a CELL id, unaffected — cells keep their own col_row ids)
+  Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const rid=mpRemapId(id,forRealId); nations[rid].capitalId=S.nations[id].capitalId; });
+  const teamOf={}; Object.keys(S.mp.teamOf).forEach(id=>{ teamOf[mpRemapId(id,forRealId)]=S.mp.teamOf[id]; });
+  const allHumanRealIds=S.mp.allHumanRealIds.map(id=>mpRemapId(id,forRealId));
+  const allAiIds=S.mp.allAiIds.map(id=>mpRemapId(id,forRealId));
+  return {cells,nations,teamOf,allHumanRealIds,allAiIds,myTeam:teamOf.player,diff:S.diff,mode:S.mode,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,time:S.time};
+}
+function initMultiplayerGuest(p){
+  S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
+     missileMode:false,over:false,time:p.time||0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:99999,fogTimer:0,
+     cam:{x:0,y:0,scale:1},diff:p.diff,mode:p.mode,fog:!!p.fog,winFrac:p.winFrac,econMul:p.econMul,
+     visible:new Set(),explored:new Set(),landCount:p.landCount};
+  for(let r=0;r<ROWS;r++){S.grid[r]=[];}
+  p.cells.forEach(pc=>{ const ct=hexCenter(pc.col,pc.row);
+    const cell={id:pc.col+"_"+pc.row,col:pc.col,row:pc.row,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
+      land:!!pc.land,cont:0,terr:pc.terr||"Plains",owner:pc.land?pc.owner:"sea",troops:pc.troops||0,b:pc.b||{},site:pc.site||null,cap:!!pc.cap};
+    S.grid[pc.row][pc.col]=cell; S.cells.push(cell); S.map[cell.id]=cell; });
+  Object.keys(p.nations).forEach(id=>{ S.nations[id]=Object.assign({},p.nations[id]); });
+  S.nations.sea={id:"sea",color:"#33586e"}; S.nations.neutral={id:"neutral",name:"Unclaimed",color:"#c3b288"};
+  S.playerCapitalId=S.nations.player.capitalId;
+  S.mp={role:"guest",myTeam:p.myTeam,teamOf:p.teamOf,allHumanRealIds:p.allHumanRealIds,allAiIds:p.allAiIds,conn:MPLOBBY.conn};
+  if(S.fog)computeFog();
+  S.selected=S.playerCapitalId; S.deploy=byId(S.playerCapitalId).troops;
+  pushLog("Joined the war as "+S.nations.player.name+".","good");
+  document.getElementById("mpOverlay").hidden=true; document.getElementById("startOverlay").hidden=true; document.getElementById("app").hidden=false;
+  resizeCanvas(); worldDirty=true; renderPanel(); updateHeader(); syncPanel(); applyMpUiVisibility();
+  S.cam.scale=1.15; centerOn(byId(S.playerCapitalId));
+  lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
+}
+function applyMpUiVisibility(){ const sp=document.getElementById("speed"); if(sp)sp.style.display=(S.mp&&S.mp.role==="guest")?"none":""; }
+// ---- host: apply an order coming from one connected guest ----
+function mpApplyOrder(actingNat,order){
+  if(order.kind==="build"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doBuildCore(c,actingNat,order.key); }
+  else if(order.kind==="recruit"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doRecruitCore(c,actingNat,order.num); }
+  else if(order.kind==="deploy"){ const src=byId(order.fromId),tgt=byId(order.toId);
+    if(src&&tgt&&src.owner===actingNat&&validTarget(src,tgt))sendArmy(src,tgt,Math.min(order.amount,src.troops),1); }
+  else if(order.kind==="missile"){ const tgt=byId(order.targetId); const nat=S.nations[actingNat];
+    if(tgt&&nat&&!tgt.cap){ const {silo,cost}=launchMissileFor(actingNat); if(nat.gold>=cost&&nat.missileCD<=0){ nat.gold-=cost; launchMissile(silo,tgt,actingNat,1); } } }
+  worldDirty=true;
+}
+// ---- state broadcast (host → guests), called from the main loop every ~350ms ----
+function mpBroadcastState(){ if(!S.mp||S.mp.role!=="host"||!S.mp.conns.size)return;
+  MPLOBBY.conns.forEach((conn,peerId)=>{ const rid=MPLOBBY.peerToRid.get(peerId); if(!rid)return;
+    try{ conn.send({type:"state",payload:mpSerializeState(rid)}); }catch(e){} });
+}
+function mpSerializeState(forRealId){
+  const cells=S.cells.filter(c=>c.land).map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap}));
+  const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
+    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0}; });
+  const armies=S.armies.map(a=>({owner:mpRemapId(a.owner,forRealId),count:a.count,fromId:a.fromId,toId:a.toId,ox:a.ox,oy:a.oy,tx:a.tx,ty:a.ty,t:a.t,dur:a.dur,extra:a.extra}));
+  const missiles=S.missiles.map(m=>({owner:mpRemapId(m.owner,forRealId),toId:m.toId,ox:m.ox,oy:m.oy,tx:m.tx,ty:m.ty,t:m.t,dur:m.dur,intercepted:m.intercepted,interceptT:m.interceptT}));
+  return {cells,nations,armies,missiles,time:S.time,over:S.over};
+}
+function mpApplyState(p){ if(!S)return;
+  p.cells.forEach(pc=>{ const c=S.map[pc.id]; if(!c)return; if(c.owner!==pc.owner){c.owner=pc.owner;worldDirty=true;} c.troops=pc.troops; c.b=pc.b; c.cap=pc.cap; });
+  Object.keys(p.nations).forEach(id=>{ const n=S.nations[id]; if(n)Object.assign(n,p.nations[id]); });
+  S.armies=p.armies; S.missiles=p.missiles; S.time=p.time;
+  renderPanel(); updateHeader(); paint(); }
+// ---- lobby: send an order from guest to host ----
+function mpSendOrder(order){ if(MPLOBBY.conn){ try{MPLOBBY.conn.send({type:"order",order});}catch(e){} } }
+
 /* ===== ECONOMY (per second) ===== */
 function labCount(nat){ return ownedCells(nat).filter(c=>c.b.lab).length; }
-function playerRates(){ const n=S.nations.player,owned=ownedCells("player"); let g=0,f=0,cap=0;
+function ratesFor(natId){ const n=S.nations[natId],owned=ownedCells(natId); let g=0,f=0,cap=0;
   owned.forEach(c=>{ g+=0.4;f+=0.4; for(const k in c.b){if(!c.b[k])continue;const d=B[k];if(d.gold)g+=d.gold;if(d.food)f+=d.food;if(d.cap)cap+=d.cap;}
     if(c.site){const s=SITES[c.site];if(s.gold)g+=s.gold;if(s.food)f+=s.food;} });
-  let boost=1+0.10*labCount("player"); owned.forEach(c=>{if(c.site&&SITES[c.site].boost)boost+=SITES[c.site].boost;});
+  let boost=1+0.10*labCount(natId); owned.forEach(c=>{if(c.site&&SITES[c.site].boost)boost+=SITES[c.site].boost;});
   g*=boost;f*=boost; if(n.perk==="industrial")g*=1.25; if(n.perk==="agrarian")f*=1.25;
   g*=S.econMul; f*=S.econMul;
-  const troops=totalTroops("player"); const armyCap=10+owned.length*2+cap;
+  const troops=totalTroops(natId); const armyCap=10+owned.length*2+cap;
   return {gold:g,food:f,foodNet:f-troops*UPKEEP,troops,armyCap}; }
+function playerRates(){ return ratesFor("player"); }
 function escMul(){ return 1+(MODE[S.mode].esc||0)*Math.min(2,S.time/240); }
 function computeFog(){ const vis=new Set();
   ownedCells("player").forEach(c=>{ let r=2; if(c.b.tower)r=4; else if(c.b.interceptor)r=Math.max(r,3);
@@ -618,18 +832,21 @@ function missileHit(m){ const center=byId(m.toId); if(!center)return;
   worldDirty=true; }
 
 /* ===== EFFECTS ===== */
-function addFx(type,x,y,owner,val){ S.fx.push({type,x,y,owner,val,age:0,life:type==="boom"?1.0:type==="clash"?0.7:type==="shield"?0.65:type==="flak"?0.5:0.5}); }
+function addFx(type,x,y,owner,val){ const base=type==="boom"?1.0:type==="clash"?0.7:type==="shield"?0.65:type==="flak"?0.5:0.5;
+  S.fx.push({type,x,y,owner,val,age:0,life:SETTINGS.reduceMotion?base*0.4:base}); }
 
 /* ===== UPDATE LOOP ===== */
 function update(dt){ if(S.over)return; S.time+=dt;
-  const n=S.nations.player, pr=playerRates();
-  n.missileCD=Math.max(0,(n.missileCD||0)-dt);
-  n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt;
-  if(n.food<0){ n.food=0; // starve slowly
-    if(Math.random()<dt*0.4){ const pool=ownedCells("player").filter(c=>c.troops>0).sort((a,b)=>b.troops-a.troops); if(pool[0]){pool[0].troops--;worldDirty=true;pushLog("A regiment starved!","bad");} } }
-  ownedCells("player").forEach(c=>{ if(c.b.hospital){c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
+  const humanIds = S.mp ? S.mp.allHumanRealIds : ["player"];
+  humanIds.forEach(id=>{ const n=S.nations[id]; if(!n)return; const pr=ratesFor(id);
+    n.missileCD=Math.max(0,(n.missileCD||0)-dt);
+    n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt;
+    if(n.food<0){ n.food=0; // starve slowly
+      if(Math.random()<dt*0.4){ const pool=ownedCells(id).filter(c=>c.troops>0).sort((a,b)=>b.troops-a.troops); if(pool[0]){pool[0].troops--;worldDirty=true; if(id==="player")pushLog("A regiment starved!","bad");} } }
+    ownedCells(id).forEach(c=>{ if(c.b.hospital){c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
+  });
   // population growth: provinces slowly raise a local militia up to a cap
-  S.cells.forEach(c=>{ if(!c.land||(c.owner!=="player"&&!c.owner.startsWith("ai")))return;
+  S.cells.forEach(c=>{ if(!c.land||(!humanIds.includes(c.owner)&&!c.owner.startsWith("ai")))return;
     const popCap=3+(c.b.barracks?4:0)+(c.cap?6:0);
     if(c.troops<popCap){ c.popAcc=(c.popAcc||0)+dt*POP_RATE*(c.cap?1.5:1); if(c.popAcc>=1){c.troops++;c.popAcc-=1;worldDirty=true;} } });
   // armies
@@ -642,8 +859,11 @@ function update(dt){ if(S.over)return; S.time+=dt;
   // fx
   for(let i=S.fx.length-1;i>=0;i--){ S.fx[i].age+=dt; if(S.fx[i].age>=S.fx[i].life)S.fx.splice(i,1); }
   // AI
-  const d=DIFF[S.diff]; const threat=ownedCells("player").length/totalLand()*100;
-  ["ai1","ai2","ai3"].forEach(id=>{ const nat=S.nations[id]; if(!nat)return; const owned=ownedCells(id); if(!owned.length)return;
+  const d=DIFF[S.diff];
+  (S.mp?S.mp.allAiIds:["ai1","ai2","ai3"]).forEach(id=>{ const nat=S.nations[id]; if(!nat)return; const owned=ownedCells(id); if(!owned.length)return;
+    const myTeam=S.mp?S.mp.teamOf[id]:null;
+    const threat = S.mp ? (Object.keys(S.nations).filter(nid=>S.mp.teamOf[nid]&&S.mp.teamOf[nid]!==myTeam).reduce((a,nid)=>a+ownedCells(nid).length,0))/totalLand()*100
+                         : ownedCells("player").length/totalLand()*100;
     nat.gold+=(owned.length*0.5+1)*d.econ*S.econMul*escMul()*dt; nat.missileCD=Math.max(0,(nat.missileCD||0)-dt); nat.think-=dt; if(nat.think>0)return; nat.think=d.think*rnd(.8,1.2);
     aiAct(id,nat,owned,d,threat); });
   // sea raiders
@@ -664,7 +884,8 @@ function fireEvent(){ const land=S.cells.filter(c=>c.land); if(!land.length)retu
       if(hit){ pushLog("☠ A plague sweeps the lands near "+c0.col+"·"+c0.row+" — garrisons wither.","bad"); worldDirty=true; } }
   else if(roll===2){ const nt=land.filter(c=>c.owner==="neutral"&&!c.cap); if(nt.length){ const t=nt[Math.floor(Math.random()*nt.length)]; t.troops+=5;
       addFx("clash",t.cx,t.cy,"neutral"); pushLog("⚔ Rebels rise at "+t.col+"·"+t.row+" — its garrison surges.","bad"); worldDirty=true; } }
-  else if(roll===3){ S.nations.player.food+=25; ["ai1","ai2","ai3"].forEach(id=>{ if(S.nations[id])S.nations[id].gold+=20; });
+  else if(roll===3){ (S.mp?S.mp.allHumanRealIds:["player"]).forEach(id=>{ if(S.nations[id])S.nations[id].food+=25; });
+      (S.mp?S.mp.allAiIds:["ai1","ai2","ai3"]).forEach(id=>{ if(S.nations[id])S.nations[id].gold+=20; });
       pushLog("🌾 A bumper harvest fills granaries across the world.","good"); }
   else { const mine=ownedCells("player"); if(mine.length){ const t=mine[Math.floor(Math.random()*mine.length)]; t.troops+=4; addFx("merge",t.cx,t.cy,"player");
       pushLog("👥 Settlers arrive at "+pName(t)+" — +4 troops.","good"); worldDirty=true; } }
@@ -680,14 +901,19 @@ function aiAct(id,nat,owned,d,threat){
   const cap=byId(nat.capitalId); const spot=(cap&&cap.owner===id)?cap:owned[0];
   if(nat.gold>=6&&totalTroops(id)<owned.length*7*escMul()+8){ nat.gold-=4; spot.troops+=Math.max(2,Math.round(2*escMul())); worldDirty=true; }
   // missile (nightmare)
-  if(d.missile&&(nat.missileCD||0)<=0&&Math.random()<0.25&&nat.gold>=40){ const tg=S.cells.filter(c=>c.land&&c.owner==="player"&&!c.cap); if(tg.length){ nat.gold-=40; launchMissile(cap||spot,tg[Math.floor(Math.random()*tg.length)],id,d.edge); } }
+  const myTeam=S.mp?S.mp.teamOf[id]:null;
+  const isEnemyOwner=ownerId=>{ if(ownerId===id)return false; if(!S.mp)return true; return !S.mp.teamOf[ownerId]||S.mp.teamOf[ownerId]!==myTeam; };
+  if(d.missile&&(nat.missileCD||0)<=0&&Math.random()<0.25&&nat.gold>=40){
+    const humanIds=S.mp?S.mp.allHumanRealIds:["player"];
+    const tg=S.cells.filter(c=>c.land&&!c.cap&&humanIds.includes(c.owner)&&isEnemyOwner(c.owner));
+    if(tg.length){ nat.gold-=40; launchMissile(cap||spot,tg[Math.floor(Math.random()*tg.length)],id,d.edge); } }
   // attack / expand
   owned.sort((a,b)=>b.troops-a.troops);
   for(const cell of owned){ if(cell.troops<3)continue;
-    let tg=neighbors(cell).filter(n=>n.land&&n.owner!==id);
-    if(!tg.length&&cell.b.harbor&&d.harbor){ tg=S.cells.filter(c=>c.land&&c.owner!==id&&isCoastal(c)&&hexDist(cell,c)<=3); }
+    let tg=neighbors(cell).filter(n=>n.land&&n.owner!==id&&isEnemyOwner(n.owner));
+    if(!tg.length&&cell.b.harbor&&d.harbor){ tg=S.cells.filter(c=>c.land&&c.owner!==id&&isEnemyOwner(c.owner)&&isCoastal(c)&&hexDist(cell,c)<=3); }
     if(!tg.length)continue;
-    if(threat>35&&Math.random()<Math.min(1,d.aggr+(MODE[S.mode].aggr||0))){ const pt=tg.filter(t=>t.owner==="player"); if(pt.length)tg=pt; }
+    if(threat>35&&Math.random()<Math.min(1,d.aggr+(MODE[S.mode].aggr||0))){ const humanIds=S.mp?S.mp.allHumanRealIds:["player"]; const pt=tg.filter(t=>humanIds.includes(t.owner)); if(pt.length)tg=pt; }
     tg.sort((a,b)=>(a.troops*(1+defBonus(a)))-(b.troops*(1+defBonus(b))));
     const t=tg[0], commit=cell.troops-1, eff=t.troops*(1+defBonus(t));
     if(commit*d.edge>=eff*0.8){ sendArmy(cell,t,commit,d.edge); break; } } // one push per think
@@ -700,32 +926,69 @@ function seaRaid(){ const coasts=S.cells.filter(c=>c.land&&isCoastal(c)&&!c.cap&
   if(cell.troops>0){ cell.troops=Math.max(0,cell.troops-(1+(Math.random()<.5?1:0))); if(cell.owner==="player")pushLog("Sea raiders hit "+pName(cell)+".","sea"); }
   else{ const bl=Object.keys(cell.b).filter(k=>cell.b[k]); if(bl.length&&Math.random()<.4){delete cell.b[bl[0]]; if(cell.owner==="player")pushLog("Raiders razed your coast.","sea");} }
   worldDirty=true; }
-function checkGameOver(){ const cap=byId(S.playerCapitalId); const pl=ownedCells("player").length,tot=totalLand();
-  if(!cap||cap.owner!=="player")return endGame(false,"Your capital has fallen. The Dominion is broken.");
-  if(pl===0)return endGame(false,"You hold no land. Your empire is gone.");
-  const aisAlive=["ai1","ai2","ai3"].some(id=>S.nations[id]&&ownedCells(id).length>0);
-  if(!aisAlive)return endGame(true,"Every rival has been crushed. The world is yours!");
-  if(MODE[S.mode].capOnly){ const allCaps=["ai1","ai2","ai3"].every(id=>{const nn=S.nations[id]; return !nn||byId(nn.capitalId).owner!==id;});
-    if(allCaps)return endGame(true,"Every rival crown has fallen — Regicide complete!"); }
-  else if(pl/tot>=S.winFrac)return endGame(true,"You rule "+Math.round(pl/tot*100)+"% of the Earth!"); }
+function checkGameOver(){
+  if(!S.mp){
+    const cap=byId(S.playerCapitalId); const pl=ownedCells("player").length,tot=totalLand();
+    if(!cap||cap.owner!=="player")return endGame(false,"Your capital has fallen. The Dominion is broken.");
+    if(pl===0)return endGame(false,"You hold no land. Your empire is gone.");
+    const aisAlive=["ai1","ai2","ai3"].some(id=>S.nations[id]&&ownedCells(id).length>0);
+    if(!aisAlive)return endGame(true,"Every rival has been crushed. The world is yours!");
+    if(MODE[S.mode].capOnly){ const allCaps=["ai1","ai2","ai3"].every(id=>{const nn=S.nations[id]; return !nn||byId(nn.capitalId).owner!==id;});
+      if(allCaps)return endGame(true,"Every rival crown has fallen — Regicide complete!"); }
+    else if(pl/tot>=S.winFrac)return endGame(true,"You rule "+Math.round(pl/tot*100)+"% of the Earth!");
+    return;
+  }
+  // multiplayer: only the host reaches this (only the host runs the simulation) — evaluate TEAM outcomes
+  const teamIds=team=>Object.keys(S.nations).filter(id=>S.mp.teamOf[id]===team);
+  const teamLand=team=>teamIds(team).reduce((a,id)=>a+ownedCells(id).length,0);
+  const teamAlive=team=>teamIds(team).some(id=>ownedCells(id).length>0);
+  const teamCapsHeld=team=>teamIds(team).filter(id=>{const nn=S.nations[id];const c=nn&&byId(nn.capitalId);return c&&c.owner===id;}).length;
+  const otherTeam=team=>team==="A"?"B":"A";
+  for(const team of ["A","B"]){ if(!teamAlive(team))return endGameMP(otherTeam(team),"Team "+team+" has been eliminated."); }
+  if(MODE[S.mode].capOnly){
+    for(const team of ["A","B"]){ if(teamIds(team).length&&teamCapsHeld(team)===0)return endGameMP(otherTeam(team),"Team "+team+"'s capitals have all fallen — Regicide complete!"); }
+  } else {
+    const tot=totalLand();
+    for(const team of ["A","B"]){ if(teamLand(team)/tot>=S.winFrac)return endGameMP(team,"Team "+team+" rules "+Math.round(teamLand(team)/tot*100)+"% of the Earth!"); }
+  }
+}
+function endGameMP(winningTeam,text){ S.over=true;
+  if(S.mp.conns)S.mp.conns.forEach(conn=>{ try{conn.send({type:"gameover",winningTeam,text});}catch(e){} });
+  endGame(S.mp.myTeam===winningTeam,text); }
 
 /* ===== PLAYER ACTIONS ===== */
-function doBuild(k){ const c=byId(S.selected),n=S.nations.player; if(!c||c.owner!=="player"||c.b[k])return;
-  if(Object.values(c.b).filter(Boolean).length>=MAXB||n.gold<B[k].c)return;
-  n.gold-=B[k].c;c.b[k]=true;addFx("build",c.cx,c.cy,"player");pushLog("Built "+B[k].n+".","");worldDirty=true;renderPanel();paint(); }
-function doRecruit(num){ const c=byId(S.selected),n=S.nations.player,pr=playerRates(); if(!c||c.owner!=="player")return;
+function doBuildCore(c,natId,k){ const n=S.nations[natId]; if(!c||c.owner!==natId||c.b[k])return false;
+  if(Object.values(c.b).filter(Boolean).length>=MAXB||n.gold<B[k].c)return false;
+  n.gold-=B[k].c;c.b[k]=true;addFx("build",c.cx,c.cy,natId); if(natId==="player")pushLog("Built "+B[k].n+".","");worldDirty=true; return true; }
+function doBuild(k){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"build",cellId:S.selected,key:k}); return; }
+  doBuildCore(byId(S.selected),"player",k); renderPanel();paint(); }
+function doRecruitCore(c,natId,num){ const n=S.nations[natId],pr=ratesFor(natId); if(!c||c.owner!==natId)return 0;
   const cost=n.perk==="agrarian"?2:3; let did=0; for(let i=0;i<num;i++){ if(n.gold<cost||pr.troops+did>=pr.armyCap)break; n.gold-=cost;c.troops++;did++; }
-  if(did){worldDirty=true;S.deploy=c.troops;} renderPanel();paint(); }
+  if(did)worldDirty=true; return did; }
+function doRecruit(num){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"recruit",cellId:S.selected,num}); return; }
+  const c=byId(S.selected); const did=doRecruitCore(c,"player",num);
+  if(did&&c){S.deploy=c.troops;} renderPanel();paint(); }
+function launchMissileFor(natId){ const nat=S.nations[natId]; const silo=ownedCells(natId).find(c=>c.b.silo)||byId(nat.capitalId);
+  return {silo,cost:natId==="player"?missileCost():(perkOf(natId)==="rocketeer"?Math.round(MISSILE_COST*.5):MISSILE_COST)}; }
 function toggleMissile(){ if(!hasBuilding("player","silo")||S.nations.player.gold<missileCost()||S.nations.player.missileCD>0)return; S.missileMode=!S.missileMode; updateModebar(); paint(); }
 function onPick(cell){ if(S.over||!cell)return;
   if(S.missileMode){ if(cell.land&&cell.owner!=="player"){
       if(cell.cap){ pushLog("Capitals are shielded from missiles — assault it with an army instead.","bad"); paint(); return; }
-      const silo=ownedCells("player").find(c=>c.b.silo)||byId(S.playerCapitalId);
-      S.nations.player.gold-=missileCost(); launchMissile(silo,cell,"player",1); pushLog("🚀 Missile launched!","boom"); }
+      if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"missile",targetId:cell.id}); }
+      else { const silo=ownedCells("player").find(c=>c.b.silo)||byId(S.playerCapitalId);
+        S.nations.player.gold-=missileCost(); launchMissile(silo,cell,"player",1); pushLog("🚀 Missile launched!","boom"); } }
     S.missileMode=false; updateModebar(); paint(); return; }
   const src=byId(S.selected);
-  if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)){ sendArmy(src,cell,Math.min(S.deploy,src.troops),1);
-    if(!S.deployLock)S.deploy=byId(S.selected).troops; renderPanel(); paint(); return; }
+  if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)){
+    const isAttack=cell.owner!=="player";
+    if(isAttack&&SETTINGS.confirmAttack&&S.attackConfirmId!==cell.id){ S.attackConfirmId=cell.id;
+      clearTimeout(S.attackConfirmTimer); S.attackConfirmTimer=setTimeout(()=>{S.attackConfirmId=null;},4000);
+      showToast("⚔ Click "+pName(cell)+" again to confirm the attack"); paint(); return; }
+    S.attackConfirmId=null;
+    const amount=Math.min(S.deploy,src.troops);
+    if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"deploy",fromId:src.id,toId:cell.id,amount}); }
+    else { sendArmy(src,cell,amount,1); if(!S.deployLock)S.deploy=byId(S.selected).troops; }
+    renderPanel(); paint(); return; }
   S.selected=cell.id;
   if(cell.owner==="player"){ if(!S.deployLock)S.deploy=cell.troops; else S.deploy=Math.max(1,Math.min(S.deploy||cell.troops,cell.troops)); }
   renderPanel(); openDrawer(); paint(); }
@@ -776,8 +1039,8 @@ function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
     ctx.fillStyle="#352b1a";ctx.font="bold 11px Spectral,serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(c.troops,c.cx,c.cy+1); });
   ctx.textBaseline="alphabetic";
   // armies
-  S.armies.forEach(a=>{ const x=a.ox+(a.tx-a.ox)*a.t,y=a.oy+(a.ty-a.oy)*a.t; const col=S.nations[a.owner].color;
-    const bob=Math.sin(S.time*10+a.ox)*1.5;
+  S.armies.forEach(a=>{ const x=a.ox+(a.tx-a.ox)*a.t,y=a.oy+(a.ty-a.oy)*a.t; const col=(S.nations[a.owner]||{color:"#888"}).color;
+    const bob=SETTINGS.reduceMotion?0:Math.sin(S.time*10+a.ox)*1.5;
     ctx.beginPath();ctx.arc(x,y+bob,7,0,7);ctx.fillStyle=col;ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=1.4;ctx.stroke();
     ctx.fillStyle="#fff";ctx.font="bold 9px Spectral,serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(a.count,x,y+bob);
     // trail arrow
@@ -804,19 +1067,26 @@ function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
   ctx.restore(); }
 function paint(){ if(ctx&&S)render(); }
 function openDrawer(){ const a=document.querySelector('aside'); if(a)a.classList.add('open'); }
+let mpBroadcastAcc=0;
 function loop(now){ const raw=(now-lastT)/1000; lastT=now; const dt=Math.min(0.05,raw)*S.speed;
-  if(!S.over&&S.speed>0)update(dt); render();
-  uiAcc+=raw; if(uiAcc>=0.2){uiAcc=0;updateHeader();updatePanelLive();syncPanel();}
+  const isGuest=S.mp&&S.mp.role==="guest";
+  if(!S.over&&S.speed>0&&!isGuest)update(dt); render();
+  if(S.mp&&S.mp.role==="host"){ mpBroadcastAcc+=raw; if(mpBroadcastAcc>=0.35){mpBroadcastAcc=0;mpBroadcastState();} }
+  uiAcc+=raw; if(uiAcc>=0.2){uiAcc=0;if(!isGuest)updateHeader();updatePanelLive();syncPanel();}
   if(rafOn)requestAnimationFrame(loop); }
 
 /* ===== HEADER / PANEL DOM ===== */
 function fmt(x){return Math.floor(x);}
-function capsTotal(){ return ["ai1","ai2","ai3"].filter(id=>S.nations[id]).length; }
-function capsTaken(){ return ["ai1","ai2","ai3"].filter(id=>S.nations[id]&&byId(S.nations[id].capitalId).owner!==id).length; }
+function enemyIds(){ return S.mp ? Object.keys(S.nations).filter(id=>S.mp.teamOf[id]&&S.mp.teamOf[id]!==S.mp.myTeam) : ["ai1","ai2","ai3"]; }
+function teamLandOf(team){ return Object.keys(S.nations).filter(id=>S.mp.teamOf[id]===team).reduce((a,id)=>a+ownedCells(id).length,0); }
+function capsTotal(){ return enemyIds().filter(id=>S.nations[id]).length; }
+function capsTaken(){ return enemyIds().filter(id=>S.nations[id]&&byId(S.nations[id].capitalId).owner!==id).length; }
 function winProgress(){ if(MODE[S.mode].capOnly){ const t=capsTotal(); return t?Math.round(capsTaken()/t*100):0; }
-  const pl=ownedCells("player").length,tot=totalLand(); return Math.min(100,Math.round(pl/tot*100/S.winFrac)); }
+  const tot=totalLand(); const pl=S.mp?teamLandOf(S.mp.myTeam):ownedCells("player").length;
+  return Math.min(100,Math.round(pl/tot*100/S.winFrac)); }
 const setT=(id,v)=>{const e=document.getElementById(id); if(e&&e.textContent!==v)e.textContent=v;};
-function updateHeader(){ if(!S)return; const n=S.nations.player,pr=playerRates(),pl=ownedCells("player").length,tot=totalLand(),th=Math.round(pl/tot*100);
+function updateHeader(){ if(!S)return; const n=S.nations.player,pr=playerRates(),pl=ownedCells("player").length,tot=totalLand();
+  const th=Math.round((S.mp?teamLandOf(S.mp.myTeam):pl)/tot*100);
   const nc=x=>x>0?"pos":x<0?"neg":"",sg=x=>(x>0?"+":"")+x.toFixed(1);
   const stats=document.getElementById("stats");
   if(stats.dataset.lang!==LANG){ stats.dataset.lang=LANG;   // build the shell once per language (no per-frame rebuild)
@@ -895,6 +1165,139 @@ function endGame(win,text){ S.over=true; document.getElementById("endTitle").tex
   document.getElementById("endTitle").style.color=win?"var(--good)":"var(--crimson)";
   document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false; return true; }
 
+/* ===== SETTINGS ===== */
+const SETTINGS_DEFAULT={sound:true,volume:70,reduceMotion:false,autoPause:true,confirmAttack:false};
+let SETTINGS=(()=>{ try{ const raw=localStorage.getItem("dominion_settings"); return raw?Object.assign({},SETTINGS_DEFAULT,JSON.parse(raw)):Object.assign({},SETTINGS_DEFAULT); }catch(e){ return Object.assign({},SETTINGS_DEFAULT); } })();
+function saveSettings(){ try{localStorage.setItem("dominion_settings",JSON.stringify(SETTINGS));}catch(e){} }
+let audioCtx=null;
+function beep(freq,dur,type){ if(!SETTINGS.sound||SETTINGS.volume<=0)return;
+  try{ if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();
+    osc.type=type||"sine"; osc.frequency.value=freq; gain.gain.value=(SETTINGS.volume/100)*0.18;
+    osc.connect(gain); gain.connect(audioCtx.destination);
+    const t0=audioCtx.currentTime; gain.gain.setValueAtTime(gain.gain.value,t0); gain.gain.exponentialRampToValueAtTime(0.001,t0+(dur||0.2));
+    osc.start(t0); osc.stop(t0+(dur||0.2)+0.02);
+  }catch(e){} }
+function sndJoin(){ beep(660,0.09); setTimeout(()=>beep(880,0.14),90); }
+function sndCapture(){ beep(520,0.12); }
+function sndMissile(){ beep(220,0.25,"sawtooth"); }
+function showToast(msg){ const wrap=document.getElementById("toastwrap"); if(!wrap)return;
+  const el=document.createElement("div"); el.className="toast"; el.textContent=msg; wrap.appendChild(el);
+  setTimeout(()=>{ el.style.transition="opacity .3s"; el.style.opacity="0"; setTimeout(()=>el.remove(),320); },3200); }
+function syncSettingsUI(){
+  document.getElementById("setSoundToggle").classList.toggle("on",SETTINGS.sound);
+  document.getElementById("setMotionToggle").classList.toggle("on",SETTINGS.reduceMotion);
+  document.getElementById("setPauseToggle").classList.toggle("on",SETTINGS.autoPause);
+  document.getElementById("setConfirmToggle").classList.toggle("on",SETTINGS.confirmAttack);
+  document.getElementById("setVolume").value=SETTINGS.volume;
+  document.querySelectorAll("#setLangGrid .langbtn").forEach(b=>b.classList.toggle("sel",b.dataset.l===LANG));
+}
+function buildSettingsModal(){
+  document.getElementById("setLangGrid").innerHTML=LANGS.map(([code,name])=>`<button class="langbtn ${code===LANG?'sel':''}" data-l="${code}">${name}</button>`).join("");
+  document.querySelectorAll("#setLangGrid .langbtn").forEach(b=>b.addEventListener("click",()=>{setLang(b.dataset.l);syncSettingsUI();}));
+}
+let wasAutoPaused=false;
+document.addEventListener("visibilitychange",()=>{ if(!S||S.over)return;
+  if(document.hidden){ if(SETTINGS.autoPause&&S.speed>0&&!(S.mp&&S.mp.role==="guest")){ wasAutoPaused=true; S.speed=0; } }
+  else if(wasAutoPaused){ wasAutoPaused=false; S.speed=1; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x.dataset.s==="1")); } });
+
+/* ===== MULTIPLAYER: room codes, lobby, PeerJS wiring ===== */
+const MPLOBBY={role:null,code:null,name:"",teamSize:1,mode:"conquest",diff:"medium",fog:false,
+  players:[],peer:null,conns:new Map(),peerToRid:new Map(),conn:null,myRid:null,started:false};
+function genRoomCode(){ const CH="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<4;i++)s+=CH[Math.floor(Math.random()*CH.length)]; return s; }
+function mpNextRid(){ let n=2; while(MPLOBBY.players.some(p=>p.rid==="h"+n))n++; return "h"+n; }
+function mpTeamCounts(){ const c={A:0,B:0}; MPLOBBY.players.forEach(p=>c[p.team]++); return c; }
+function mpAssignTeam(){ const c=mpTeamCounts(); return c.A<=c.B?"A":"B"; }
+function renderLobby(){
+  const list=document.getElementById("mpLobbyList");
+  list.innerHTML=MPLOBBY.players.map(p=>`<div class="lobbyrow"><span class="ldot" style="background:${p.rid==='player'?PLAYER_COLOR:AI_COLORS[0]}"></span>
+    <span class="lname">${p.name}${p.isHost?' 👑':''}</span>${p.rid===MPLOBBY.myRid?'<span class="lyou">(you)</span>':''}
+    <span class="lteam ${p.team}" data-rid="${p.rid}" ${MPLOBBY.role==='host'?'':'style="pointer-events:none"'}>${p.team==='A'?'Team A':'Team B'}</span></div>`).join("");
+  document.querySelectorAll("#mpLobbyList .lteam").forEach(el=>el.addEventListener("click",()=>{
+    if(MPLOBBY.role!=="host")return; const p=MPLOBBY.players.find(x=>x.rid===el.dataset.rid); if(!p)return;
+    p.team=p.team==="A"?"B":"A"; renderLobby(); mpBroadcastLobby(); }));
+  const total=MPLOBBY.teamSize*2;
+  document.getElementById("mpRoomHint").textContent=MPLOBBY.players.length+" / "+total+" joined — bots fill any empty slots";
+  const startBtn=document.getElementById("mpStartBtn");
+  if(startBtn)startBtn.hidden=(MPLOBBY.role!=="host");
+}
+function mpBroadcastLobby(){ const msg={type:"lobby",code:MPLOBBY.code,teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,
+    players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,isHost:p.isHost}))};
+  MPLOBBY.conns.forEach(conn=>{ try{conn.send(msg);}catch(e){} }); }
+function mpHostCreate(){
+  const status=document.getElementById("mpStatus"); status.className="mpstatus"; status.textContent="Opening room…";
+  MPLOBBY.code=genRoomCode(); MPLOBBY.role="host"; MPLOBBY.myRid="player";
+  MPLOBBY.players=[{rid:"player",name:MPLOBBY.name||"Host",team:"A",isHost:true,peerId:null}];
+  try{
+    MPLOBBY.peer=new Peer("dom-"+MPLOBBY.code,{debug:0});
+    MPLOBBY.peer.on("open",()=>{ status.textContent="";
+      document.getElementById("mpHostPane").hidden=true; document.getElementById("mpLobbyPane").hidden=false;
+      document.getElementById("mpRoomCode").textContent=MPLOBBY.code; renderLobby(); });
+    MPLOBBY.peer.on("error",e=>{ status.className="mpstatus err";
+      status.textContent = e.type==="unavailable-id" ? "That room code is taken — try again." : "Connection error: "+e.type; });
+    MPLOBBY.peer.on("connection",conn=>{
+      conn.on("open",()=>{});
+      conn.on("data",data=>mpHostOnData(conn,data));
+      conn.on("close",()=>{ const rid=MPLOBBY.peerToRid.get(conn.peer);
+        MPLOBBY.conns.delete(conn.peer); MPLOBBY.peerToRid.delete(conn.peer);
+        MPLOBBY.players=MPLOBBY.players.filter(p=>p.rid!==rid);
+        if(MPLOBBY.started){ showToast("👋 "+(rid||"A player")+" disconnected."); }
+        else { renderLobby(); mpBroadcastLobby(); } });
+    });
+  }catch(e){ status.className="mpstatus err"; status.textContent="Could not start hosting."; }
+}
+function mpHostOnData(conn,data){
+  if(!data||typeof data!=="object")return;
+  if(data.type==="hello"){
+    const total=MPLOBBY.teamSize*2;
+    if(MPLOBBY.started){ try{conn.send({type:"full"});}catch(e){} return; }
+    if(MPLOBBY.players.length>=total){ try{conn.send({type:"full"});}catch(e){} return; }
+    const rid=mpNextRid(); const p={rid,name:(data.name||"Player").slice(0,16),team:mpAssignTeam(),isHost:false,peerId:conn.peer};
+    MPLOBBY.players.push(p); MPLOBBY.conns.set(conn.peer,conn); MPLOBBY.peerToRid.set(conn.peer,rid);
+    try{conn.send({type:"youare",rid});}catch(e){}
+    renderLobby(); mpBroadcastLobby(); showToast("🔔 "+p.name+" joined!"); sndJoin();
+  } else if(data.type==="order"){
+    const rid=MPLOBBY.peerToRid.get(conn.peer); if(rid&&S&&!S.over)mpApplyOrder(rid,data.order);
+  }
+}
+function mpHostStart(){
+  MPLOBBY.started=true;
+  const lobby={teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team}))};
+  startMultiplayerHost(lobby);
+}
+function mpGuestJoin(code,name){
+  const status=document.getElementById("mpStatus"); status.className="mpstatus"; status.textContent="Connecting…";
+  MPLOBBY.role="guest"; MPLOBBY.name=name;
+  try{
+    MPLOBBY.peer=new Peer({debug:0});
+    MPLOBBY.peer.on("open",()=>{
+      const conn=MPLOBBY.peer.connect("dom-"+code.toUpperCase(),{reliable:true}); MPLOBBY.conn=conn;
+      let openTimer=setTimeout(()=>{ status.className="mpstatus err"; status.textContent="No room found with that code."; },7000);
+      conn.on("open",()=>{ clearTimeout(openTimer); status.textContent=""; conn.send({type:"hello",name}); });
+      conn.on("data",data=>mpGuestOnData(data));
+      conn.on("close",()=>{ if(MPLOBBY.started){ document.getElementById("discbanner").hidden=false; document.getElementById("discbanner").textContent="⚠ Lost connection to the host."; }
+        else { status.className="mpstatus err"; status.textContent="Host closed the room."; } });
+      conn.on("error",()=>{ clearTimeout(openTimer); status.className="mpstatus err"; status.textContent="Could not reach that room."; });
+    });
+    MPLOBBY.peer.on("error",e=>{ status.className="mpstatus err"; status.textContent="Connection error: "+e.type; });
+  }catch(e){ status.className="mpstatus err"; status.textContent="Could not connect."; }
+}
+function mpGuestOnData(data){
+  if(!data||typeof data!=="object")return;
+  if(data.type==="lobby"){
+    MPLOBBY.code=data.code; MPLOBBY.teamSize=data.teamSize; MPLOBBY.mode=data.mode; MPLOBBY.diff=data.diff; MPLOBBY.fog=data.fog;
+    MPLOBBY.players=data.players;
+    document.getElementById("mpJoinPane").hidden=true; document.getElementById("mpHostPane").hidden=true; document.getElementById("mpLobbyPane").hidden=false;
+    document.getElementById("mpRoomCode").textContent=MPLOBBY.code;
+    renderLobby();
+  } else if(data.type==="youare"){ MPLOBBY.myRid=data.rid; renderLobby();
+  } else if(data.type==="full"){ const status=document.getElementById("mpStatus"); status.className="mpstatus err"; status.textContent="That room is full or already playing.";
+  } else if(data.type==="init"){ initMultiplayerGuest(data.payload);
+  } else if(data.type==="state"){ mpApplyState(data.payload);
+  } else if(data.type==="gameover"){ if(S){ S.over=true; endGame(S.mp.myTeam===data.winningTeam,data.text); }
+  }
+}
+
 /* ===== CANVAS / INPUT ===== */
 function resizeCanvas(){ if(!canvas)return; const dpr=window.devicePixelRatio||1;
   const nw=Math.round(canvas.clientWidth*dpr), nh=Math.round(canvas.clientHeight*dpr);
@@ -915,6 +1318,25 @@ function initInput(){ let down=false,moved=false,sx=0,sy=0,px=0,py=0;
 }
 function zoomBtn(f){ const vw=(canvas.clientWidth-panelW())/2,vh=canvas.clientHeight/2,w=screenToWorld(vw,vh);
   S.cam.scale=Math.max(0.45,Math.min(2.4,S.cam.scale*f)); S.cam.x=vw-w.x*S.cam.scale; S.cam.y=vh-w.y*S.cam.scale; }
+
+let mpSelSize=1, mpSelMode="conquest", mpSelDiff="medium";
+function buildMpHostOptions(){
+  document.getElementById("mpTeamSizes").innerHTML=[1,2,3,4].map(n=>`<button class="tschip ${n===mpSelSize?'sel':''}" data-n="${n}">${n}v${n}<small>${n*2} players</small></button>`).join("");
+  document.querySelectorAll("#mpTeamSizes .tschip").forEach(b=>b.addEventListener("click",()=>{mpSelSize=+b.dataset.n;buildMpHostOptions();}));
+  document.getElementById("mpModePick").innerHTML=Object.keys(MODE).map(k=>`<button class="dchip ${k===mpSelMode?'sel':''}" data-m="${k}"><div class="dn">${MODE[k].i} ${t(MODE[k].n)}</div><div class="dd">${t(MODE[k].d)}</div></button>`).join("");
+  document.querySelectorAll("#mpModePick .dchip").forEach(b=>b.addEventListener("click",()=>{mpSelMode=b.dataset.m;buildMpHostOptions();}));
+  document.getElementById("mpDiffPick").innerHTML=Object.keys(DIFF).map(k=>`<button class="dchip ${k===mpSelDiff?'sel':''}" data-d="${k}"><div class="dn">${t(DIFF[k].n)}</div><div class="dd">${t(DIFF[k].d)}</div></button>`).join("");
+  document.querySelectorAll("#mpDiffPick .dchip").forEach(b=>b.addEventListener("click",()=>{mpSelDiff=b.dataset.d;buildMpHostOptions();}));
+}
+function mpShowTab(tab){
+  document.querySelectorAll("#mpTabs .mptab").forEach(b=>b.classList.toggle("sel",b.dataset.t===tab));
+  document.getElementById("mpHostPane").hidden=tab!=="host";
+  document.getElementById("mpJoinPane").hidden=tab!=="join";
+  document.getElementById("mpLobbyPane").hidden=true;
+  document.getElementById("mpStatus").textContent=""; document.getElementById("mpStatus").className="mpstatus";
+}
+function mpGetName(){ const inp=document.getElementById("mpNameInput"); let name=(inp.value||"").trim().slice(0,16);
+  if(!name){name="Player"+Math.floor(rnd(100,999));} try{localStorage.setItem("dominion_mpname",name);}catch(e){} return name; }
 
 let selDiff="medium", selMode="conquest";
 function buildStart(){
@@ -959,9 +1381,35 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
   }
   document.getElementById("restartBtn").addEventListener("click",()=>{document.getElementById("endOverlay").hidden=true;document.getElementById("app").hidden=true;document.getElementById("startOverlay").hidden=false;});
   document.getElementById("leaveBtn").addEventListener("click",leaveGame);
+
+  // ---- settings ----
+  document.getElementById("settingsBtn").addEventListener("click",()=>{ buildSettingsModal(); syncSettingsUI(); document.getElementById("settingsOverlay").hidden=false; });
+  document.getElementById("settingsClose").addEventListener("click",()=>document.getElementById("settingsOverlay").hidden=true);
+  const toggleRow=(id,key)=>document.getElementById(id).addEventListener("click",()=>{ SETTINGS[key]=!SETTINGS[key]; saveSettings(); syncSettingsUI(); });
+  toggleRow("setSoundToggle","sound"); toggleRow("setMotionToggle","reduceMotion"); toggleRow("setPauseToggle","autoPause"); toggleRow("setConfirmToggle","confirmAttack");
+  document.getElementById("setVolume").addEventListener("input",e=>{ SETTINGS.volume=+e.target.value; saveSettings(); });
+
+  // ---- multiplayer entry / lobby ----
+  document.getElementById("mpEnterBtn").addEventListener("click",()=>{
+    document.getElementById("startOverlay").hidden=true; document.getElementById("mpOverlay").hidden=false;
+    try{ document.getElementById("mpNameInput").value=localStorage.getItem("dominion_mpname")||""; }catch(e){}
+    buildMpHostOptions(); mpShowTab("host"); });
+  document.getElementById("mpBackBtn").addEventListener("click",()=>{
+    if(MPLOBBY.peer){ try{MPLOBBY.peer.destroy();}catch(e){} MPLOBBY.peer=null; }
+    MPLOBBY.role=null; MPLOBBY.conns.clear(); MPLOBBY.peerToRid.clear(); MPLOBBY.players=[]; MPLOBBY.myRid=null; MPLOBBY.conn=null; MPLOBBY.started=false;
+    document.getElementById("mpOverlay").hidden=true; document.getElementById("startOverlay").hidden=false; });
+  document.getElementById("mpTabs").addEventListener("click",e=>{ const b=e.target.closest(".mptab"); if(b)mpShowTab(b.dataset.t); });
+  document.getElementById("mpCreateBtn").addEventListener("click",()=>{
+    MPLOBBY.name=mpGetName(); MPLOBBY.teamSize=mpSelSize; MPLOBBY.mode=mpSelMode; MPLOBBY.diff=mpSelDiff; MPLOBBY.fog=false;
+    mpHostCreate(); });
+  document.getElementById("mpJoinBtn").addEventListener("click",()=>{
+    const code=(document.getElementById("mpCodeInput").value||"").trim();
+    if(code.length!==4){ const s=document.getElementById("mpStatus"); s.className="mpstatus err"; s.textContent="Enter the 4-character room code."; return; }
+    mpGuestJoin(code,mpGetName()); });
+  document.getElementById("mpStartBtn").addEventListener("click",mpHostStart);
+
   const ls=document.getElementById("langSel");
-  ls.innerHTML=LANGS.map(([code,name])=>`<option value="${code}" ${code===LANG?"selected":""}>${name}</option>`).join("");
-  ls.addEventListener("change",e=>setLang(e.target.value));
+  if(ls){ ls.innerHTML=LANGS.map(([code,name])=>`<option value="${code}" ${code===LANG?"selected":""}>${name}</option>`).join(""); ls.addEventListener("change",e=>setLang(e.target.value)); }
   applyStatic();
   buildStart();
 }
