@@ -69,6 +69,13 @@
     border:1.5px dashed #ffcf8f;background:rgba(122,42,18,.92);color:#ffe9cf;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);}
   .modebar button{background:rgba(255,255,255,.15);color:#ffe9cf;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:3px 9px;font-size:11px;}
   .zoomctl{position:absolute;right:calc(clamp(240px,var(--aside-w,320px),520px) + 12px);bottom:12px;display:flex;flex-direction:column;gap:4px;z-index:6;}
+  #minimap{position:absolute;top:12px;right:calc(clamp(240px,var(--aside-w,320px),520px) + 12px);z-index:6;border:1.5px solid rgba(242,232,207,.5);border-radius:6px;background:#16262f;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);}
+  @media(max-width:720px){ #minimap{right:12px;} }
+  .pingwrap{position:absolute;left:12px;bottom:46px;z-index:7;}
+  .pingbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:rgba(242,232,207,.92);font-size:16px;box-shadow:var(--shadow);}
+  .pingmenu{position:absolute;bottom:44px;left:0;background:var(--parchment-2);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;overflow:hidden;min-width:160px;}
+  .pingmenu button{padding:8px 12px;text-align:left;border:0;background:none;font-size:12.5px;border-bottom:1px solid var(--line-soft);font-family:inherit;color:var(--ink);}
+  .pingmenu button:last-child{border-bottom:0;} .pingmenu button:hover{background:#fff6e0;}
   .zoomctl button{width:32px;height:32px;font-size:17px;border-radius:7px;border:1px solid var(--line);background:rgba(242,232,207,.92);}
 
   aside{position:fixed;right:0;top:52px;height:calc(100vh - 52px);width:min(clamp(240px,var(--aside-w,320px),520px), calc(100vw - 8px));z-index:20;background:var(--parchment-2);border-left:2px solid var(--line);display:flex;flex-direction:column;overflow:hidden;box-shadow:-5px 0 16px rgba(53,43,26,.16);}
@@ -87,6 +94,7 @@
   .buildgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:9px;}
   .bbtn{border:1px solid var(--line);border-radius:6px;background:var(--parchment);padding:5px 7px;display:flex;flex-direction:column;gap:1px;align-items:flex-start;font-size:11px;text-align:left;line-height:1.12;}
   .bbtn:hover:not(:disabled){background:#fff6e0;} .bbtn:disabled{opacity:.36;cursor:not-allowed;}
+  .bbtn.owned{opacity:1;border-color:var(--good);background:rgba(76,107,56,.1);}
   .bbtn .bt{font-weight:600;} .bbtn small{color:var(--ink-soft);font-size:9px;} .bbtn .cost{color:#7a5c1f;font-size:9px;font-weight:600;}
   .full{grid-column:1/-1;}
   .deploy{margin-top:9px;border:1px solid var(--line);border-radius:7px;padding:8px;background:var(--parchment);}
@@ -95,6 +103,9 @@
   .deploy .amt b{color:var(--ink);font-size:14px;font-variant-numeric:tabular-nums;}
   .lockbtn{font-size:10px;padding:1px 7px;border:1px solid var(--line);border-radius:11px;background:var(--parchment-3);margin-left:5px;}
   .lockbtn.on{background:var(--crimson);color:#f6ecd2;border-color:#7a2019;}
+  .formrow{display:flex;gap:4px;margin-top:7px;}
+  .formbtn{flex:1;font-size:9.5px;padding:5px 2px;border:1px solid var(--line);border-radius:6px;background:var(--parchment);text-align:center;line-height:1.3;}
+  .formbtn.sel{border-color:var(--crimson);background:#fff2e2;color:var(--crimson);font-weight:600;}
   .hint{font-size:11.5px;color:#7a5c1f;background:rgba(176,134,58,.12);border:1px dashed var(--gold);border-radius:6px;padding:6px 8px;margin-top:9px;line-height:1.4;}
 
   footer.log{border-top:2px solid var(--line);padding:6px 18px 9px;background:linear-gradient(180deg,#e9dcbd,#e3d4b2);}
@@ -158,6 +169,24 @@
 
   /* ---- multiplayer ---- */
   .mplink{display:block;text-align:center;font-size:12.5px;color:var(--sea-2);text-decoration:underline;cursor:pointer;margin:2px 0 14px;background:none;border:0;width:100%;font-family:inherit;}
+  .quicklinks{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:-4px;}
+  .qlink{border:1px solid var(--line-soft);border-radius:8px;padding:8px 14px;background:var(--parchment);font-size:12px;font-family:inherit;color:var(--ink-soft);}
+  .qlink:hover{background:#fff6e0;color:var(--ink);}
+  .statsummary{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px;}
+  .statsummary .spod{border:1px solid var(--line-soft);border-radius:8px;padding:8px 16px;text-align:center;background:var(--parchment);min-width:74px;}
+  .statsummary .spod b{display:block;font-size:20px;font-variant-numeric:tabular-nums;color:var(--crimson);}
+  .statsummary .spod span{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+  .histlist{max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:5px;}
+  .histrow{display:flex;align-items:center;gap:10px;padding:7px 11px;border:1px solid var(--line-soft);border-radius:7px;background:var(--parchment);font-size:12px;}
+  .histrow .hw{width:8px;height:8px;border-radius:50%;flex:none;}
+  .histrow .hw.win{background:var(--good);} .histrow .hw.loss{background:var(--crimson);}
+  .histrow .hmode{flex:1;font-weight:600;} .histrow .hmeta{color:var(--ink-soft);}
+  .missionlist{display:flex;flex-direction:column;gap:9px;}
+  .missioncard{display:flex;align-items:center;gap:14px;padding:12px 16px;border:1.5px solid var(--line);border-radius:10px;background:var(--parchment);text-align:left;}
+  .missioncard.locked{opacity:.5;cursor:not-allowed;}
+  .missioncard .mnum{font-family:'Cinzel',serif;font-size:22px;color:var(--crimson);width:30px;flex:none;text-align:center;}
+  .missioncard .mtitle{font-family:'Cinzel',serif;font-size:14px;} .missioncard .mdesc{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+  .missioncard .mcheck{font-size:18px;color:var(--good);flex:none;}
   .mptabs{display:flex;gap:8px;justify-content:center;margin-bottom:14px;}
   .mptab{border:1.5px solid var(--line);border-radius:8px;padding:7px 20px;background:var(--parchment);font-family:'Cinzel',serif;font-size:12.5px;letter-spacing:.06em;}
   .mptab.sel{border-color:var(--crimson);background:#fff2e2;color:var(--crimson);}
@@ -176,6 +205,7 @@
   .lobbyrow .lname{flex:1;font-size:13px;font-weight:600;}
   .lobbyrow .lteam{font-size:11px;padding:3px 9px;border-radius:12px;border:1px solid var(--line);cursor:pointer;font-weight:600;}
   .lobbyrow .lteam.A{background:#dbe9f5;color:#2e5e8c;} .lobbyrow .lteam.B{background:#f5dbdb;color:#98281f;}
+  .lobbyrow .lperk{font-size:11px;padding:3px 9px;border-radius:12px;border:1px dashed var(--gold);background:rgba(176,134,58,.12);color:#7a5c1f;cursor:pointer;white-space:nowrap;}
   .lobbyrow .lyou{font-size:10px;color:var(--ink-soft);}
   .mpstatus{text-align:center;font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;min-height:16px;}
   .mpstatus.err{color:var(--crimson);font-weight:600;}
@@ -208,7 +238,17 @@
       <canvas id="map"></canvas>
       <div class="modebar" id="modebar" hidden></div>
       <div class="maphud" id="maphud"></div>
+      <canvas id="minimap" width="160" height="106" title="Click to jump the camera"></canvas>
       <div class="zoomctl"><button id="zin">+</button><button id="zout">−</button></div>
+      <div class="pingwrap" id="pingWrap" hidden>
+        <button class="pingbtn" id="pingBtn">📢</button>
+        <div class="pingmenu" id="pingMenu" hidden>
+          <button data-p="Attack here!">⚔ Attack here!</button>
+          <button data-p="Need help!">🆘 Need help!</button>
+          <button data-p="Enemy incoming!">⚠ Enemy incoming!</button>
+          <button data-p="Good job!">👍 Good job!</button>
+        </div>
+      </div>
     </div>
     <aside><div class="resizer" id="resizer" title="Drag to resize the panel"></div><div class="phead"><span id="ppTitle">Province</span><span id="ppTag"></span></div><div id="ppBody"></div></aside>
   </main>
@@ -229,6 +269,29 @@
     <div class="steplbl">3 · Choose your faction — this begins the war</div>
     <div class="factions" id="factionPick"></div>
     <button class="mplink" id="mpEnterBtn">🌐 Play Online with a Room Code (1v1 / 2v2 / 3v3 / 4v4) →</button>
+    <div class="quicklinks">
+      <button class="qlink" id="continueBtn" hidden>▶ Continue Saved Game</button>
+      <button class="qlink" id="campaignBtn">📖 Campaign</button>
+      <button class="qlink" id="historyBtn">📜 History &amp; Stats</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="historyOverlay" hidden>
+  <div class="modal" style="width:min(620px,100%)">
+    <h2 style="font-size:24px">📜 History &amp; Stats</h2>
+    <div class="statsummary" id="histSummary"></div>
+    <div class="histlist" id="histList"></div>
+    <div class="closebar"><button class="btn ghost" id="histClearBtn">Clear History</button><button class="btn primary" id="histCloseBtn">Close</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="campaignOverlay" hidden>
+  <div class="modal" style="width:min(680px,100%);position:relative">
+    <button class="btn ghost mpback" id="campBackBtn">← Back</button>
+    <h2 style="font-size:26px">📖 Campaign</h2>
+    <div class="tagline">Five hand-picked battles of rising difficulty. Beat one to unlock the next.</div>
+    <div class="missionlist" id="missionList"></div>
   </div>
 </div>
 
@@ -256,6 +319,7 @@
     <div id="mpJoinPane" hidden>
       <div class="steplbl">Enter room code</div>
       <div class="codebox"><input id="mpCodeInput" maxlength="4" placeholder="ABCD"></div>
+      <label class="fogtoggle"><input type="checkbox" id="mpSpectateChk"> <span>👁 Join as spectator (watch only, doesn't take a player slot)</span></label>
       <button class="btn primary full" id="mpJoinBtn" style="display:block;width:100%;padding:12px">Join Room</button>
     </div>
 
@@ -347,6 +411,14 @@ const MODE={ conquest:{n:"Conquest",d:"Rule half the world",i:"🌍",win:.5,econ
   blitz:{n:"Blitz",d:"Fast, rich, brutal",i:"⚡",win:.4,econ:1.7,aggr:.15,esc:0,botStart:0,capOnly:false},
   regicide:{n:"Regicide",d:"Take every capital",i:"👑",win:1.1,econ:1,aggr:.1,esc:0,botStart:0,capOnly:true},
   laststand:{n:"Last Stand",d:"Outlast a stronger world",i:"🛡",win:.45,econ:1,aggr:.35,esc:1,botStart:2,capOnly:false} };
+const TECH={
+  logistics:{n:"Logistics Corps",i:"🐎",c:60,d:"+15% army speed"},
+  siege:{n:"Siege Engineering",i:"💣",c:70,d:"+10% attack power"},
+  currency:{n:"Currency Reform",i:"💰",c:55,d:"+10% gold income"},
+  irrigation:{n:"Irrigation",i:"🌾",c:55,d:"+10% food income"},
+  medicine:{n:"Field Medicine",i:"⛑",c:50,d:"Hospitals heal 2x faster"},
+  naval:{n:"Naval Doctrine",i:"⚓",c:65,d:"+1 harbor range"},
+};
 const AI_NAMES=["Ironpeak Hegemony","Verdant Coalition","Sunspear Caliphate","Frostmark Realm","Azure League"];
 const AI_COLORS=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const PLAYER_COLOR="#2e5e8c";
 const WIN_FRACTION=0.5, MISSILE_COST=45, UPKEEP=0.06, MISSILE_COOLDOWN=18, MISSILE_BLAST=2, INT_RANGE=4, INT_CHANCE=0.6;
@@ -545,7 +617,7 @@ function applyStatic(){
 }
 
 /* ===== STATE ===== */
-let S=null, ctx=null, off=null, offCtx=null, canvas=null;
+let S=null, ctx=null, off=null, offCtx=null, canvas=null, miniCanvas=null, miniCtx=null;
 const byId=id=>S.map[id];
 const cellAt=(c,r)=>(c<0||r<0||c>=COLS||r>=ROWS)?null:S.grid[r][c];
 function neighbors(cell){ const o=cell.row%2?OFF_ODD:OFF_EVEN; return o.map(([dc,dr])=>cellAt(cell.col+dc,cell.row+dr)).filter(Boolean); }
@@ -600,17 +672,23 @@ function genWorld(){
 }
 
 /* ===== SETUP ===== */
-function startGame(perk,diff,mode,fog){
+function startGame(perk,diff,mode,fog,campaignId){
+  clearSave();
+  if(campaignId){ const m=MISSIONS.find(x=>x.id===campaignId); const orig=Math.random; Math.random=mulberry32(m.seed);
+    try{ startGameInner(perk,diff,mode,fog); S.campaignId=campaignId; } finally{ Math.random=orig; } }
+  else { startGameInner(perk,diff,mode,fog); S.campaignId=null; }
+}
+function startGameInner(perk,diff,mode,fog){
   mode=mode||"conquest";
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:rnd(EVENT_MIN,EVENT_MAX),fogTimer:0,
      cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,
-     visible:new Set(),explored:new Set(),landCount:0};
+     visible:new Set(),explored:new Set(),landCount:0,pacts:{}};
   const conts=genWorld();
   const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
   const bigs=conts.slice(0,4); const pIdx=Math.floor(Math.random()*bigs.length);
   const pCont=bigs[pIdx], aiConts=bigs.filter((_,i)=>i!==pIdx);
-  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0};
+  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0,tech:{}};
   const pcap=nCap(pCont); pcap.owner="player";pcap.troops=8;pcap.cap=true;pcap.b.factory=true;pcap.b.barracks=true;
   S.nations.player.capitalId=pcap.id; S.playerCapitalId=pcap.id; if(perk==="rocketeer")pcap.b.silo=true;
   const cperks=["warmonger","fortifier",null];
@@ -644,23 +722,22 @@ function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas
 
 /* ===== MULTIPLAYER SETUP (host builds the match; guest deserializes it) ===== */
 function startMultiplayerHost(lobby){
-  const perk=pickAiPerk();
   const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:rnd(EVENT_MIN,EVENT_MAX),fogTimer:0,
      cam:{x:0,y:0,scale:1},diff,mode,fog:!!fog,winFrac:MODE[mode].win,econMul:MODE[mode].econ,
-     visible:new Set(),explored:new Set(),landCount:0};
+     visible:new Set(),explored:new Set(),landCount:0,pacts:{}};
   const conts=genWorld();
   const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
   const total=lobby.teamSize*2;
   const bigs=conts.slice(0,total);
   // shuffle which continent each slot gets (fair placement)
   const contOrder=bigs.slice(); for(let i=contOrder.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[contOrder[i],contOrder[j]]=[contOrder[j],contOrder[i]];}
-  const humans=lobby.players; // [{rid,name,team,peerId,isHost}]
+  const humans=lobby.players; // [{rid,name,team,peerId,isHost,perk}]
   const teamOf={}, allHumanRealIds=[], allAiIds=[];
   humans.forEach((p,i)=>{ teamOf[p.rid]=p.team;
-    const isMe=p.rid==="player";
-    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:isMe?perk:pickAiPerk(),gold:50,food:45,missileCD:0,human:true};
+    const isMe=p.rid==="player"; const chosenPerk=(p.perk&&PERKS[p.perk])?p.perk:pickAiPerk();
+    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50,food:45,missileCD:0,human:true,tech:{}};
     const cap=nCap(contOrder[i]); cap.owner=p.rid;cap.troops=8;cap.cap=true;cap.b.factory=true;cap.b.barracks=true;
     S.nations[p.rid].capitalId=cap.id; if(isMe){S.playerCapitalId=cap.id;} if(S.nations[p.rid].perk==="rocketeer")cap.b.silo=true;
     allHumanRealIds.push(p.rid); });
@@ -683,16 +760,17 @@ function startMultiplayerHost(lobby){
   // send each guest their own remapped init payload
   MPLOBBY.conns.forEach((conn,peerId)=>{ const rid=MPLOBBY.peerToRid.get(peerId); if(!rid)return;
     try{ conn.send({type:"init",payload:mpSerializeInit(rid)}); }catch(e){} });
+  MPLOBBY.specConns.forEach(conn=>{ try{ conn.send({type:"init",payload:mpSerializeInit(null),spectator:true}); }catch(e){} });
   lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
 }
 function pickAiPerk(){ const ks=Object.keys(PERKS); return ks[Math.floor(Math.random()*ks.length)]; }
 // Build the static (send-once) + dynamic (per-tick) payload from the HOST's own canonical id-space,
 // remapped so that `forRealId` becomes "player" for the RECIPIENT, and the host's own id becomes "__host__".
-function mpRemapId(id,forRealId){ if(id===forRealId)return "player"; if(id==="player")return "__host__"; return id; }
+function mpRemapId(id,forRealId){ if(!forRealId)return id; if(id===forRealId)return "player"; if(id==="player")return "__host__"; return id; }
 function mpSerializeInit(forRealId){
   const cells=S.cells.map(c=>c.land?{col:c.col,row:c.row,land:1,terr:c.terr,site:c.site,cap:c.cap,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b}:{col:c.col,row:c.row,land:0});
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
-    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,human:!!n.human,capitalId:null}; });
+    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,human:!!n.human,tech:n.tech||{},capitalId:null}; });
   // fix capitalId references after id remap (capitalId is a CELL id, unaffected — cells keep their own col_row ids)
   Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const rid=mpRemapId(id,forRealId); nations[rid].capitalId=S.nations[id].capitalId; });
   const teamOf={}; Object.keys(S.mp.teamOf).forEach(id=>{ teamOf[mpRemapId(id,forRealId)]=S.mp.teamOf[id]; });
@@ -713,36 +791,42 @@ function initMultiplayerGuest(p){
   Object.keys(p.nations).forEach(id=>{ S.nations[id]=Object.assign({},p.nations[id]); });
   S.nations.sea={id:"sea",color:"#33586e"}; S.nations.neutral={id:"neutral",name:"Unclaimed",color:"#c3b288"};
   S.playerCapitalId=S.nations.player.capitalId;
-  S.mp={role:"guest",myTeam:p.myTeam,teamOf:p.teamOf,allHumanRealIds:p.allHumanRealIds,allAiIds:p.allAiIds,conn:MPLOBBY.conn};
+  const role=MPLOBBY.spectating?"spectator":"guest";
+  S.mp={role,myTeam:p.myTeam,teamOf:p.teamOf,allHumanRealIds:p.allHumanRealIds,allAiIds:p.allAiIds,conn:MPLOBBY.conn};
   if(S.fog)computeFog();
   S.selected=S.playerCapitalId; S.deploy=byId(S.playerCapitalId).troops;
-  pushLog("Joined the war as "+S.nations.player.name+".","good");
+  pushLog(role==="spectator"?"Now spectating the match.":"Joined the war as "+S.nations.player.name+".","good");
   document.getElementById("mpOverlay").hidden=true; document.getElementById("startOverlay").hidden=true; document.getElementById("app").hidden=false;
   resizeCanvas(); worldDirty=true; renderPanel(); updateHeader(); syncPanel(); applyMpUiVisibility();
   S.cam.scale=1.15; centerOn(byId(S.playerCapitalId));
   lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
 }
-function applyMpUiVisibility(){ const sp=document.getElementById("speed"); if(sp)sp.style.display=(S.mp&&S.mp.role==="guest")?"none":""; }
+function applyMpUiVisibility(){ const sp=document.getElementById("speed"); if(sp)sp.style.display=(S.mp&&S.mp.role!=="host")?"none":"";
+  const pw=document.getElementById("pingWrap"); if(pw)pw.hidden=!S.mp;
+  const mb=document.getElementById("missileBtn"); if(mb)mb.style.display=(S.mp&&S.mp.role==="spectator")?"none":"";
+  const lv=document.getElementById("leaveBtn"); if(lv)lv.textContent=t(S.mp&&S.mp.role==="spectator"?"Stop":"Leave"); }
 // ---- host: apply an order coming from one connected guest ----
 function mpApplyOrder(actingNat,order){
   if(order.kind==="build"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doBuildCore(c,actingNat,order.key); }
   else if(order.kind==="recruit"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doRecruitCore(c,actingNat,order.num); }
   else if(order.kind==="deploy"){ const src=byId(order.fromId),tgt=byId(order.toId);
-    if(src&&tgt&&src.owner===actingNat&&validTarget(src,tgt))sendArmy(src,tgt,Math.min(order.amount,src.troops),1); }
+    if(src&&tgt&&src.owner===actingNat&&validTarget(src,tgt))sendArmy(src,tgt,Math.min(order.amount,src.troops),1,order.formation); }
   else if(order.kind==="missile"){ const tgt=byId(order.targetId); const nat=S.nations[actingNat];
     if(tgt&&nat&&!tgt.cap){ const {silo,cost}=launchMissileFor(actingNat); if(nat.gold>=cost&&nat.missileCD<=0){ nat.gold-=cost; launchMissile(silo,tgt,actingNat,1); } } }
+  else if(order.kind==="tech"){ buyTech(actingNat,order.key); }
   worldDirty=true;
 }
 // ---- state broadcast (host → guests), called from the main loop every ~350ms ----
-function mpBroadcastState(){ if(!S.mp||S.mp.role!=="host"||!S.mp.conns.size)return;
+function mpBroadcastState(){ if(!S.mp||S.mp.role!=="host")return;
   MPLOBBY.conns.forEach((conn,peerId)=>{ const rid=MPLOBBY.peerToRid.get(peerId); if(!rid)return;
     try{ conn.send({type:"state",payload:mpSerializeState(rid)}); }catch(e){} });
+  MPLOBBY.specConns.forEach(conn=>{ try{ conn.send({type:"state",payload:mpSerializeState(null)}); }catch(e){} });
 }
 function mpSerializeState(forRealId){
   const cells=S.cells.filter(c=>c.land).map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap}));
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
-    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0}; });
-  const armies=S.armies.map(a=>({owner:mpRemapId(a.owner,forRealId),count:a.count,fromId:a.fromId,toId:a.toId,ox:a.ox,oy:a.oy,tx:a.tx,ty:a.ty,t:a.t,dur:a.dur,extra:a.extra}));
+    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0,tech:n.tech||{}}; });
+  const armies=S.armies.map(a=>({owner:mpRemapId(a.owner,forRealId),count:a.count,fromId:a.fromId,toId:a.toId,ox:a.ox,oy:a.oy,tx:a.tx,ty:a.ty,t:a.t,dur:a.dur,extra:a.extra,formation:a.formation}));
   const missiles=S.missiles.map(m=>({owner:mpRemapId(m.owner,forRealId),toId:m.toId,ox:m.ox,oy:m.oy,tx:m.tx,ty:m.ty,t:m.t,dur:m.dur,intercepted:m.intercepted,interceptT:m.interceptT}));
   return {cells,nations,armies,missiles,time:S.time,over:S.over};
 }
@@ -750,6 +834,7 @@ function mpApplyState(p){ if(!S)return;
   p.cells.forEach(pc=>{ const c=S.map[pc.id]; if(!c)return; if(c.owner!==pc.owner){c.owner=pc.owner;worldDirty=true;} c.troops=pc.troops; c.b=pc.b; c.cap=pc.cap; });
   Object.keys(p.nations).forEach(id=>{ const n=S.nations[id]; if(n)Object.assign(n,p.nations[id]); });
   S.armies=p.armies; S.missiles=p.missiles; S.time=p.time;
+  if(S.fog){ computeFog(); worldDirty=true; }
   renderPanel(); updateHeader(); paint(); }
 // ---- lobby: send an order from guest to host ----
 function mpSendOrder(order){ if(MPLOBBY.conn){ try{MPLOBBY.conn.send({type:"order",order});}catch(e){} } }
@@ -761,14 +846,16 @@ function ratesFor(natId){ const n=S.nations[natId],owned=ownedCells(natId); let 
     if(c.site){const s=SITES[c.site];if(s.gold)g+=s.gold;if(s.food)f+=s.food;} });
   let boost=1+0.10*labCount(natId); owned.forEach(c=>{if(c.site&&SITES[c.site].boost)boost+=SITES[c.site].boost;});
   g*=boost;f*=boost; if(n.perk==="industrial")g*=1.25; if(n.perk==="agrarian")f*=1.25;
+  if(n.tech&&n.tech.currency)g*=1.1; if(n.tech&&n.tech.irrigation)f*=1.1;
   g*=S.econMul; f*=S.econMul;
   const troops=totalTroops(natId); const armyCap=10+owned.length*2+cap;
   return {gold:g,food:f,foodNet:f-troops*UPKEEP,troops,armyCap}; }
 function playerRates(){ return ratesFor("player"); }
 function escMul(){ return 1+(MODE[S.mode].esc||0)*Math.min(2,S.time/240); }
 function computeFog(){ const vis=new Set();
-  ownedCells("player").forEach(c=>{ let r=2; if(c.b.tower)r=4; else if(c.b.interceptor)r=Math.max(r,3);
-    S.cells.forEach(t=>{ if(hexDist(t,c)<=r)vis.add(t.id); }); });
+  const visionIds = S.mp ? Object.keys(S.mp.teamOf).filter(id=>S.mp.teamOf[id]===S.mp.myTeam) : ["player"];
+  visionIds.forEach(id=>{ ownedCells(id).forEach(c=>{ let r=2; if(c.b.tower)r=4; else if(c.b.interceptor)r=Math.max(r,3);
+    S.cells.forEach(t=>{ if(hexDist(t,c)<=r)vis.add(t.id); }); }); });
   vis.forEach(id=>S.explored.add(id)); S.visible=vis; }
 function fogHidden(cell){ return S.fog && !S.visible.has(cell.id); }         // troops/details hidden
 function fogUnknown(cell){ return S.fog && !S.explored.has(cell.id); }        // never seen
@@ -777,26 +864,38 @@ function fogUnknown(cell){ return S.fog && !S.explored.has(cell.id); }        //
 function defBonus(cell){ let b=TERR[cell.terr].def; if(cell.b.fort)b+=B.fort.def;
   if(cell.b.tower)b+=B.tower.defAdj; else if(neighbors(cell).some(n=>n.owner===cell.owner&&n.b.tower))b+=B.tower.defAdj;
   if(cell.site&&SITES[cell.site].def)b+=SITES[cell.site].def; if(perkOf(cell.owner)==="fortifier")b+=0.2; return b; }
-function resolve(amount,attNat,target,extra){ if(target.troops<=0)return{win:true,att:amount,def:0};
-  let am=(extra||1)*(perkOf(attNat)==="warmonger"?1.2:1);
-  const ap=amount*am*rnd(.85,1.15), dp=target.troops*(1+defBonus(target))*rnd(.85,1.15);
+function resolve(amount,attNat,target,extra,formation){ if(target.troops<=0)return{win:true,att:amount,def:0};
+  const attTech=(S.nations[attNat]||{}).tech;
+  let am=(extra||1)*(perkOf(attNat)==="warmonger"?1.2:1)*(attTech&&attTech.siege?1.1:1);
+  const fort=defBonus(target);
+  if(formation==="cavalry")am*=1.2; else if(formation==="artillery")am*=(fort>=0.15?1.5:0.85);
+  const ap=amount*am*rnd(.85,1.15), dp=target.troops*(1+fort)*rnd(.85,1.15);
   if(ap>=dp){const lr=dp/ap;return{win:true,att:Math.max(1,Math.round(amount*(1-0.75*lr))),def:0};}
   const lr=ap/dp;return{win:false,att:0,def:Math.max(1,Math.round(target.troops*(1-0.75*lr)))}; }
 
 /* ===== ARMIES ===== */
 const TERR_SPEED={Plains:0.8,Desert:1.0,Tundra:1.2,Forest:1.35,Jungle:1.4,Mountains:1.7};
-function sendArmy(src,tgt,amount,extra){ amount=Math.min(amount,src.troops); if(amount<1)return;
+const FORMATIONS={ standard:{n:"Standard",i:"⚔",d:"No bonus, no cost — the default.",atkMul:1,durMul:1,gpt:0,naval:true},
+  cavalry:{n:"Cavalry Charge",i:"🐎",d:"+20% attack, arrives 25% faster. Land only.",atkMul:1.2,durMul:0.75,gpt:0.5,naval:false},
+  artillery:{n:"Artillery Barrage",i:"💣",d:"+50% vs fortified, −15% vs weak targets. 35% slower.",atkMul:1,durMul:1.35,gpt:1,naval:true} };
+function sendArmy(src,tgt,amount,extra,formation){ amount=Math.min(amount,src.troops); if(amount<1)return;
+  const naval=!neighbors(src).some(x=>x.id===tgt.id);
+  let form=(formation&&FORMATIONS[formation])?formation:"standard";
+  if(naval&&!FORMATIONS[form].naval)form="standard";
+  const nat=S.nations[src.owner]; const surcharge=Math.ceil(amount*FORMATIONS[form].gpt);
+  if(surcharge>0){ if(nat&&nat.gold>=surcharge)nat.gold-=surcharge; else form="standard"; }
   src.troops-=amount; worldDirty=true;
-  const terr=TERR_SPEED[tgt.terr]||1, naval=neighbors(src).some(x=>x.id===tgt.id)?1:1.3;
-  const dur=Math.max(0.5,hexDist(src,tgt)*0.5*terr*naval);
-  S.armies.push({owner:src.owner,count:amount,fromId:src.id,toId:tgt.id,ox:src.cx,oy:src.cy,tx:tgt.cx,ty:tgt.cy,t:0,dur,extra:extra||1}); }
+  const terr=TERR_SPEED[tgt.terr]||1, navalMul=naval?1.3:1;
+  const srcTech=(S.nations[src.owner]||{}).tech, techSpeed=srcTech&&srcTech.logistics?0.87:1;
+  const dur=Math.max(0.5,hexDist(src,tgt)*0.5*terr*navalMul*techSpeed*FORMATIONS[form].durMul);
+  S.armies.push({owner:src.owner,count:amount,fromId:src.id,toId:tgt.id,ox:src.cx,oy:src.cy,tx:tgt.cx,ty:tgt.cy,t:0,dur,extra:extra||1,formation:form}); }
 function arriveArmy(a){ const tgt=byId(a.toId); if(!tgt)return;
   if(tgt.owner===a.owner){ tgt.troops+=a.count; addFx("merge",tgt.cx,tgt.cy,a.owner); worldDirty=true; return; }
   if(tgt.b.shield){ delete tgt.b.shield; addFx("shield",tgt.cx,tgt.cy,tgt.owner);
     if(tgt.owner==="player")pushLog("🔰 Your shield repelled the assault on "+pName(tgt)+"!","good");
     else if(a.owner==="player")pushLog("🔰 "+pName(tgt)+"'s shield blocked your attack!","bad");
     worldDirty=true; return; }
-  const res=resolve(a.count,a.owner,tgt,a.extra); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
+  const res=resolve(a.count,a.owner,tgt,a.extra,a.formation); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
   if(res.win){ const prev=tgt.owner; tgt.owner=a.owner;tgt.troops=res.att;tgt.cap=tgt.cap&&false;
     if(a.owner==="player"){pushLog("Captured "+pName(tgt)+".","good");sndCapture();} else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad"); }
   else { tgt.troops=res.def; if(a.owner==="player")pushLog("Attack on "+pName(tgt)+" failed.","bad"); }
@@ -843,7 +942,8 @@ function update(dt){ if(S.over)return; S.time+=dt;
     n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt;
     if(n.food<0){ n.food=0; // starve slowly
       if(Math.random()<dt*0.4){ const pool=ownedCells(id).filter(c=>c.troops>0).sort((a,b)=>b.troops-a.troops); if(pool[0]){pool[0].troops--;worldDirty=true; if(id==="player")pushLog("A regiment starved!","bad");} } }
-    ownedCells(id).forEach(c=>{ if(c.b.hospital){c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
+    ownedCells(id).forEach(c=>{ if(c.b.hospital){ const medMul=n.tech&&n.tech.medicine?2:1;
+      c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen*medMul; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
   });
   // population growth: provinces slowly raise a local militia up to a cap
   S.cells.forEach(c=>{ if(!c.land||(!humanIds.includes(c.owner)&&!c.owner.startsWith("ai")))return;
@@ -902,7 +1002,7 @@ function aiAct(id,nat,owned,d,threat){
   if(nat.gold>=6&&totalTroops(id)<owned.length*7*escMul()+8){ nat.gold-=4; spot.troops+=Math.max(2,Math.round(2*escMul())); worldDirty=true; }
   // missile (nightmare)
   const myTeam=S.mp?S.mp.teamOf[id]:null;
-  const isEnemyOwner=ownerId=>{ if(ownerId===id)return false; if(!S.mp)return true; return !S.mp.teamOf[ownerId]||S.mp.teamOf[ownerId]!==myTeam; };
+  const isEnemyOwner=ownerId=>{ if(ownerId===id)return false; if(S.pacts&&S.pacts[id]&&ownerId==="player")return false; if(!S.mp)return true; return !S.mp.teamOf[ownerId]||S.mp.teamOf[ownerId]!==myTeam; };
   if(d.missile&&(nat.missileCD||0)<=0&&Math.random()<0.25&&nat.gold>=40){
     const humanIds=S.mp?S.mp.allHumanRealIds:["player"];
     const tg=S.cells.filter(c=>c.land&&!c.cap&&humanIds.includes(c.owner)&&isEnemyOwner(c.owner));
@@ -918,6 +1018,20 @@ function aiAct(id,nat,owned,d,threat){
     const t=tg[0], commit=cell.troops-1, eff=t.troops*(1+defBonus(t));
     if(commit*d.edge>=eff*0.8){ sendArmy(cell,t,commit,d.edge); break; } } // one push per think
 }
+/* ===== TECH TREE (one-time global upgrades, managed from your capital) ===== */
+function buyTech(natId,key){ const nat=S.nations[natId]; if(!nat||!TECH[key])return;
+  nat.tech=nat.tech||{}; if(nat.tech[key]||nat.gold<TECH[key].c)return;
+  nat.gold-=TECH[key].c; nat.tech[key]=true; if(natId==="player")pushLog("🔬 Researched "+TECH[key].n+".","good"); worldDirty=true; }
+function doTech(key){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"tech",key}); return; }
+  buyTech("player",key); renderPanel(); paint(); }
+/* ===== DIPLOMACY (solo/campaign: player <-> AI non-aggression pacts) ===== */
+function proposePeace(nationId){ const nat=S.nations[nationId]; if(!nat)return;
+  if(S.pacts&&S.pacts[nationId]){ delete S.pacts[nationId]; pushLog("💔 You broke the peace with "+nat.name+".","bad"); renderPanel(); return; }
+  const threat=ownedCells("player").length/totalLand()*100;
+  const accept=Math.random() < Math.max(0.1, 1-threat/70);
+  if(accept){ S.pacts[nationId]=true; showToast("🤝 "+nat.name+" accepts your peace offer."); pushLog("🤝 Peace made with "+nat.name+".","good"); }
+  else { showToast("❌ "+nat.name+" rejects your offer."); pushLog(nat.name+" rejected your peace offer.","bad"); }
+  renderPanel(); }
 function seaRaid(){ const coasts=S.cells.filter(c=>c.land&&isCoastal(c)&&!c.cap&&(c.owner==="player"||c.owner.startsWith("ai")));
   if(!coasts.length)return; const cell=coasts[Math.floor(Math.random()*coasts.length)];
   let chance=0.6; if(cell.b.harbor)chance-=0.35; if(perkOf(cell.owner)==="seafarer")chance-=0.2;
@@ -972,6 +1086,7 @@ function launchMissileFor(natId){ const nat=S.nations[natId]; const silo=ownedCe
   return {silo,cost:natId==="player"?missileCost():(perkOf(natId)==="rocketeer"?Math.round(MISSILE_COST*.5):MISSILE_COST)}; }
 function toggleMissile(){ if(!hasBuilding("player","silo")||S.nations.player.gold<missileCost()||S.nations.player.missileCD>0)return; S.missileMode=!S.missileMode; updateModebar(); paint(); }
 function onPick(cell){ if(S.over||!cell)return;
+  if(S.mp&&S.mp.role==="spectator"){ S.selected=cell.id; renderPanel(); openDrawer(); paint(); return; }
   if(S.missileMode){ if(cell.land&&cell.owner!=="player"){
       if(cell.cap){ pushLog("Capitals are shielded from missiles — assault it with an army instead.","bad"); paint(); return; }
       if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"missile",targetId:cell.id}); }
@@ -985,16 +1100,18 @@ function onPick(cell){ if(S.over||!cell)return;
       clearTimeout(S.attackConfirmTimer); S.attackConfirmTimer=setTimeout(()=>{S.attackConfirmId=null;},4000);
       showToast("⚔ Click "+pName(cell)+" again to confirm the attack"); paint(); return; }
     S.attackConfirmId=null;
-    const amount=Math.min(S.deploy,src.troops);
-    if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"deploy",fromId:src.id,toId:cell.id,amount}); }
-    else { sendArmy(src,cell,amount,1); if(!S.deployLock)S.deploy=byId(S.selected).troops; }
+    if(isAttack&&S.pacts&&S.pacts[cell.owner]){ delete S.pacts[cell.owner]; pushLog("💔 Peace with "+S.nations[cell.owner].name+" is broken!","bad"); }
+    const amount=Math.min(S.deploy,src.troops), formation=S.deployFormation||"standard";
+    if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"deploy",fromId:src.id,toId:cell.id,amount,formation}); }
+    else { sendArmy(src,cell,amount,1,formation); if(!S.deployLock)S.deploy=byId(S.selected).troops; }
     renderPanel(); paint(); return; }
   S.selected=cell.id;
   if(cell.owner==="player"){ if(!S.deployLock)S.deploy=cell.troops; else S.deploy=Math.max(1,Math.min(S.deploy||cell.troops,cell.troops)); }
   renderPanel(); openDrawer(); paint(); }
 function validTarget(src,cell){ if(!cell.land||cell.id===src.id)return false;
   if(neighbors(src).some(n=>n.id===cell.id))return true;
-  if(src.b.harbor&&isCoastal(cell)&&hexDist(src,cell)<=(perkOf("player")==="seafarer"?4:3))return true; return false; }
+  let range=3; if(perkOf(src.owner)==="seafarer")range++; const st=(S.nations[src.owner]||{}).tech; if(st&&st.naval)range++;
+  if(src.b.harbor&&isCoastal(cell)&&hexDist(src,cell)<=range)return true; return false; }
 
 /* ===== RENDER ===== */
 let worldDirty=true, rafOn=false, lastT=0, uiAcc=0;
@@ -1042,6 +1159,8 @@ function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
   S.armies.forEach(a=>{ const x=a.ox+(a.tx-a.ox)*a.t,y=a.oy+(a.ty-a.oy)*a.t; const col=(S.nations[a.owner]||{color:"#888"}).color;
     const bob=SETTINGS.reduceMotion?0:Math.sin(S.time*10+a.ox)*1.5;
     ctx.beginPath();ctx.arc(x,y+bob,7,0,7);ctx.fillStyle=col;ctx.fill();ctx.strokeStyle="#fff";ctx.lineWidth=1.4;ctx.stroke();
+    if(a.formation==="cavalry"){ ctx.strokeStyle="#ffd873";ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(x,y+bob,10,0,7);ctx.stroke(); }
+    else if(a.formation==="artillery"){ ctx.strokeStyle="#e0761f";ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(x,y+bob,10,0,7);ctx.stroke(); }
     ctx.fillStyle="#fff";ctx.font="bold 9px Spectral,serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(a.count,x,y+bob);
     // trail arrow
     ctx.strokeStyle="rgba(255,255,255,.35)";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(a.ox,a.oy);ctx.lineTo(x,y);ctx.stroke(); });
@@ -1064,14 +1183,26 @@ function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
     else if(fx.type==="merge"){ const r=3+p*12;ctx.strokeStyle="rgba(127,192,240,"+(1-p)+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); }
     else if(fx.type==="ship"){ ctx.fillStyle="#20323d";ctx.fillRect(fx.x-5,fx.y-2,10,4); }
     else if(fx.type==="raid"){ const r=3+p*14;ctx.strokeStyle="rgba(224,145,127,"+(1-p)+")";ctx.lineWidth=2;ctx.beginPath();ctx.arc(fx.x,fx.y,r,0,7);ctx.stroke(); } });
-  ctx.restore(); }
+  ctx.restore(); renderMinimap(); }
+function renderMinimap(){ if(!miniCtx||!S)return; const w=miniCanvas.width,h=miniCanvas.height;
+  miniCtx.clearRect(0,0,w,h); const sx=w/WORLD_W, sy=h/WORLD_H;
+  miniCtx.fillStyle="#16262f"; miniCtx.fillRect(0,0,w,h);
+  S.cells.forEach(c=>{ if(!c.land)return; if(S.fog&&fogUnknown(c))return;
+    const nat=S.nations[c.owner]; miniCtx.fillStyle=nat?nat.color:"#6b6250";
+    miniCtx.fillRect(c.cx*sx-1,c.cy*sy-1,2.4,2.4); });
+  // viewport rectangle
+  const vw=canvas.clientWidth,vh=canvas.clientHeight;
+  const x0=(-S.cam.x/S.cam.scale)*sx, y0=(-S.cam.y/S.cam.scale)*sy;
+  const vw2=(vw/S.cam.scale)*sx, vh2=(vh/S.cam.scale)*sy;
+  miniCtx.strokeStyle="#ffd873"; miniCtx.lineWidth=1.5; miniCtx.strokeRect(x0,y0,vw2,vh2); }
 function paint(){ if(ctx&&S)render(); }
 function openDrawer(){ const a=document.querySelector('aside'); if(a)a.classList.add('open'); }
-let mpBroadcastAcc=0;
+let mpBroadcastAcc=0, saveAcc=0;
 function loop(now){ const raw=(now-lastT)/1000; lastT=now; const dt=Math.min(0.05,raw)*S.speed;
   const isGuest=S.mp&&S.mp.role==="guest";
   if(!S.over&&S.speed>0&&!isGuest)update(dt); render();
   if(S.mp&&S.mp.role==="host"){ mpBroadcastAcc+=raw; if(mpBroadcastAcc>=0.35){mpBroadcastAcc=0;mpBroadcastState();} }
+  if(!S.mp){ saveAcc+=raw; if(saveAcc>=10){saveAcc=0;saveGameState();} }
   uiAcc+=raw; if(uiAcc>=0.2){uiAcc=0;if(!isGuest)updateHeader();updatePanelLive();syncPanel();}
   if(rafOn)requestAnimationFrame(loop); }
 
@@ -1121,18 +1252,20 @@ function renderPanel(){ const title=document.getElementById("ppTitle"),tag=docum
   if(!c.land){title.textContent=t("Open Sea");tag.innerHTML=`<span style="color:var(--sea-2)">⚔</span>`;body.innerHTML=`<div class="muted">${t("The raiders' domain. Coasts get attacked from here — build Harbors and keep troops on shore.")}</div>`;return;}
   if(fogUnknown(c)){title.textContent=t("Unknown Lands");tag.innerHTML="";body.innerHTML=`<div class="muted">${t("Unexplored territory — hidden by fog of war. Expand toward it to reveal what lies here.")}</div>`;return;}
   const n=S.nations[c.owner];
-  title.textContent=(c.site?t(SITES[c.site].n):t(c.terr))+" "+c.col+"·"+c.row+(c.cap?" ★":""); tag.innerHTML=`<span><span class="ownerdot" style="background:${n?n.color:'#c3b288'}"></span>${c.owner==='player'?t("You"):(n?n.name:t("Unclaimed"))}</span>`;
+  const iAmSpectator=S.mp&&S.mp.role==="spectator";
+  title.textContent=(c.site?t(SITES[c.site].n):t(c.terr))+" "+c.col+"·"+c.row+(c.cap?" ★":""); tag.innerHTML=`<span><span class="ownerdot" style="background:${n?n.color:'#c3b288'}"></span>${c.owner==='player'&&!iAmSpectator?t("You"):(n?n.name:t("Unclaimed"))}</span>`;
   const bl=Object.keys(c.b).filter(k=>c.b[k]);
   let h=`<div class="prow"><span class="k">${t("Terrain")}</span><span class="v">${t(c.terr)}${isCoastal(c)?' · '+t("coast"):''}</span></div>
     <div class="prow"><span class="k">${t("Defense")}</span><span class="v">+${Math.round(defBonus(c)*100)}%</span></div>
     <div class="prow"><span class="k">${t("Garrison")}</span><span class="v">${fogHidden(c)&&c.owner!=='player'?'?':c.troops}</span></div>`;
   if(c.site)h+=`<div class="prow"><span class="k">${t("Special")}</span><span class="v">${SITES[c.site].i} ${t(SITES[c.site].n)}</span></div>`;
   if(bl.length)h+=`<div class="built">${bl.map(k=>`<span class="btag">${B[k].i} ${t(B[k].n)}</span>`).join("")}</div>`;
-  if(c.owner==="player"){ const nn=S.nations.player,pr=playerRates(),rc=nn.perk==="agrarian"?2:3,slots=MAXB-bl.length;
-    const eff=Math.min(S.deploy||c.troops,c.troops)||1;
+  if(c.owner==="player"&&!iAmSpectator){ const nn=S.nations.player,pr=playerRates(),rc=nn.perk==="agrarian"?2:3,slots=MAXB-bl.length;
+    const eff=Math.min(S.deploy||c.troops,c.troops)||1; const curForm=S.deployFormation||"standard";
     h+=`<div class="deploy"><div class="amt"><span>${t("Deploy")} <button class="lockbtn ${S.deployLock?'on':''}" data-lock="1">${S.deployLock?'🔒 '+t("saved"):'🔓 '+t("save")}</button></span><b id="depVal">${eff}</b></div>
       <input type="range" id="depSlider" min="1" max="${Math.max(1,c.troops)}" value="${eff}">
-      <div class="muted" style="font-size:10px;margin-top:3px">${t("Click a highlighted tile to send this many.")}${S.deployLock?' <b>'+t("Amount is kept for every province.")+'</b>':''}</div></div>`;
+      <div class="muted" style="font-size:10px;margin-top:3px">${t("Click a highlighted tile to send this many.")}${S.deployLock?' <b>'+t("Amount is kept for every province.")+'</b>':''}</div>
+      <div class="formrow">${Object.keys(FORMATIONS).map(k=>`<button class="formbtn ${k===curForm?'sel':''}" data-form="${k}" title="${FORMATIONS[k].d}${FORMATIONS[k].gpt?' ('+FORMATIONS[k].gpt+'g/troop)':''}">${FORMATIONS[k].i} ${t(FORMATIONS[k].n)}</button>`).join("")}</div></div>`;
     h+=`<div class="prow" style="margin-top:8px"><span class="k">${t("Build slots")}</span><span class="v">${bl.length}/${MAXB}</span></div><div class="buildgrid" id="bgrid">`;
     BORDER.forEach(k=>{ if(c.b[k])return; const d=B[k],ok=slots>0&&nn.gold>=d.c;
       h+=`<button class="bbtn" data-bk="${k}" ${ok?'':'disabled'}><span class="bt">${d.i} ${t(d.n)}</span><small>${t(d.d)}</small><span class="cost">${d.c}g</span></button>`; });
@@ -1140,14 +1273,27 @@ function renderPanel(){ const title=document.getElementById("ppTitle"),tag=docum
       <button class="bbtn full" data-rec="1" ${nn.gold>=rc&&pr.troops<pr.armyCap?'':'disabled'} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">➕ ${t("Recruit")}</span><span class="cost">${rc}g</span></button>
       <button class="bbtn full" data-rec="5" ${nn.gold>=rc*5&&pr.troops<pr.armyCap?'':'disabled'} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">➕ ${t("Recruit ×5")}</span><span class="cost">${rc*5}g</span></button></div>`;
     h+=`<div class="hint">${t("Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.")}</div>`;
-  } else { h+=`<div class="hint" style="border-color:var(--crimson);background:rgba(152,40,31,.08);color:var(--crimson)">${c.owner==='neutral'?t("Unclaimed")+'.':t("Held by")+' '+(n?n.name:t("a rival"))+'.'} ${t("Send an army from an adjacent tile you own, or 🚀 missile it.")}</div>`; }
+    if(c.cap){ nn.tech=nn.tech||{};
+      h+=`<div class="prow" style="margin-top:10px"><span class="k">🔬 Tech Tree</span><span class="v"></span></div><div class="buildgrid">`;
+      Object.keys(TECH).forEach(k=>{ const td=TECH[k], owned=nn.tech[k];
+        h+=`<button class="bbtn ${owned?'owned':''}" data-tech="${k}" ${owned||nn.gold<td.c?'disabled':''}>
+          <span class="bt">${td.i} ${td.n}${owned?' ✓':''}</span><small>${td.d}</small><span class="cost">${owned?'Researched':td.c+'g'}</span></button>`; });
+      h+=`</div>`;
+    }
+  } else { h+=`<div class="hint" style="border-color:var(--crimson);background:rgba(152,40,31,.08);color:var(--crimson)">${c.owner==='neutral'?t("Unclaimed")+'.':t("Held by")+' '+(n?n.name:t("a rival"))+'.'} ${t("Send an army from an adjacent tile you own, or 🚀 missile it.")}</div>`;
+    if(!S.mp&&!iAmSpectator&&c.owner&&c.owner.startsWith("ai")){
+      const atPeace=S.pacts&&S.pacts[c.owner];
+      h+=atPeace ? `<button class="btn full" style="margin-top:8px;width:100%" data-diplo="${c.owner}">💔 Break Peace with ${n.name}</button>`
+                 : `<button class="btn full" style="margin-top:8px;width:100%" data-diplo="${c.owner}">🤝 Propose Peace with ${n.name}</button>`;
+    } }
   body.innerHTML=h; }
 function updatePanelLive(){ const c=S.selected?byId(S.selected):null; if(!c||c.owner!=="player")return;
   const nn=S.nations.player,pr=playerRates(),slots=MAXB-Object.keys(c.b).filter(k=>c.b[k]).length;
   document.querySelectorAll("#bgrid .bbtn").forEach(btn=>{ const k=btn.dataset.bk; btn.disabled=!(slots>0&&nn.gold>=B[k].c); });
   const rc=nn.perk==="agrarian"?2:3;
   const r1=document.querySelector('[data-rec="1"]'),r5=document.querySelector('[data-rec="5"]');
-  if(r1)r1.disabled=!(nn.gold>=rc&&pr.troops<pr.armyCap); if(r5)r5.disabled=!(nn.gold>=rc*5&&pr.troops<pr.armyCap); }
+  if(r1)r1.disabled=!(nn.gold>=rc&&pr.troops<pr.armyCap); if(r5)r5.disabled=!(nn.gold>=rc*5&&pr.troops<pr.armyCap);
+  document.querySelectorAll("[data-tech]").forEach(btn=>{ const k=btn.dataset.tech; if(!(nn.tech&&nn.tech[k]))btn.disabled=nn.gold<TECH[k].c; }); }
 function pushLog(m,cls){ S.log.unshift({t:Math.floor(S.time),m,cls:cls||""}); if(S.log.length>20)S.log.pop();
   document.getElementById("logfeed").innerHTML=S.log.slice(0,10).map(l=>`<span class="logline ${l.cls}"><span class="tag">${l.t}s</span>${l.m}</span>`).join(""); }
 
@@ -1157,13 +1303,21 @@ function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
   if(!leaveArmed){ leaveArmed=true; b.classList.add("armed"); b.textContent=t("Leave?");
     clearTimeout(leaveTimer); leaveTimer=setTimeout(()=>{leaveArmed=false;b.classList.remove("armed");b.textContent=t("Leave");},2500); return; }
   clearTimeout(leaveTimer); leaveArmed=false; b.classList.remove("armed"); b.textContent=t("Leave");
+  if(S&&!S.mp&&!S.over)saveGameState();
   if(S)S.over=true;
   document.getElementById("endOverlay").hidden=true;
   document.getElementById("app").hidden=true;
-  document.getElementById("startOverlay").hidden=false; }
+  document.getElementById("startOverlay").hidden=false;
+  buildStart(); }
 function endGame(win,text){ S.over=true; document.getElementById("endTitle").textContent=win?t("Victory"):t("Defeat");
   document.getElementById("endTitle").style.color=win?"var(--good)":"var(--crimson)";
-  document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false; return true; }
+  document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false;
+  recordHistory(win); if(win&&S.campaignId)setCampaignComplete(S.campaignId); clearSave(); return true; }
+function recordHistory(win){ try{
+  const hist=JSON.parse(localStorage.getItem("dominion_history")||"[]");
+  hist.unshift({date:Date.now(),win,mode:S.mode,diff:S.diff,perk:S.nations.player.perk,mp:!!S.mp,teamSize:S.mp?Math.max(1,Object.values(S.mp.teamOf).filter(t=>t===S.mp.myTeam).length):0,duration:Math.round(S.time)});
+  localStorage.setItem("dominion_history",JSON.stringify(hist.slice(0,50)));
+}catch(e){} }
 
 /* ===== SETTINGS ===== */
 const SETTINGS_DEFAULT={sound:true,volume:70,reduceMotion:false,autoPause:true,confirmAttack:false};
@@ -1201,33 +1355,118 @@ document.addEventListener("visibilitychange",()=>{ if(!S||S.over)return;
   if(document.hidden){ if(SETTINGS.autoPause&&S.speed>0&&!(S.mp&&S.mp.role==="guest")){ wasAutoPaused=true; S.speed=0; } }
   else if(wasAutoPaused){ wasAutoPaused=false; S.speed=1; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x.dataset.s==="1")); } });
 
+/* ===== SAVE / RESUME (solo only) ===== */
+function saveGameState(){ if(!S||S.mp||S.over)return;
+  try{
+    const cells=S.cells.map(c=>({col:c.col,row:c.row,land:c.land,cont:c.cont,terr:c.terr,site:c.site,cap:c.cap,owner:c.owner,troops:c.troops,b:c.b,regenAcc:c.regenAcc||0,popAcc:c.popAcc||0}));
+    const data={cells,nations:S.nations,playerCapitalId:S.playerCapitalId,armies:S.armies,missiles:S.missiles,
+      time:S.time,mode:S.mode,diff:S.diff,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,
+      visible:S.fog?Array.from(S.visible):[],explored:S.fog?Array.from(S.explored):[],
+      raidTimer:S.raidTimer,eventTimer:S.eventTimer,log:S.log,deploy:S.deploy,selected:S.selected,deployLock:S.deployLock,
+      campaignId:S.campaignId||null,pacts:S.pacts||{},savedAt:Date.now()};
+    localStorage.setItem("dominion_save",JSON.stringify(data));
+  }catch(e){} }
+function clearSave(){ try{localStorage.removeItem("dominion_save");}catch(e){} }
+function hasSave(){ try{return !!localStorage.getItem("dominion_save");}catch(e){return false;} }
+function loadGameState(){
+  let data; try{data=JSON.parse(localStorage.getItem("dominion_save"));}catch(e){return false;}
+  if(!data||!data.cells)return false;
+  S={cells:[],grid:[],map:{},nations:data.nations,armies:data.armies||[],missiles:data.missiles||[],fx:[],
+     selected:data.selected,deploy:data.deploy||0,deployLock:!!data.deployLock,missileMode:false,over:false,
+     time:data.time||0,speed:1,log:data.log||[],raidTimer:data.raidTimer||4,winTimer:1,eventTimer:data.eventTimer||30,fogTimer:0,
+     cam:{x:0,y:0,scale:1},diff:data.diff,mode:data.mode,fog:!!data.fog,winFrac:data.winFrac,econMul:data.econMul,
+     visible:new Set(data.visible||[]),explored:new Set(data.explored||[]),landCount:data.landCount,campaignId:data.campaignId||null,pacts:data.pacts||{}};
+  for(let r=0;r<ROWS;r++)S.grid[r]=[];
+  data.cells.forEach(pc=>{ const ct=hexCenter(pc.col,pc.row);
+    const cell={id:pc.col+"_"+pc.row,col:pc.col,row:pc.row,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
+      land:pc.land,cont:pc.cont,terr:pc.terr,owner:pc.owner,troops:pc.troops,b:pc.b||{},site:pc.site,cap:pc.cap,
+      regenAcc:pc.regenAcc,popAcc:pc.popAcc};
+    S.grid[pc.row][pc.col]=cell; S.cells.push(cell); S.map[cell.id]=cell; });
+  S.playerCapitalId=data.playerCapitalId;
+  pushLog("Welcome back — the war continues.","good");
+  document.getElementById("startOverlay").hidden=true; document.getElementById("app").hidden=false;
+  resizeCanvas(); worldDirty=true; renderPanel(); updateHeader(); syncPanel(); applyMpUiVisibility();
+  S.cam.scale=1.15; centerOn(byId(S.playerCapitalId));
+  lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
+  return true; }
+
+/* ===== HISTORY & STATS ===== */
+function mostCommon(arr){ if(!arr.length)return null; const c={}; arr.forEach(x=>c[x]=(c[x]||0)+1); return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; }
+function fmtDuration(s){ const m=Math.floor(s/60),r=Math.round(s%60); return m+"m "+r+"s"; }
+function buildHistoryModal(){
+  let hist=[]; try{hist=JSON.parse(localStorage.getItem("dominion_history")||"[]");}catch(e){}
+  const wins=hist.filter(h=>h.win).length, total=hist.length;
+  const favMode=mostCommon(hist.map(h=>h.mode)), favPerk=mostCommon(hist.map(h=>h.perk));
+  document.getElementById("histSummary").innerHTML=`
+    <div class="spod"><b>${total}</b><span>Games</span></div>
+    <div class="spod"><b>${wins}</b><span>Wins</span></div>
+    <div class="spod"><b>${total?Math.round(wins/total*100):0}%</b><span>Win Rate</span></div>
+    <div class="spod"><b>${favMode&&MODE[favMode]?MODE[favMode].i:'–'}</b><span>Top Mode</span></div>
+    <div class="spod"><b>${favPerk&&PERKS[favPerk]?PERKS[favPerk].i:'–'}</b><span>Top Faction</span></div>`;
+  document.getElementById("histList").innerHTML = hist.length ? hist.map(h=>`<div class="histrow"><span class="hw ${h.win?'win':'loss'}"></span>
+    <span class="hmode">${MODE[h.mode]?MODE[h.mode].i:''} ${MODE[h.mode]?t(MODE[h.mode].n):h.mode}${h.mp?' 🌐 '+h.teamSize+'v'+h.teamSize:''}</span>
+    <span class="hmeta">${DIFF[h.diff]?t(DIFF[h.diff].n):h.diff} · ${PERKS[h.perk]?PERKS[h.perk].i:''} · ${fmtDuration(h.duration)} · ${new Date(h.date).toLocaleDateString()}</span></div>`).join("")
+    : `<div class="muted" style="text-align:center;padding:20px">No games played yet.</div>`;
+}
+
+/* ===== CAMPAIGN (fixed, curated maps via a seeded RNG) ===== */
+function mulberry32(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+const MISSIONS=[
+  {id:1,seed:190412,title:"The Coastal Uprising",desc:"A small world, one weak rival. Learn the basics.",perk:"industrial",diff:"easy",mode:"conquest",fog:false},
+  {id:2,seed:284733,title:"Two Front War",desc:"Enemies press from both sides. Expand fast, pick a side to break first.",perk:"warmonger",diff:"medium",mode:"conquest",fog:false},
+  {id:3,seed:377051,title:"Iron Harvest",desc:"A Blitz economy war — outbuild your rivals before they outbuild you.",perk:"industrial",diff:"medium",mode:"blitz",fog:false},
+  {id:4,seed:461829,title:"Fog of the Unknown",desc:"You can't see them coming. Scout with Watchtowers before you commit.",perk:"seafarer",diff:"hard",mode:"conquest",fog:true},
+  {id:5,seed:559104,title:"The Nightmare Alliance",desc:"Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.",perk:"rocketeer",diff:"nightmare",mode:"regicide",fog:false},
+];
+function getCampaignProgress(){ try{return JSON.parse(localStorage.getItem("dominion_campaign")||"{}");}catch(e){return {};} }
+function setCampaignComplete(id){ const p=getCampaignProgress(); p[id]=true; try{localStorage.setItem("dominion_campaign",JSON.stringify(p));}catch(e){} }
+function buildCampaignModal(){
+  const prog=getCampaignProgress();
+  document.getElementById("missionList").innerHTML=MISSIONS.map((m,i)=>{
+    const unlocked=i===0||prog[MISSIONS[i-1].id]; const done=prog[m.id];
+    return `<button class="missioncard ${unlocked?'':'locked'}" data-id="${m.id}" ${unlocked?'':'disabled'}>
+      <span class="mnum">${m.id}</span><span style="flex:1"><span class="mtitle">${m.title}</span><br><span class="mdesc">${m.desc}</span></span>
+      ${done?'<span class="mcheck">✓</span>':(unlocked?'':'<span class="mcheck" style="color:var(--ink-soft)">🔒</span>')}</button>`;
+  }).join("");
+  document.querySelectorAll("#missionList .missioncard").forEach(b=>{ if(b.disabled)return;
+    b.addEventListener("click",()=>{ const m=MISSIONS.find(x=>x.id===+b.dataset.id); document.getElementById("campaignOverlay").hidden=true; startGame(m.perk,m.diff,m.mode,m.fog,m.id); }); });
+}
+
 /* ===== MULTIPLAYER: room codes, lobby, PeerJS wiring ===== */
 const MPLOBBY={role:null,code:null,name:"",teamSize:1,mode:"conquest",diff:"medium",fog:false,
-  players:[],peer:null,conns:new Map(),peerToRid:new Map(),conn:null,myRid:null,started:false};
+  players:[],peer:null,conns:new Map(),peerToRid:new Map(),conn:null,myRid:null,started:false,
+  spectators:[],specConns:new Map(),spectating:false};
 function genRoomCode(){ const CH="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; let s=""; for(let i=0;i<4;i++)s+=CH[Math.floor(Math.random()*CH.length)]; return s; }
 function mpNextRid(){ let n=2; while(MPLOBBY.players.some(p=>p.rid==="h"+n))n++; return "h"+n; }
 function mpTeamCounts(){ const c={A:0,B:0}; MPLOBBY.players.forEach(p=>c[p.team]++); return c; }
 function mpAssignTeam(){ const c=mpTeamCounts(); return c.A<=c.B?"A":"B"; }
 function renderLobby(){
   const list=document.getElementById("mpLobbyList");
-  list.innerHTML=MPLOBBY.players.map(p=>`<div class="lobbyrow"><span class="ldot" style="background:${p.rid==='player'?PLAYER_COLOR:AI_COLORS[0]}"></span>
-    <span class="lname">${p.name}${p.isHost?' 👑':''}</span>${p.rid===MPLOBBY.myRid?'<span class="lyou">(you)</span>':''}
-    <span class="lteam ${p.team}" data-rid="${p.rid}" ${MPLOBBY.role==='host'?'':'style="pointer-events:none"'}>${p.team==='A'?'Team A':'Team B'}</span></div>`).join("");
+  list.innerHTML=MPLOBBY.players.map(p=>{ const isMe=p.rid===MPLOBBY.myRid; const perk=PERKS[p.perk||"industrial"];
+    return `<div class="lobbyrow"><span class="ldot" style="background:${p.rid==='player'?PLAYER_COLOR:AI_COLORS[0]}"></span>
+    <span class="lname">${p.name}${p.isHost?' 👑':''}</span>${isMe?'<span class="lyou">(you)</span>':''}
+    <span class="lperk" data-rid="${p.rid}" title="${isMe?'Click to change faction':t(perk.n)}" ${isMe?'':'style="pointer-events:none;opacity:.75"'}>${perk.i} ${t(perk.n)}</span>
+    <span class="lteam ${p.team}" data-rid="${p.rid}" ${MPLOBBY.role==='host'?'':'style="pointer-events:none"'}>${p.team==='A'?'Team A':'Team B'}</span></div>`; }).join("");
   document.querySelectorAll("#mpLobbyList .lteam").forEach(el=>el.addEventListener("click",()=>{
     if(MPLOBBY.role!=="host")return; const p=MPLOBBY.players.find(x=>x.rid===el.dataset.rid); if(!p)return;
     p.team=p.team==="A"?"B":"A"; renderLobby(); mpBroadcastLobby(); }));
+  document.querySelectorAll("#mpLobbyList .lperk").forEach(el=>el.addEventListener("click",()=>{
+    const p=MPLOBBY.players.find(x=>x.rid===MPLOBBY.myRid); if(!p||el.dataset.rid!==MPLOBBY.myRid)return;
+    const keys=Object.keys(PERKS); const next=keys[(keys.indexOf(p.perk||"industrial")+1)%keys.length];
+    if(MPLOBBY.role==="host"){ p.perk=next; renderLobby(); mpBroadcastLobby(); }
+    else if(MPLOBBY.conn){ try{MPLOBBY.conn.send({type:"setperk",perk:next});}catch(e){} } }));
   const total=MPLOBBY.teamSize*2;
   document.getElementById("mpRoomHint").textContent=MPLOBBY.players.length+" / "+total+" joined — bots fill any empty slots";
   const startBtn=document.getElementById("mpStartBtn");
   if(startBtn)startBtn.hidden=(MPLOBBY.role!=="host");
 }
 function mpBroadcastLobby(){ const msg={type:"lobby",code:MPLOBBY.code,teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,
-    players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,isHost:p.isHost}))};
+    players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,isHost:p.isHost,perk:p.perk}))};
   MPLOBBY.conns.forEach(conn=>{ try{conn.send(msg);}catch(e){} }); }
 function mpHostCreate(){
   const status=document.getElementById("mpStatus"); status.className="mpstatus"; status.textContent="Opening room…";
   MPLOBBY.code=genRoomCode(); MPLOBBY.role="host"; MPLOBBY.myRid="player";
-  MPLOBBY.players=[{rid:"player",name:MPLOBBY.name||"Host",team:"A",isHost:true,peerId:null}];
+  MPLOBBY.players=[{rid:"player",name:MPLOBBY.name||"Host",team:"A",isHost:true,peerId:null,perk:pickAiPerk()}];
   try{
     MPLOBBY.peer=new Peer("dom-"+MPLOBBY.code,{debug:0});
     MPLOBBY.peer.on("open",()=>{ status.textContent="";
@@ -1239,48 +1478,106 @@ function mpHostCreate(){
       conn.on("open",()=>{});
       conn.on("data",data=>mpHostOnData(conn,data));
       conn.on("close",()=>{ const rid=MPLOBBY.peerToRid.get(conn.peer);
-        MPLOBBY.conns.delete(conn.peer); MPLOBBY.peerToRid.delete(conn.peer);
+        MPLOBBY.conns.delete(conn.peer); MPLOBBY.peerToRid.delete(conn.peer); MPLOBBY.specConns.delete(conn.peer);
         MPLOBBY.players=MPLOBBY.players.filter(p=>p.rid!==rid);
-        if(MPLOBBY.started){ showToast("👋 "+(rid||"A player")+" disconnected."); }
-        else { renderLobby(); mpBroadcastLobby(); } });
+        if(rid&&MPLOBBY.started){ showToast("👋 "+(rid||"A player")+" disconnected."); }
+        else if(!rid){} else { renderLobby(); mpBroadcastLobby(); } });
     });
   }catch(e){ status.className="mpstatus err"; status.textContent="Could not start hosting."; }
 }
 function mpHostOnData(conn,data){
   if(!data||typeof data!=="object")return;
-  if(data.type==="hello"){
+  if(data.type==="hello"&&data.spectate){
+    MPLOBBY.specConns.set(conn.peer,conn); MPLOBBY.spectators.push({name:(data.name||"Spectator").slice(0,16),peerId:conn.peer});
+    try{ conn.send({type:"youare",rid:null,spectator:true}); }catch(e){}
+    if(MPLOBBY.started&&S&&!S.over){ try{conn.send({type:"init",payload:mpSerializeInit(null),spectator:true});}catch(e){} }
+    else { try{conn.send({type:"lobby",code:MPLOBBY.code,teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,
+      players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,isHost:p.isHost,perk:p.perk}))});}catch(e){} }
+    showToast("👁 "+MPLOBBY.spectators[MPLOBBY.spectators.length-1].name+" is spectating.");
+  } else if(data.type==="hello"&&data.reconnectRid&&MPLOBBY.started&&S&&!S.over){
+    // a player reconnecting after a host handover — reattach them to their existing nation if it's still unclaimed
+    const rid=data.reconnectRid;
+    const alreadyClaimed=[...MPLOBBY.peerToRid.values()].includes(rid);
+    if(!S.nations[rid]||!S.mp.allHumanRealIds.includes(rid)||alreadyClaimed){ try{conn.send({type:"full"});}catch(e){} return; }
+    MPLOBBY.conns.set(conn.peer,conn); MPLOBBY.peerToRid.set(conn.peer,rid);
+    try{ conn.send({type:"youare",rid}); conn.send({type:"init",payload:mpSerializeInit(rid)}); }catch(e){}
+    showToast("🔌 "+(data.name||"A player")+" reconnected as "+rid+".");
+  } else if(data.type==="hello"){
     const total=MPLOBBY.teamSize*2;
     if(MPLOBBY.started){ try{conn.send({type:"full"});}catch(e){} return; }
     if(MPLOBBY.players.length>=total){ try{conn.send({type:"full"});}catch(e){} return; }
-    const rid=mpNextRid(); const p={rid,name:(data.name||"Player").slice(0,16),team:mpAssignTeam(),isHost:false,peerId:conn.peer};
+    const rid=mpNextRid(); const p={rid,name:(data.name||"Player").slice(0,16),team:mpAssignTeam(),isHost:false,peerId:conn.peer,perk:pickAiPerk()};
     MPLOBBY.players.push(p); MPLOBBY.conns.set(conn.peer,conn); MPLOBBY.peerToRid.set(conn.peer,rid);
     try{conn.send({type:"youare",rid});}catch(e){}
     renderLobby(); mpBroadcastLobby(); showToast("🔔 "+p.name+" joined!"); sndJoin();
   } else if(data.type==="order"){
     const rid=MPLOBBY.peerToRid.get(conn.peer); if(rid&&S&&!S.over)mpApplyOrder(rid,data.order);
+  } else if(data.type==="setperk"){
+    const rid=MPLOBBY.peerToRid.get(conn.peer); const p=MPLOBBY.players.find(x=>x.rid===rid);
+    if(p&&PERKS[data.perk]){ p.perk=data.perk; renderLobby(); mpBroadcastLobby(); }
+  } else if(data.type==="chat"){ mpHostRelayChat(conn,data);
   }
 }
 function mpHostStart(){
   MPLOBBY.started=true;
-  const lobby={teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team}))};
+  const lobby={teamSize:MPLOBBY.teamSize,mode:MPLOBBY.mode,diff:MPLOBBY.diff,fog:MPLOBBY.fog,players:MPLOBBY.players.map(p=>({rid:p.rid,name:p.name,team:p.team,perk:p.perk}))};
   startMultiplayerHost(lobby);
 }
-function mpGuestJoin(code,name){
+function mpGuestJoin(code,name,spectate){
   const status=document.getElementById("mpStatus"); status.className="mpstatus"; status.textContent="Connecting…";
-  MPLOBBY.role="guest"; MPLOBBY.name=name;
+  MPLOBBY.role="guest"; MPLOBBY.name=name; MPLOBBY.spectating=!!spectate;
   try{
     MPLOBBY.peer=new Peer({debug:0});
     MPLOBBY.peer.on("open",()=>{
       const conn=MPLOBBY.peer.connect("dom-"+code.toUpperCase(),{reliable:true}); MPLOBBY.conn=conn;
       let openTimer=setTimeout(()=>{ status.className="mpstatus err"; status.textContent="No room found with that code."; },7000);
-      conn.on("open",()=>{ clearTimeout(openTimer); status.textContent=""; conn.send({type:"hello",name}); });
+      conn.on("open",()=>{ clearTimeout(openTimer); status.textContent=""; conn.send({type:"hello",name,spectate:!!spectate}); });
       conn.on("data",data=>mpGuestOnData(data));
-      conn.on("close",()=>{ if(MPLOBBY.started){ document.getElementById("discbanner").hidden=false; document.getElementById("discbanner").textContent="⚠ Lost connection to the host."; }
+      conn.on("close",()=>{ if(MPLOBBY.started)mpHandleHostLoss();
         else { status.className="mpstatus err"; status.textContent="Host closed the room."; } });
       conn.on("error",()=>{ clearTimeout(openTimer); status.className="mpstatus err"; status.textContent="Could not reach that room."; });
     });
     MPLOBBY.peer.on("error",e=>{ status.className="mpstatus err"; status.textContent="Connection error: "+e.type; });
   }catch(e){ status.className="mpstatus err"; status.textContent="Could not connect."; }
+}
+// ---- host migration: if the host drops mid-match, the backup host (rid "h2") takes over at the same
+// room code; everyone else auto-retries reconnecting with their old identity to reclaim their nation ----
+function mpHandleHostLoss(){
+  const banner=document.getElementById("discbanner");
+  if(MPLOBBY.spectating){ banner.hidden=false; banner.textContent="⚠ The host disconnected."; return; }
+  if(MPLOBBY.myRid==="h2"){ mpBecomeHost(); return; }
+  banner.hidden=false; banner.textContent="⚠ Host disconnected — trying to reconnect…";
+  let attempts=0;
+  const retry=()=>{ if(!S||S.over||MPLOBBY.role!=="guest")return;
+    attempts++;
+    if(attempts>12){ banner.textContent="⚠ Could not reconnect. The match has ended."; return; }
+    mpReconnectAttempt(()=>{ setTimeout(retry,3500); }); };
+  setTimeout(retry,3500);
+}
+function mpReconnectAttempt(onFail){
+  try{
+    const conn=MPLOBBY.peer.connect("dom-"+MPLOBBY.code,{reliable:true}); let done=false;
+    const timer=setTimeout(()=>{ if(!done){done=true;onFail();} },3000);
+    conn.on("open",()=>{ if(!done)conn.send({type:"hello",name:MPLOBBY.name,reconnectRid:MPLOBBY.myRid}); });
+    conn.on("data",data=>{ if(done)return; if(data&&data.type==="init"){ done=true; clearTimeout(timer); MPLOBBY.conn=conn;
+        conn.on("data",d2=>mpGuestOnData(d2));
+        document.getElementById("discbanner").hidden=true; mpGuestOnData(data); }
+      else if(data&&data.type==="full"){ done=true; clearTimeout(timer); onFail(); } });
+    conn.on("error",()=>{ if(!done){done=true;clearTimeout(timer);onFail();} });
+  }catch(e){ onFail(); } }
+function mpBecomeHost(){
+  const banner=document.getElementById("discbanner"); banner.hidden=false; banner.textContent="👑 Host lost — taking over as host…";
+  MPLOBBY.role="host"; MPLOBBY.conns=new Map(); MPLOBBY.peerToRid=new Map(); MPLOBBY.specConns=new Map(); MPLOBBY.started=true;
+  if(S){ S.mp.role="host"; S.mp.conns=MPLOBBY.conns; }
+  try{
+    MPLOBBY.peer=new Peer("dom-"+MPLOBBY.code,{debug:0});
+    MPLOBBY.peer.on("open",()=>{ banner.hidden=true; showToast("👑 You are now hosting the match!"); });
+    MPLOBBY.peer.on("error",e=>{ banner.textContent="⚠ Could not take over hosting: "+e.type; });
+    MPLOBBY.peer.on("connection",conn=>{
+      conn.on("data",data=>mpHostOnData(conn,data));
+      conn.on("close",()=>{ const rid=MPLOBBY.peerToRid.get(conn.peer); MPLOBBY.conns.delete(conn.peer); MPLOBBY.peerToRid.delete(conn.peer); MPLOBBY.specConns.delete(conn.peer);
+        if(rid)showToast("👋 "+rid+" disconnected."); }); });
+  }catch(e){ banner.textContent="⚠ Could not take over hosting."; }
 }
 function mpGuestOnData(data){
   if(!data||typeof data!=="object")return;
@@ -1289,14 +1586,28 @@ function mpGuestOnData(data){
     MPLOBBY.players=data.players;
     document.getElementById("mpJoinPane").hidden=true; document.getElementById("mpHostPane").hidden=true; document.getElementById("mpLobbyPane").hidden=false;
     document.getElementById("mpRoomCode").textContent=MPLOBBY.code;
+    const startBtn=document.getElementById("mpStartBtn"); if(startBtn&&MPLOBBY.spectating)startBtn.hidden=true;
     renderLobby();
   } else if(data.type==="youare"){ MPLOBBY.myRid=data.rid; renderLobby();
   } else if(data.type==="full"){ const status=document.getElementById("mpStatus"); status.className="mpstatus err"; status.textContent="That room is full or already playing.";
   } else if(data.type==="init"){ initMultiplayerGuest(data.payload);
   } else if(data.type==="state"){ mpApplyState(data.payload);
+  } else if(data.type==="chat"){ showPing(data.fromName,data.text,data.cellId);
   } else if(data.type==="gameover"){ if(S){ S.over=true; endGame(S.mp.myTeam===data.winningTeam,data.text); }
   }
 }
+// ---- team pings (quick preset messages, relayed by the host to teammates only) ----
+function mpHostRelayChat(conn,data){ if(!S||!S.mp)return;
+  const senderRid = conn ? MPLOBBY.peerToRid.get(conn.peer) : "player"; if(!senderRid)return;
+  const senderTeam=S.mp.teamOf[senderRid]; const senderName=(MPLOBBY.players.find(p=>p.rid===senderRid)||{}).name||"Ally";
+  const msg={type:"chat",text:data.text,cellId:data.cellId,fromName:senderName};
+  MPLOBBY.conns.forEach((c,peerId)=>{ const rid=MPLOBBY.peerToRid.get(peerId); if(rid&&rid!==senderRid&&S.mp.teamOf[rid]===senderTeam){ try{c.send(msg);}catch(e){} } });
+  if(S.mp.teamOf.player===senderTeam&&senderRid!=="player") showPing(senderName,data.text,data.cellId); }
+function sendTeamPing(text){ if(!S||!S.mp||S.mp.role==="spectator")return; const cellId=S.selected;
+  if(S.mp.role==="guest"){ try{S.mp.conn.send({type:"chat",text,cellId});}catch(e){} }
+  else { mpHostRelayChat(null,{text,cellId}); } }
+function showPing(fromName,text,cellId){ showToast("📢 "+fromName+": "+text); beep(740,0.08);
+  if(cellId){ const c=byId(cellId); if(c)addFx("clash",c.cx,c.cy,"player"); } }
 
 /* ===== CANVAS / INPUT ===== */
 function resizeCanvas(){ if(!canvas)return; const dpr=window.devicePixelRatio||1;
@@ -1346,9 +1657,14 @@ function buildStart(){
   document.querySelectorAll("#diffPick .dchip").forEach(b=>b.addEventListener("click",()=>{selDiff=b.dataset.d;buildStart();}));
   document.getElementById("factionPick").innerHTML=Object.keys(PERKS).map(k=>`<button class="fcard" data-p="${k}"><div class="fn"><span class="fi">${PERKS[k].i}</span>${t(PERKS[k].n)}</div><div class="fb">${t(PERKS[k].d)}</div></button>`).join("");
   document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked)));
+  const cb=document.getElementById("continueBtn"); if(cb)cb.hidden=!hasSave();
 }
 function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2d");
   off=document.createElement("canvas"); off.width=WORLD_W; off.height=WORLD_H; offCtx=off.getContext("2d");
+  miniCanvas=document.getElementById("minimap"); miniCtx=miniCanvas.getContext("2d");
+  miniCanvas.addEventListener("click",e=>{ if(!S)return; const r=miniCanvas.getBoundingClientRect();
+    const wx=(e.clientX-r.left)/r.width*WORLD_W, wy=(e.clientY-r.top)/r.height*WORLD_H;
+    S.cam.x=canvas.clientWidth/2-wx*S.cam.scale; S.cam.y=canvas.clientHeight/2-wy*S.cam.scale; paint(); });
   initInput();
   window.addEventListener("resize",()=>{resizeCanvas();syncPanel();});
   document.getElementById("missileBtn").addEventListener("click",toggleMissile);
@@ -1361,7 +1677,10 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
   const pp=document.getElementById("ppBody");
   pp.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled||!S)return;
     if(b.dataset.bk)doBuild(b.dataset.bk); else if(b.dataset.rec)doRecruit(+b.dataset.rec);
-    else if(b.dataset.lock){ S.deployLock=!S.deployLock; renderPanel(); } });
+    else if(b.dataset.lock){ S.deployLock=!S.deployLock; renderPanel(); }
+    else if(b.dataset.diplo)proposePeace(b.dataset.diplo);
+    else if(b.dataset.tech)doTech(b.dataset.tech);
+    else if(b.dataset.form){ S.deployFormation=b.dataset.form; renderPanel(); } });
   pp.addEventListener("input",e=>{ if(!S)return; if(e.target.id==="depSlider"){ S.deploy=+e.target.value; const dv=document.getElementById("depVal"); if(dv)dv.textContent=e.target.value; } });
   document.getElementById("modebar").addEventListener("click",e=>{ if(S&&e.target.closest("button"))toggleMissile(); });
   const ahd=document.querySelector("aside > .phead"); if(ahd)ahd.addEventListener("click",()=>document.querySelector("aside").classList.toggle("open"));
@@ -1389,6 +1708,14 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
   toggleRow("setSoundToggle","sound"); toggleRow("setMotionToggle","reduceMotion"); toggleRow("setPauseToggle","autoPause"); toggleRow("setConfirmToggle","confirmAttack");
   document.getElementById("setVolume").addEventListener("input",e=>{ SETTINGS.volume=+e.target.value; saveSettings(); });
 
+  // ---- continue / history / campaign ----
+  document.getElementById("continueBtn").addEventListener("click",()=>{ loadGameState(); });
+  document.getElementById("historyBtn").addEventListener("click",()=>{ buildHistoryModal(); document.getElementById("historyOverlay").hidden=false; });
+  document.getElementById("histCloseBtn").addEventListener("click",()=>document.getElementById("historyOverlay").hidden=true);
+  document.getElementById("histClearBtn").addEventListener("click",()=>{ try{localStorage.removeItem("dominion_history");}catch(e){} buildHistoryModal(); });
+  document.getElementById("campaignBtn").addEventListener("click",()=>{ document.getElementById("startOverlay").hidden=true; buildCampaignModal(); document.getElementById("campaignOverlay").hidden=false; });
+  document.getElementById("campBackBtn").addEventListener("click",()=>{ document.getElementById("campaignOverlay").hidden=true; document.getElementById("startOverlay").hidden=false; });
+
   // ---- multiplayer entry / lobby ----
   document.getElementById("mpEnterBtn").addEventListener("click",()=>{
     document.getElementById("startOverlay").hidden=true; document.getElementById("mpOverlay").hidden=false;
@@ -1405,8 +1732,11 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
   document.getElementById("mpJoinBtn").addEventListener("click",()=>{
     const code=(document.getElementById("mpCodeInput").value||"").trim();
     if(code.length!==4){ const s=document.getElementById("mpStatus"); s.className="mpstatus err"; s.textContent="Enter the 4-character room code."; return; }
-    mpGuestJoin(code,mpGetName()); });
+    mpGuestJoin(code,mpGetName(),document.getElementById("mpSpectateChk").checked); });
   document.getElementById("mpStartBtn").addEventListener("click",mpHostStart);
+  document.getElementById("pingBtn").addEventListener("click",()=>{ const m=document.getElementById("pingMenu"); m.hidden=!m.hidden; });
+  document.getElementById("pingMenu").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b)return;
+    sendTeamPing(b.dataset.p); document.getElementById("pingMenu").hidden=true; });
 
   const ls=document.getElementById("langSel");
   if(ls){ ls.innerHTML=LANGS.map(([code,name])=>`<option value="${code}" ${code===LANG?"selected":""}>${name}</option>`).join(""); ls.addEventListener("change",e=>setLang(e.target.value)); }
