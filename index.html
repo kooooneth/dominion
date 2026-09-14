@@ -798,7 +798,7 @@ function arriveArmy(a){ const tgt=byId(a.toId); if(!tgt)return;
     worldDirty=true; return; }
   const res=resolve(a.count,a.owner,tgt,a.extra); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
   if(res.win){ const prev=tgt.owner; tgt.owner=a.owner;tgt.troops=res.att;tgt.cap=tgt.cap&&false;
-    if(a.owner==="player")pushLog("Captured "+pName(tgt)+".","good"); else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad"); }
+    if(a.owner==="player"){pushLog("Captured "+pName(tgt)+".","good");sndCapture();} else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad"); }
   else { tgt.troops=res.def; if(a.owner==="player")pushLog("Attack on "+pName(tgt)+" failed.","bad"); }
   worldDirty=true; }
 function pName(cell){ return (cell.site?SITES[cell.site].n:cell.terr)+" "+cell.col+"·"+cell.row+(cell.cap?" ★":""); }
@@ -976,7 +976,7 @@ function onPick(cell){ if(S.over||!cell)return;
       if(cell.cap){ pushLog("Capitals are shielded from missiles — assault it with an army instead.","bad"); paint(); return; }
       if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"missile",targetId:cell.id}); }
       else { const silo=ownedCells("player").find(c=>c.b.silo)||byId(S.playerCapitalId);
-        S.nations.player.gold-=missileCost(); launchMissile(silo,cell,"player",1); pushLog("🚀 Missile launched!","boom"); } }
+        S.nations.player.gold-=missileCost(); launchMissile(silo,cell,"player",1); pushLog("🚀 Missile launched!","boom"); sndMissile(); } }
     S.missileMode=false; updateModebar(); paint(); return; }
   const src=byId(S.selected);
   if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)){
