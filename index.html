@@ -276,6 +276,7 @@
       <button class="qlink" id="savesBtn" hidden>🗂 Saved Games</button>
       <button class="qlink" id="campaignBtn">📖 Campaign</button>
       <button class="qlink" id="dailyBtn">📅 Daily Challenge</button>
+      <button class="qlink" id="ironmanBtn">☠ Ironman</button>
       <button class="qlink" id="historyBtn">📜 History &amp; Stats</button>
       <button class="qlink" id="achievementsBtn">🏆 Achievements</button>
     </div>
@@ -291,6 +292,7 @@
     <div class="codebox"><input id="statCodeOut" readonly style="font-size:11px;letter-spacing:0;text-transform:none;flex:2"><button class="btn ghost" id="statCodeCopyBtn">📋 Copy</button></div>
     <div class="codebox"><input id="statCodeIn" placeholder="Paste a friend's code…" style="font-size:11px;letter-spacing:0;text-transform:none"><button class="btn ghost" id="statCodeCmpBtn">Compare</button></div>
     <div id="statCodeCompare"></div>
+    <div class="codebox"><input id="replayCodeIn" placeholder="Paste a replay code to view…" style="font-size:11px;letter-spacing:0;text-transform:none"><button class="btn ghost" id="replayCodeViewBtn">▶ View</button></div>
     <div class="closebar"><button class="btn ghost" id="histClearBtn">Clear History</button><button class="btn primary" id="histCloseBtn">Close</button></div>
   </div>
 </div>
@@ -301,6 +303,8 @@
     <div class="tagline" style="margin-bottom:8px">Land held over time (not a full re-simulation).</div>
     <canvas id="replayCanvas" width="500" height="220" style="width:100%;height:auto;border:1px solid var(--line-soft);border-radius:8px;background:var(--parchment)"></canvas>
     <div id="replayLegend" style="margin-top:8px;text-align:center"></div>
+    <div class="steplbl" style="margin-top:12px">Share this replay</div>
+    <div class="codebox"><input id="replayCodeOut" readonly style="font-size:11px;letter-spacing:0;text-transform:none;flex:2"><button class="btn ghost" id="replayCodeCopyBtn">📋 Copy</button></div>
     <div class="closebar"><button class="btn primary" id="replayCloseBtn">Close</button></div>
   </div>
 </div>
@@ -373,9 +377,11 @@
     <div class="setgrid">
       <div class="setrow"><div><div class="sl" id="setSoundLbl">Sound</div><div class="sd" id="setSoundDesc">Beeps for joins, captures, missiles</div></div>
         <div style="display:flex;align-items:center;gap:10px"><input type="range" id="setVolume" min="0" max="100" value="70"><div class="toggle on" id="setSoundToggle"></div></div></div>
+      <div class="setrow"><div><div class="sl">Music</div><div class="sd">Quiet ambient background music</div></div><div class="toggle" id="setMusicToggle"></div></div>
       <div class="setrow"><div><div class="sl" id="setMotionLbl">Reduce Motion</div><div class="sd" id="setMotionDesc">Fewer animated effects</div></div><div class="toggle" id="setMotionToggle"></div></div>
       <div class="setrow"><div><div class="sl" id="setPauseLbl">Auto-Pause</div><div class="sd" id="setPauseDesc">Pause when you switch tabs</div></div><div class="toggle on" id="setPauseToggle"></div></div>
       <div class="setrow"><div><div class="sl" id="setConfirmLbl">Confirm Attacks</div><div class="sd" id="setConfirmDesc">Extra tap before attacking a tile</div></div><div class="toggle" id="setConfirmToggle"></div></div>
+      <div class="setrow"><div><div class="sl">Tutorial</div><div class="sd">Replay the step-by-step guide</div></div><button class="btn ghost" id="tutReplayBtn">❓ Replay</button></div>
     </div>
     <div class="closebar"><button class="btn primary" id="settingsClose">Done</button></div>
   </div>
@@ -396,6 +402,21 @@
       <li><b>Win/Lose:</b> hit the mode's goal to win; you always lose if your capital falls.</li>
     </ul>
     <div class="closebar"><button class="btn primary" id="rulesClose">Understood</button></div></div>
+</div>
+
+<div class="overlay" id="tutorialOverlay" hidden>
+  <div class="modal" style="width:min(480px,100%)">
+    <div class="steplbl" id="tutStepLbl"></div>
+    <h2 style="font-size:22px" id="tutTitle"></h2>
+    <p style="font-size:13.5px;line-height:1.6;color:var(--ink-soft);text-align:center" id="tutText"></p>
+    <div class="closebar" style="justify-content:space-between">
+      <button class="btn ghost" id="tutSkipBtn">Skip Tutorial</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn ghost" id="tutPrevBtn">← Back</button>
+        <button class="btn primary" id="tutNextBtn">Next →</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div class="overlay" id="endOverlay" hidden>
@@ -783,7 +804,7 @@ function startGame(perk,diff,mode,fog,campaignId,worldSize){
   else { startGameInner(perk,diff,mode,fog,worldSize); S.campaignId=null; }
 }
 function startGameInner(perk,diff,mode,fog,worldSize){
-  resetSurrenderArm();
+  resetSurrenderArm(); startMusic();
   mode=mode||"conquest";
   const wsz=WORLD_SIZES[worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
@@ -828,7 +849,7 @@ function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas
 
 /* ===== MULTIPLAYER SETUP (host builds the match; guest deserializes it) ===== */
 function startMultiplayerHost(lobby){
-  resetSurrenderArm();
+  resetSurrenderArm(); startMusic();
   const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog, goldMul=lobby.goldMul||1;
   const wsz=WORLD_SIZES[lobby.worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
@@ -888,7 +909,7 @@ function mpSerializeInit(forRealId){
   return {cells,nations,teamOf,allHumanRealIds,allAiIds,myTeam:teamOf.player,diff:S.diff,mode:S.mode,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,time:S.time};
 }
 function initMultiplayerGuest(p){
-  resetSurrenderArm();
+  resetSurrenderArm(); startMusic();
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:p.time||0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:99999,fogTimer:0,
      cam:{x:0,y:0,scale:1},diff:p.diff,mode:p.mode,fog:!!p.fog,winFrac:p.winFrac,econMul:p.econMul,everAttacked:false,
@@ -1000,6 +1021,16 @@ function resolve(amount,attNat,target,extra,formation,naval){ if(target.troops<=
   const ap=amount*am*rnd(.85,1.15), dp=target.troops*(1+fort+navalDef)*rnd(.85,1.15);
   if(ap>=dp){const lr=dp/ap;return{win:true,att:Math.max(1,Math.round(amount*(1-0.75*lr))),def:0};}
   const lr=ap/dp;return{win:false,att:0,def:Math.max(1,Math.round(target.troops*(1-0.75*lr)))}; }
+// ---- attack odds preview: runs the REAL resolve() formula many times (it has no side effects) to
+// estimate win chance + expected outcome, so the player can see how chance-dependent a fight is before
+// committing to it. Cheap enough to call on-demand (a click), not meant to run every animation frame.
+function attackPreview(amount,attNat,target,extra,formation,naval){
+  const trials=80; let wins=0,sumAtt=0,sumDef=0;
+  for(let i=0;i<trials;i++){ const r=resolve(amount,attNat,target,extra,formation,naval);
+    if(r.win){wins++;sumAtt+=r.att;} else sumDef+=r.def; }
+  const losses=trials-wins;
+  return {winChance:wins/trials, avgTroopsLeft:wins?Math.round(sumAtt/wins):0, avgEnemyLeft:losses?Math.round(sumDef/losses):0};
+}
 
 /* ===== ARMIES ===== */
 const TERR_SPEED={Plains:0.8,Desert:1.0,Tundra:1.2,Forest:1.35,Jungle:1.4,Mountains:1.7};
@@ -1327,9 +1358,17 @@ function onPick(cell){ if(S.over||!cell)return;
   const src=byId(S.selected);
   if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)&&!isTeammateOwner(cell.owner)){
     const isAttack=cell.owner!=="player";
-    if(isAttack&&SETTINGS.confirmAttack&&S.attackConfirmId!==cell.id){ S.attackConfirmId=cell.id;
-      clearTimeout(S.attackConfirmTimer); S.attackConfirmTimer=setTimeout(()=>{S.attackConfirmId=null;},4000);
-      showToast("⚔ Click "+pName(cell)+" again to confirm the attack"); paint(); return; }
+    if(isAttack&&S.attackConfirmId!==cell.id){
+      const amt=Math.min(S.deploy,src.troops), form=S.deployFormation||"standard";
+      const naval=!neighbors(src).some(x=>x.id===cell.id);
+      const preview=attackPreview(amt,"player",cell,1,form,naval);
+      const uncertain=preview.winChance>0.08&&preview.winChance<0.92; // outcome genuinely depends on the dice, not a foregone conclusion
+      if(SETTINGS.confirmAttack||uncertain){ S.attackConfirmId=cell.id;
+        clearTimeout(S.attackConfirmTimer); S.attackConfirmTimer=setTimeout(()=>{S.attackConfirmId=null;},4500);
+        const pct=Math.round(preview.winChance*100);
+        const detail=preview.winChance>=0.5?`~${preview.avgTroopsLeft} troops would remain`:`you'd likely lose the army (defender keeps ~${preview.avgEnemyLeft})`;
+        showToast(`⚔ ${pct}% chance to win — ${detail}. Click ${pName(cell)} again to confirm.`); paint(); return; }
+    }
     S.attackConfirmId=null;
     if(isAttack&&S.pacts&&S.pacts[cell.owner]){ delete S.pacts[cell.owner]; if(S.trades)delete S.trades[cell.owner]; pushLog("💔 Peace with "+S.nations[cell.owner].name+" is broken!","bad"); }
     const amount=Math.min(S.deploy,src.troops), formation=S.deployFormation||"standard";
@@ -1362,13 +1401,39 @@ function drawStatic(){ if(!off)return; offCtx.clearRect(0,0,WORLD_W,WORLD_H); co
     // ownership fill blended with terrain tint
     offCtx.fillStyle=base; offCtx.fill(); offCtx.globalAlpha=.28; offCtx.fillStyle=TERR[c.terr].tint; offCtx.fill(); offCtx.globalAlpha=1;
     offCtx.strokeStyle="#efe3c6";offCtx.lineWidth=1;offCtx.stroke();
-    if(c.cap){ offCtx.fillStyle="#ffe9a8";offCtx.font="12px serif";offCtx.textAlign="center";offCtx.fillText("★",c.cx,c.cy-8); }
+    if(c.cap){ offCtx.fillStyle="#ffe9a8";offCtx.font="12px serif";offCtx.textAlign="center";offCtx.fillText("★",c.cx,c.cy-8);
+      if(nat&&nat.hero){ offCtx.font="11px serif";offCtx.fillText("🎖",c.cx+13,c.cy-8); } }
     // buildings marks (little icons under center)
     const bl=Object.keys(c.b).filter(k=>c.b[k]); if(bl.length){ offCtx.font="8px serif";offCtx.textAlign="center";
       const w=Math.min(bl.length,5); bl.slice(0,5).forEach((k,i)=>{ offCtx.fillText(B[k].i, c.cx-(w-1)*5+i*10, c.cy+16); }); }
     if(c.site){ offCtx.font="12px serif";offCtx.textAlign="center";offCtx.fillText(SITES[c.site].i,c.cx,c.cy-8+(c.cap?0:2)); }
     if(fog&&fogHidden(c)){ offCtx.beginPath();poly(offCtx,c.poly);offCtx.fillStyle="rgba(14,24,32,.5)";offCtx.fill(); } });
+  drawBorders(fog);
   worldDirty=false; }
+// national border outlines: a thicker stroke along any hex edge that faces a differently-owned
+// (or non-land) neighbor, so a nation's territory reads as one shape at a glance instead of only
+// via per-hex fill color. Matches each of the 6 polygon edges to its facing neighbor by angle rather
+// than assuming a fixed edge-index/offset-table correspondence, so it stays correct at map boundaries
+// (where cellAt() returns null for an out-of-bounds neighbor -- that's just treated as "different").
+function drawBorders(fog){
+  S.cells.forEach(c=>{ if(!c.land||c.owner==="neutral"||c.owner==="sea")return;
+    if(fog&&fogUnknown(c))return;
+    const offs=c.row%2?OFF_ODD:OFF_EVEN, pts=c.poly;
+    for(let i=0;i<6;i++){
+      const v1=pts[i], v2=pts[(i+1)%6];
+      const midx=(v1[0]+v2[0])/2, midy=(v1[1]+v2[1])/2;
+      const edgeAngle=Math.atan2(midy-c.cy,midx-c.cx);
+      let best=null,bestDiff=Infinity;
+      offs.forEach(([dc,dr])=>{ const nc=hexCenter(c.col+dc,c.row+dr);
+        const a=Math.atan2(nc.y-c.cy,nc.x-c.cx); let diff=Math.abs(a-edgeAngle); if(diff>Math.PI)diff=2*Math.PI-diff;
+        if(diff<bestDiff){bestDiff=diff;best=cellAt(c.col+dc,c.row+dr);} });
+      if(!best||!best.land||best.owner!==c.owner){
+        offCtx.beginPath(); offCtx.moveTo(v1[0],v1[1]); offCtx.lineTo(v2[0],v2[1]);
+        offCtx.strokeStyle=(S.nations[c.owner]||{}).color||"#c3b288"; offCtx.lineWidth=2.4; offCtx.lineCap="round"; offCtx.stroke();
+      }
+    }
+  });
+}
 function poly(g,pts){ g.moveTo(pts[0][0],pts[0][1]); for(let i=1;i<6;i++)g.lineTo(pts[i][0],pts[i][1]); g.closePath(); }
 function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
   const nw=Math.round(canvas.clientWidth*dpr), nh=Math.round(canvas.clientHeight*dpr);
@@ -1576,13 +1641,19 @@ function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
   if(S&&!S.mp&&!S.over)saveGameState();
   if(S&&!S.over)checkAchievements(false); // catches win-independent achievements (e.g. Hoarder) for modes like Sandbox that never call endGame()
   if(S)S.over=true;
+  stopMusic();
   document.getElementById("endOverlay").hidden=true;
   document.getElementById("app").hidden=true;
   document.getElementById("startOverlay").hidden=false;
   buildStart(); }
-function endGame(win,text){ S.over=true; document.getElementById("endTitle").textContent=win?t("Victory"):t("Defeat");
+function endGame(win,text){ S.over=true; stopMusic(); document.getElementById("endTitle").textContent=win?t("Victory"):t("Defeat");
   document.getElementById("endTitle").style.color=win?"var(--good)":"var(--crimson)";
-  document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false;
+  let fullText=text;
+  if(S.ironman){ S.ironmanWasWin=win;
+    if(win){ const streak=ironmanRegisterWin(); fullText+=" ☠ Ironman streak: "+streak+" (best: "+getIronmanState().bestStreak+")"; }
+    else { const best=getIronmanState().bestStreak||0; ironmanEndRun(); fullText+=" ☠ Your Ironman run ends here. Best streak: "+best+"."; } }
+  document.getElementById("endText").textContent=fullText; document.getElementById("endOverlay").hidden=false;
+  const rb=document.getElementById("restartBtn"); if(rb)rb.textContent=(S.ironman&&win)?"Continue Run →":t("Play Again");
   buildEndSummary();
   recordHistory(win); if(win&&S.campaignId)setCampaignComplete(S.campaignId); checkAchievements(win); clearSave(); return true; }
 function buildEndSummary(){ const el=document.getElementById("endSummary"); if(!el)return;
@@ -1603,7 +1674,7 @@ function recordSnap(){ if(!S)return; if(S.lastSnapT!=null&&S.time-S.lastSnapT<14
   S.replaySnaps=S.replaySnaps||[]; S.replaySnaps.push({t:Math.round(S.time),land}); if(S.replaySnaps.length>40)S.replaySnaps.shift(); }
 
 /* ===== SETTINGS ===== */
-const SETTINGS_DEFAULT={sound:true,volume:70,reduceMotion:false,autoPause:true,confirmAttack:false};
+const SETTINGS_DEFAULT={sound:true,volume:70,music:false,reduceMotion:false,autoPause:true,confirmAttack:false};
 let SETTINGS=(()=>{ try{ const raw=localStorage.getItem("dominion_settings"); return raw?Object.assign({},SETTINGS_DEFAULT,JSON.parse(raw)):Object.assign({},SETTINGS_DEFAULT); }catch(e){ return Object.assign({},SETTINGS_DEFAULT); } })();
 function saveSettings(){ try{localStorage.setItem("dominion_settings",JSON.stringify(SETTINGS));}catch(e){} }
 let audioCtx=null;
@@ -1618,11 +1689,33 @@ function beep(freq,dur,type){ if(!SETTINGS.sound||SETTINGS.volume<=0)return;
 function sndJoin(){ beep(660,0.09); setTimeout(()=>beep(880,0.14),90); }
 function sndCapture(){ beep(520,0.12); }
 function sndMissile(){ beep(220,0.25,"sawtooth"); }
+/* ---- ambient background music: a slow, quiet synthesized drone (no audio files, single-file game) ---- */
+let musicNodes=null;
+function startMusic(){ if(!SETTINGS.music||musicNodes)return;
+  try{ if(!audioCtx)audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    const master=audioCtx.createGain(); master.gain.value=(SETTINGS.volume/100)*0.05; master.connect(audioCtx.destination);
+    const notes=[65.41,98.00,130.81,164.81]; // C2 G2 C3 E3 -- a calm, open drone chord
+    const oscs=notes.map((f,i)=>{ const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.type="sine"; o.frequency.value=f; g.gain.value=1/notes.length;
+      const lfo=audioCtx.createOscillator(),lfoGain=audioCtx.createGain();
+      lfo.type="sine"; lfo.frequency.value=0.04+i*0.015; lfoGain.gain.value=1.5;
+      lfo.connect(lfoGain); lfoGain.connect(o.frequency);
+      o.connect(g); g.connect(master); o.start(); lfo.start();
+      return {o,lfo}; });
+    musicNodes={master,oscs};
+  }catch(e){} }
+function stopMusic(){ if(!musicNodes)return;
+  try{ musicNodes.oscs.forEach(({o,lfo})=>{ o.stop(); lfo.stop(); }); musicNodes.master.disconnect(); }catch(e){}
+  musicNodes=null; }
+function refreshMusicVolume(){ if(musicNodes)musicNodes.master.gain.value=(SETTINGS.volume/100)*0.05; }
+function toggleMusicSetting(){ SETTINGS.music=!SETTINGS.music; saveSettings();
+  if(SETTINGS.music&&S&&!S.over)startMusic(); else stopMusic(); }
 function showToast(msg){ const wrap=document.getElementById("toastwrap"); if(!wrap)return;
   const el=document.createElement("div"); el.className="toast"; el.textContent=msg; wrap.appendChild(el);
   setTimeout(()=>{ el.style.transition="opacity .3s"; el.style.opacity="0"; setTimeout(()=>el.remove(),320); },3200); }
 function syncSettingsUI(){
   document.getElementById("setSoundToggle").classList.toggle("on",SETTINGS.sound);
+  document.getElementById("setMusicToggle").classList.toggle("on",SETTINGS.music);
   document.getElementById("setMotionToggle").classList.toggle("on",SETTINGS.reduceMotion);
   document.getElementById("setPauseToggle").classList.toggle("on",SETTINGS.autoPause);
   document.getElementById("setConfirmToggle").classList.toggle("on",SETTINGS.confirmAttack);
@@ -1633,6 +1726,27 @@ function buildSettingsModal(){
   document.getElementById("setLangGrid").innerHTML=LANGS.map(([code,name])=>`<button class="langbtn ${code===LANG?'sel':''}" data-l="${code}">${name}</button>`).join("");
   document.querySelectorAll("#setLangGrid .langbtn").forEach(b=>b.addEventListener("click",()=>{setLang(b.dataset.l);syncSettingsUI();}));
 }
+/* ===== INTERACTIVE TUTORIAL ===== */
+const TUTORIAL_STEPS=[
+  {title:"Welcome to Dominion",text:"This is a real-time strategy game — there are no turns. Time flows continuously, even while you think. Use the ⏸ / 1× / 2× / 3× buttons in the top-right to control the pace."},
+  {title:"Your Provinces",text:"Click any province you own to select it. The panel on the right shows its terrain, defense bonus, and garrison size."},
+  {title:"Deploy & Attack",text:"With a province selected, set the troop slider, then click a glowing neighbouring tile to send your army there. Sending to your own tile reinforces it; sending to a rival's tile attacks it."},
+  {title:"Build & Grow",text:"Spend gold to build up to 5 structures per province — mines, farms, forts, and more — and recruit fresh troops to grow your army."},
+  {title:"Capitals Are Everything",text:"Capturing a rival's ★ capital instantly collapses their ENTIRE empire into yours — not just that one tile. Focus your strongest strikes there."},
+  {title:"Your Capital's Powers",text:"Only at your own capital: research Tech, construct one Wonder, and recruit a Commander (🎖, shown right on the map). Each grants a permanent, empire-wide bonus."},
+  {title:"Know Your Odds",text:"Before a risky attack, the game shows your estimated chance to win and how much damage you'd take — pay attention when that message appears."},
+  {title:"The Minimap",text:"The small map in the corner shows the whole world. Click anywhere on it to jump your camera there instantly."},
+  {title:"You're Ready",text:"Good luck out there, ruler. The Dominion awaits."},
+];
+let tutorialStep=0;
+function buildTutorialStepUI(){ const s=TUTORIAL_STEPS[tutorialStep];
+  document.getElementById("tutStepLbl").textContent="Step "+(tutorialStep+1)+" of "+TUTORIAL_STEPS.length;
+  document.getElementById("tutTitle").textContent=s.title;
+  document.getElementById("tutText").textContent=s.text;
+  document.getElementById("tutPrevBtn").disabled=tutorialStep===0;
+  document.getElementById("tutNextBtn").textContent=tutorialStep===TUTORIAL_STEPS.length-1?"Done":"Next →"; }
+function startTutorial(){ tutorialStep=0; buildTutorialStepUI(); document.getElementById("tutorialOverlay").hidden=false; }
+function closeTutorial(){ document.getElementById("tutorialOverlay").hidden=true; try{localStorage.setItem("dominion_tutorial_seen","1");}catch(e){} }
 let wasAutoPaused=false;
 document.addEventListener("visibilitychange",()=>{ if(!S||S.over)return;
   if(document.hidden){ if(SETTINGS.autoPause&&S.speed>0&&!(S.mp&&S.mp.role==="guest")){ wasAutoPaused=true; S.speed=0; } }
@@ -1668,7 +1782,7 @@ function hasSave(){ return listSaveSlots().some(s=>!s.empty); }
 function mostRecentSlot(){ const slots=listSaveSlots().filter(s=>!s.empty); if(!slots.length)return null;
   return slots.reduce((best,s)=>s.savedAt>best.savedAt?s:best).slot; }
 function loadGameState(slot){
-  resetSurrenderArm();
+  resetSurrenderArm(); startMusic();
   if(slot==null)slot=mostRecentSlot(); if(slot==null)return false;
   const data=readSlot(slot); if(!data||!data.cells)return false;
   S={cells:[],grid:[],map:{},nations:data.nations,armies:data.armies||[],missiles:data.missiles||[],fx:[],
@@ -1740,7 +1854,12 @@ function compareStatsCode(){ const raw=(document.getElementById("statCodeIn").va
     <div class="spod"><b>${mine.wins} / ${theirs.wins}</b><span>Wins (you/them)</span></div>
     <div class="spod"><b>${mine.fastest||'–'} / ${theirs.fastest||'–'}</b><span>Fastest win (s)</span></div></div>`; }
 /* ===== REPLAY VIEWER (land-count-over-time graph, not a full re-simulation) ===== */
-function openReplay(snaps){ drawReplay(snaps); document.getElementById("replayOverlay").hidden=false; }
+function openReplay(snaps){ drawReplay(snaps); document.getElementById("replayOverlay").hidden=false;
+  currentReplaySnaps=snaps; const out=document.getElementById("replayCodeOut"); if(out)out.value=exportReplayCode(snaps); }
+let currentReplaySnaps=null;
+function exportReplayCode(snaps){ try{ return btoa(encodeURIComponent(JSON.stringify({v:1,type:"dominion-replay",snaps}))); }catch(e){ return ""; } }
+function importReplayCode(code){ try{ const d=JSON.parse(decodeURIComponent(atob(code.trim())));
+  return (d&&d.v===1&&d.type==="dominion-replay"&&Array.isArray(d.snaps))?d.snaps:null; }catch(e){ return null; } }
 function drawReplay(snaps){ const cv=document.getElementById("replayCanvas"); if(!cv)return; const g=cv.getContext("2d"); const w=cv.width,h=cv.height;
   g.clearRect(0,0,w,h); if(!snaps||!snaps.length){ document.getElementById("replayLegend").innerHTML=""; return; }
   const ids=Object.keys(snaps[snaps.length-1].land);
@@ -1788,6 +1907,21 @@ function startDailyChallenge(){ const {seed,key}=dailySeed();
   const orig=Math.random; Math.random=mulberry32(seed); // no clearSave() here -- see the note in startGame()
   try{ startGameInner(perk,diff,"conquest",false,"medium"); S.campaignId=null; S.dailyKey=key; }
   finally{ Math.random=orig; } }
+
+/* ===== IRONMAN MODE (a persistent series of matches, escalating difficulty; one loss ends the run) ===== */
+const IRONMAN_DIFFS=["peaceful","easy","medium","medium","hard","hard","nightmare","nightmare","impossible"];
+function getIronmanState(){ try{return JSON.parse(localStorage.getItem("dominion_ironman")||"{}");}catch(e){return {};} }
+function saveIronmanState(s){ try{localStorage.setItem("dominion_ironman",JSON.stringify(s));}catch(e){} }
+function startIronman(){ const prev=getIronmanState();
+  const streak=prev.active?(prev.streak||0):0;
+  const diff=IRONMAN_DIFFS[Math.min(streak,IRONMAN_DIFFS.length-1)];
+  saveIronmanState({active:true,streak,bestStreak:prev.bestStreak||0});
+  const perk=Object.keys(PERKS)[Math.floor(Math.random()*Object.keys(PERKS).length)];
+  startGameInner(perk,diff,"conquest",false,"medium"); S.campaignId=null; S.ironman=true;
+  pushLog("☠ Ironman run — win streak: "+streak+" · this battle: "+t(DIFF[diff].n),"good"); }
+function ironmanRegisterWin(){ const st=getIronmanState(); const newStreak=(st.streak||0)+1;
+  saveIronmanState({active:true,streak:newStreak,bestStreak:Math.max(newStreak,st.bestStreak||0)}); return newStreak; }
+function ironmanEndRun(){ const st=getIronmanState(); saveIronmanState({active:false,streak:0,bestStreak:st.bestStreak||0}); }
 
 /* ===== MULTIPLAYER: room codes, lobby, PeerJS wiring ===== */
 const MPLOBBY={role:null,code:null,name:"",teamSize:1,mode:"conquest",diff:"medium",fog:false,worldSize:"medium",goldMul:1,
@@ -2020,10 +2154,15 @@ function buildStart(){
   document.getElementById("diffPick").innerHTML=Object.keys(DIFF).map(k=>`<button class="dchip ${k===selDiff?'sel':''}" data-d="${k}"><div class="dn">${t(DIFF[k].n)}</div><div class="dd">${t(DIFF[k].d)}</div></button>`).join("");
   document.querySelectorAll("#diffPick .dchip").forEach(b=>b.addEventListener("click",()=>{selDiff=b.dataset.d;buildStart();}));
   document.getElementById("factionPick").innerHTML=Object.keys(PERKS).map(k=>`<button class="fcard" data-p="${k}"><div class="fn"><span class="fi">${PERKS[k].i}</span>${t(PERKS[k].n)}</div><div class="fb">${t(PERKS[k].d)}</div></button>`).join("");
-  document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked,null,selWorldSize)));
+  document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>{
+    startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked,null,selWorldSize);
+    let seen=true; try{seen=!!localStorage.getItem("dominion_tutorial_seen");}catch(e){}
+    if(!seen)startTutorial(); }));
   const cb=document.getElementById("continueBtn"); if(cb)cb.hidden=!hasSave();
   const sb=document.getElementById("savesBtn"); if(sb)sb.hidden=!hasSave();
   const db=document.getElementById("dailyBtn"); if(db)db.textContent=getDailyDone()?"📅 Daily Challenge ✓":"📅 Daily Challenge";
+  const ib=document.getElementById("ironmanBtn"); if(ib){ const ist=getIronmanState();
+    ib.textContent = ist.active&&ist.streak>0 ? "☠ Ironman (streak "+ist.streak+")" : "☠ Ironman"+(ist.bestStreak?" (best "+ist.bestStreak+")":""); }
 }
 function boot(){ migrateOldSave();
   canvas=document.getElementById("map"); ctx=canvas.getContext("2d");
@@ -2037,6 +2176,11 @@ function boot(){ migrateOldSave();
   document.getElementById("missileBtn").addEventListener("click",toggleMissile);
   document.getElementById("rulesBtn").addEventListener("click",()=>document.getElementById("rulesOverlay").hidden=false);
   document.getElementById("rulesClose").addEventListener("click",()=>document.getElementById("rulesOverlay").hidden=true);
+  document.getElementById("tutNextBtn").addEventListener("click",()=>{ if(tutorialStep>=TUTORIAL_STEPS.length-1)closeTutorial();
+    else{ tutorialStep++; buildTutorialStepUI(); } });
+  document.getElementById("tutPrevBtn").addEventListener("click",()=>{ if(tutorialStep>0){ tutorialStep--; buildTutorialStepUI(); } });
+  document.getElementById("tutSkipBtn").addEventListener("click",closeTutorial);
+  document.getElementById("tutReplayBtn").addEventListener("click",()=>{ document.getElementById("settingsOverlay").hidden=true; startTutorial(); });
   document.getElementById("zin").addEventListener("click",()=>zoomBtn(1.2));
   document.getElementById("zout").addEventListener("click",()=>zoomBtn(1/1.2));
   document.getElementById("speed").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||!S)return;
@@ -2073,7 +2217,10 @@ function boot(){ migrateOldSave();
       window.addEventListener("pointermove",onMove); window.addEventListener("pointerup",onUp); window.addEventListener("pointercancel",onUp); });
     resizer.addEventListener("dblclick",()=>{ mainEl.style.removeProperty("--aside-w"); try{localStorage.removeItem("dominion_asidew");}catch(_){} paint(); });
   }
-  document.getElementById("restartBtn").addEventListener("click",()=>{document.getElementById("endOverlay").hidden=true;document.getElementById("app").hidden=true;document.getElementById("startOverlay").hidden=false;});
+  document.getElementById("restartBtn").addEventListener("click",()=>{
+    document.getElementById("endOverlay").hidden=true;
+    if(S&&S.ironman&&S.ironmanWasWin){ startIronman(); return; }
+    document.getElementById("app").hidden=true;document.getElementById("startOverlay").hidden=false; });
   document.getElementById("leaveBtn").addEventListener("click",leaveGame);
 
   // ---- settings ----
@@ -2081,13 +2228,15 @@ function boot(){ migrateOldSave();
   document.getElementById("settingsClose").addEventListener("click",()=>document.getElementById("settingsOverlay").hidden=true);
   const toggleRow=(id,key)=>document.getElementById(id).addEventListener("click",()=>{ SETTINGS[key]=!SETTINGS[key]; saveSettings(); syncSettingsUI(); });
   toggleRow("setSoundToggle","sound"); toggleRow("setMotionToggle","reduceMotion"); toggleRow("setPauseToggle","autoPause"); toggleRow("setConfirmToggle","confirmAttack");
-  document.getElementById("setVolume").addEventListener("input",e=>{ SETTINGS.volume=+e.target.value; saveSettings(); });
+  document.getElementById("setMusicToggle").addEventListener("click",()=>{ toggleMusicSetting(); syncSettingsUI(); });
+  document.getElementById("setVolume").addEventListener("input",e=>{ SETTINGS.volume=+e.target.value; saveSettings(); refreshMusicVolume(); });
 
   // ---- continue / history / campaign ----
   document.getElementById("continueBtn").addEventListener("click",()=>{ loadGameState(); });
   document.getElementById("savesBtn").addEventListener("click",()=>{ buildSavesModal(); document.getElementById("savesOverlay").hidden=false; });
   document.getElementById("savesCloseBtn").addEventListener("click",()=>document.getElementById("savesOverlay").hidden=true);
   document.getElementById("dailyBtn").addEventListener("click",()=>{ startDailyChallenge(); });
+  document.getElementById("ironmanBtn").addEventListener("click",()=>{ startIronman(); });
   document.getElementById("historyBtn").addEventListener("click",()=>{ buildHistoryModal(); document.getElementById("historyOverlay").hidden=false; });
   document.getElementById("histCloseBtn").addEventListener("click",()=>document.getElementById("historyOverlay").hidden=true);
   document.getElementById("histClearBtn").addEventListener("click",()=>{ try{localStorage.removeItem("dominion_history");}catch(e){} buildHistoryModal(); });
@@ -2099,6 +2248,11 @@ function boot(){ migrateOldSave();
   document.getElementById("statCodeCopyBtn").addEventListener("click",()=>{ const inp=document.getElementById("statCodeOut");
     inp.select(); try{ navigator.clipboard.writeText(inp.value); showToast("📋 Stats code copied!"); }catch(e){ try{document.execCommand("copy");showToast("📋 Stats code copied!");}catch(e2){} } });
   document.getElementById("statCodeCmpBtn").addEventListener("click",compareStatsCode);
+  document.getElementById("replayCodeViewBtn").addEventListener("click",()=>{
+    const snaps=importReplayCode(document.getElementById("replayCodeIn").value||"");
+    if(snaps)openReplay(snaps); else showToast("Not a valid replay code."); });
+  document.getElementById("replayCodeCopyBtn").addEventListener("click",()=>{ const inp=document.getElementById("replayCodeOut");
+    inp.select(); try{ navigator.clipboard.writeText(inp.value); showToast("📋 Replay code copied!"); }catch(e){ try{document.execCommand("copy");showToast("📋 Replay code copied!");}catch(e2){} } });
 
   // ---- multiplayer entry / lobby ----
   document.getElementById("mpEnterBtn").addEventListener("click",()=>{
