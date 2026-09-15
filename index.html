@@ -696,12 +696,15 @@ const byId=id=>S.map[id];
 const cellAt=(c,r)=>(c<0||r<0||c>=COLS||r>=ROWS)?null:S.grid[r][c];
 function neighbors(cell){ const o=cell.row%2?OFF_ODD:OFF_EVEN; return o.map(([dc,dr])=>cellAt(cell.col+dc,cell.row+dr)).filter(Boolean); }
 const isCoastal=cell=>cell.land&&neighbors(cell).some(n=>!n.land);
+const soloAiIds=()=>Object.keys(S.nations).filter(k=>k.startsWith("ai"));
 const ownedCells=nat=>S.cells.filter(c=>c.land&&c.owner===nat);
 const totalLand=()=>S.landCount;
 const totalTroops=nat=>ownedCells(nat).reduce((a,c)=>a+c.troops,0);
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const perkOf=nat=>(S.nations[nat]||{}).perk||null;
 const hasBuilding=(nat,k)=>S.cells.some(c=>c.owner===nat&&c.b[k]);
+const isTeammateOwner=ownerId=>ownerId!=="player"&&!!(S.mp&&S.mp.teamOf&&S.mp.teamOf[ownerId]!=null&&S.mp.teamOf[ownerId]===S.mp.myTeam);
+const sameTeam=(idA,idB)=>!!(S.mp&&S.mp.teamOf&&S.mp.teamOf[idA]!=null&&S.mp.teamOf[idA]===S.mp.teamOf[idB]);
 
 /* ===== WORLD GEN ===== */
 const WORLD_SIZES={small:{conts:3,islands:15},medium:{conts:4,islands:30},large:{conts:6,islands:45}};
@@ -887,9 +890,9 @@ function mpApplyOrder(actingNat,order){
   if(order.kind==="build"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doBuildCore(c,actingNat,order.key); }
   else if(order.kind==="recruit"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doRecruitCore(c,actingNat,order.num); }
   else if(order.kind==="deploy"){ const src=byId(order.fromId),tgt=byId(order.toId);
-    if(src&&tgt&&src.owner===actingNat&&validTarget(src,tgt))sendArmy(src,tgt,Math.min(order.amount,src.troops),1,order.formation); }
+    if(src&&tgt&&src.owner===actingNat&&validTarget(src,tgt)&&(tgt.owner===actingNat||!sameTeam(actingNat,tgt.owner)))sendArmy(src,tgt,Math.min(order.amount,src.troops),1,order.formation); }
   else if(order.kind==="missile"){ const tgt=byId(order.targetId); const nat=S.nations[actingNat];
-    if(tgt&&nat&&!tgt.cap){ const {silo,cost}=launchMissileFor(actingNat); if(nat.gold>=cost&&nat.missileCD<=0){ nat.gold-=cost; launchMissile(silo,tgt,actingNat,1); } } }
+    if(tgt&&nat&&!tgt.cap&&tgt.owner!==actingNat&&!sameTeam(actingNat,tgt.owner)){ const {silo,cost}=launchMissileFor(actingNat); if(nat.gold>=cost&&nat.missileCD<=0){ nat.gold-=cost; launchMissile(silo,tgt,actingNat,1); } } }
   else if(order.kind==="tech"){ buyTech(actingNat,order.key); }
   else if(order.kind==="spy"){ doSpyCore(actingNat,order.targetId); }
   else if(order.kind==="hero"){ doHeroCore(actingNat); }
@@ -1045,7 +1048,7 @@ function update(dt){ if(S.over)return; S.time+=dt;
   for(let i=S.fx.length-1;i>=0;i--){ S.fx[i].age+=dt; if(S.fx[i].age>=S.fx[i].life)S.fx.splice(i,1); }
   // AI
   const d=DIFF[S.diff];
-  (S.mp?S.mp.allAiIds:["ai1","ai2","ai3"]).forEach(id=>{ const nat=S.nations[id]; if(!nat)return; const owned=ownedCells(id); if(!owned.length)return;
+  (S.mp?S.mp.allAiIds:soloAiIds()).forEach(id=>{ const nat=S.nations[id]; if(!nat)return; const owned=ownedCells(id); if(!owned.length)return;
     const myTeam=S.mp?S.mp.teamOf[id]:null;
     const threat = S.mp ? (Object.keys(S.nations).filter(nid=>S.mp.teamOf[nid]&&S.mp.teamOf[nid]!==myTeam).reduce((a,nid)=>a+ownedCells(nid).length,0))/totalLand()*100
                          : ownedCells("player").length/totalLand()*100;
@@ -1073,7 +1076,7 @@ function fireEvent(){ const land=S.cells.filter(c=>c.land); if(!land.length)retu
   else if(roll===2){ const nt=land.filter(c=>c.owner==="neutral"&&!c.cap); if(nt.length){ const t=nt[Math.floor(Math.random()*nt.length)]; t.troops+=5;
       addFx("clash",t.cx,t.cy,"neutral"); pushLog("⚔ Rebels rise at "+t.col+"·"+t.row+" — its garrison surges.","bad"); worldDirty=true; } }
   else if(roll===3){ (S.mp?S.mp.allHumanRealIds:["player"]).forEach(id=>{ if(S.nations[id])S.nations[id].food+=25; });
-      (S.mp?S.mp.allAiIds:["ai1","ai2","ai3"]).forEach(id=>{ if(S.nations[id])S.nations[id].gold+=20; });
+      (S.mp?S.mp.allAiIds:soloAiIds()).forEach(id=>{ if(S.nations[id])S.nations[id].gold+=20; });
       pushLog("🌾 A bumper harvest fills granaries across the world.","good"); }
   else if(roll===4){ const mine=ownedCells("player"); if(mine.length){ const t=mine[Math.floor(Math.random()*mine.length)]; t.troops+=4; addFx("merge",t.cx,t.cy,"player");
       pushLog("👥 Settlers arrive at "+pName(t)+" — +4 troops.","good"); worldDirty=true; } }
@@ -1127,6 +1130,7 @@ function doTech(key){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"tech",ke
 const SPY_COST=25, SPY_CD=15;
 function doSpyCore(natId,targetId){ const nat=S.nations[natId]; const tgt=byId(targetId);
   if(!nat||!tgt||!tgt.land||tgt.owner===natId||tgt.owner==="neutral"||tgt.owner==="sea")return;
+  if(sameTeam(natId,tgt.owner))return; // can't spy on a teammate
   if((nat.spyCD||0)>0||nat.gold<SPY_COST)return;
   nat.gold-=SPY_COST; nat.spyCD=SPY_CD;
   const success=Math.random()<0.65;
@@ -1180,9 +1184,9 @@ function checkGameOver(){
     const cap=byId(S.playerCapitalId); const pl=ownedCells("player").length,tot=totalLand();
     if(!cap||cap.owner!=="player")return endGame(false,"Your capital has fallen. The Dominion is broken.");
     if(pl===0)return endGame(false,"You hold no land. Your empire is gone.");
-    const aisAlive=["ai1","ai2","ai3"].some(id=>S.nations[id]&&ownedCells(id).length>0);
+    const aisAlive=soloAiIds().some(id=>S.nations[id]&&ownedCells(id).length>0);
     if(!aisAlive)return endGame(true,"Every rival has been crushed. The world is yours!");
-    if(MODE[S.mode].capOnly){ const allCaps=["ai1","ai2","ai3"].every(id=>{const nn=S.nations[id]; return !nn||byId(nn.capitalId).owner!==id;});
+    if(MODE[S.mode].capOnly){ const allCaps=soloAiIds().every(id=>{const nn=S.nations[id]; return !nn||byId(nn.capitalId).owner!==id;});
       if(allCaps)return endGame(true,"Every rival crown has fallen — Regicide complete!"); }
     else if(pl/tot>=S.winFrac)return endGame(true,"You rule "+Math.round(pl/tot*100)+"% of the Earth!");
     return;
@@ -1222,14 +1226,14 @@ function launchMissileFor(natId){ const nat=S.nations[natId]; const silo=ownedCe
 function toggleMissile(){ if(!hasBuilding("player","silo")||S.nations.player.gold<missileCost()||S.nations.player.missileCD>0)return; S.missileMode=!S.missileMode; updateModebar(); paint(); }
 function onPick(cell){ if(S.over||!cell)return;
   if(S.mp&&S.mp.role==="spectator"){ S.selected=cell.id; renderPanel(); openDrawer(); paint(); return; }
-  if(S.missileMode){ if(cell.land&&cell.owner!=="player"){
+  if(S.missileMode){ if(cell.land&&cell.owner!=="player"&&!isTeammateOwner(cell.owner)){
       if(cell.cap){ pushLog("Capitals are shielded from missiles — assault it with an army instead.","bad"); paint(); return; }
       if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"missile",targetId:cell.id}); }
       else { const silo=ownedCells("player").find(c=>c.b.silo)||byId(S.playerCapitalId);
         S.nations.player.gold-=missileCost(); launchMissile(silo,cell,"player",1); pushLog("🚀 Missile launched!","boom"); sndMissile(); } }
     S.missileMode=false; updateModebar(); paint(); return; }
   const src=byId(S.selected);
-  if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)){
+  if(src&&src.owner==="player"&&src.troops>0&&validTarget(src,cell)&&!isTeammateOwner(cell.owner)){
     const isAttack=cell.owner!=="player";
     if(isAttack&&SETTINGS.confirmAttack&&S.attackConfirmId!==cell.id){ S.attackConfirmId=cell.id;
       clearTimeout(S.attackConfirmTimer); S.attackConfirmTimer=setTimeout(()=>{S.attackConfirmId=null;},4000);
@@ -1281,10 +1285,10 @@ function render(){ if(!ctx||!S)return; const dpr=window.devicePixelRatio||1;
   if(worldDirty)drawStatic();
   ctx.save(); ctx.translate(S.cam.x,S.cam.y); ctx.scale(S.cam.scale,S.cam.scale);
   ctx.drawImage(off,0,0);
-  const src=byId(S.selected), targets=(src&&src.owner==="player"&&src.troops>0)?S.cells.filter(c=>validTarget(src,c)):[];
+  const src=byId(S.selected), targets=(src&&src.owner==="player"&&src.troops>0)?S.cells.filter(c=>validTarget(src,c)&&!isTeammateOwner(c.owner)):[];
   // highlights
   targets.forEach(c=>{ ctx.beginPath();poly(ctx,c.poly); ctx.strokeStyle=c.owner==="player"?"#7fc0f0":"#e64a3a";ctx.lineWidth=2.4;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]); });
-  if(S.missileMode)S.cells.filter(c=>c.land&&c.owner!=="player"&&!c.cap).forEach(c=>{ ctx.beginPath();poly(ctx,c.poly);ctx.strokeStyle="#ff9a3c";ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]); });
+  if(S.missileMode)S.cells.filter(c=>c.land&&c.owner!=="player"&&!c.cap&&!isTeammateOwner(c.owner)).forEach(c=>{ ctx.beginPath();poly(ctx,c.poly);ctx.strokeStyle="#ff9a3c";ctx.lineWidth=2;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]); });
   if(src){ ctx.beginPath();poly(ctx,src.poly);ctx.strokeStyle="#ffd873";ctx.lineWidth=3;ctx.stroke(); }
   // troop tokens
   S.cells.forEach(c=>{ if(!c.land||c.troops<=0||fogHidden(c))return; ctx.beginPath();ctx.arc(c.cx,c.cy+1,9,0,7);ctx.fillStyle="#f4ead0";ctx.fill();ctx.strokeStyle="#4a3a20";ctx.lineWidth=1.1;ctx.stroke();
@@ -1345,7 +1349,7 @@ function loop(now){ const raw=(now-lastT)/1000; lastT=now; const dt=Math.min(0.0
 
 /* ===== HEADER / PANEL DOM ===== */
 function fmt(x){return Math.floor(x);}
-function enemyIds(){ return S.mp ? Object.keys(S.nations).filter(id=>S.mp.teamOf[id]&&S.mp.teamOf[id]!==S.mp.myTeam) : ["ai1","ai2","ai3"]; }
+function enemyIds(){ return S.mp ? Object.keys(S.nations).filter(id=>S.mp.teamOf[id]&&S.mp.teamOf[id]!==S.mp.myTeam) : soloAiIds(); }
 function teamLandOf(team){ return Object.keys(S.nations).filter(id=>S.mp.teamOf[id]===team).reduce((a,id)=>a+ownedCells(id).length,0); }
 function capsTotal(){ return enemyIds().filter(id=>S.nations[id]).length; }
 function capsTaken(){ return enemyIds().filter(id=>S.nations[id]&&byId(S.nations[id].capitalId).owner!==id).length; }
@@ -1428,7 +1432,7 @@ function renderPanel(){ const title=document.getElementById("ppTitle"),tag=docum
                  : `<button class="btn full" style="margin-top:8px;width:100%" data-diplo="${c.owner}">🤝 Propose Peace with ${n.name}</button>`;
       if(atPeace)h+=`<button class="btn full" style="margin-top:6px;width:100%" data-trade="${c.owner}">${S.trades&&S.trades[c.owner]?'📦 Close Trade Route':'📦 Open Trade Route'}</button>`;
     }
-    if(!iAmSpectator&&c.owner&&c.owner!=="neutral"){ const myN=S.nations.player, spyCd=Math.ceil(myN.spyCD||0);
+    if(!iAmSpectator&&c.owner&&c.owner!=="neutral"&&!isTeammateOwner(c.owner)){ const myN=S.nations.player, spyCd=Math.ceil(myN.spyCD||0);
       h+=`<button class="btn full" style="margin-top:6px;width:100%" data-spy="${c.id}" ${(myN.gold<SPY_COST||spyCd>0)?'disabled':''}>🕵 Send Spy (${SPY_COST}g)${spyCd>0?' — '+spyCd+'s':''}</button>`;
     } }
   body.innerHTML=h; }
@@ -1452,6 +1456,7 @@ function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
     clearTimeout(leaveTimer); leaveTimer=setTimeout(()=>{leaveArmed=false;b.classList.remove("armed");b.textContent=t("Leave");},2500); return; }
   clearTimeout(leaveTimer); leaveArmed=false; b.classList.remove("armed"); b.textContent=t("Leave");
   if(S&&!S.mp&&!S.over)saveGameState();
+  if(S&&!S.over)checkAchievements(false); // catches win-independent achievements (e.g. Hoarder) for modes like Sandbox that never call endGame()
   if(S)S.over=true;
   document.getElementById("endOverlay").hidden=true;
   document.getElementById("app").hidden=true;
