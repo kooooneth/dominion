@@ -273,7 +273,9 @@
     <button class="mplink" id="mpEnterBtn">🌐 Play Online with a Room Code (1v1 / 2v2 / 3v3 / 4v4) →</button>
     <div class="quicklinks">
       <button class="qlink" id="continueBtn" hidden>▶ Continue Saved Game</button>
+      <button class="qlink" id="savesBtn" hidden>🗂 Saved Games</button>
       <button class="qlink" id="campaignBtn">📖 Campaign</button>
+      <button class="qlink" id="dailyBtn">📅 Daily Challenge</button>
       <button class="qlink" id="historyBtn">📜 History &amp; Stats</button>
       <button class="qlink" id="achievementsBtn">🏆 Achievements</button>
     </div>
@@ -397,7 +399,15 @@
 </div>
 
 <div class="overlay" id="endOverlay" hidden>
-  <div class="modal endmodal"><h2 id="endTitle"></h2><p id="endText"></p><button class="btn primary" id="restartBtn">Play Again</button></div>
+  <div class="modal endmodal"><h2 id="endTitle"></h2><p id="endText"></p><div id="endSummary" style="text-align:left"></div><button class="btn primary" id="restartBtn">Play Again</button></div>
+</div>
+
+<div class="overlay" id="savesOverlay" hidden>
+  <div class="modal" style="width:min(560px,100%)">
+    <h2 style="font-size:24px">🗂 Saved Games</h2>
+    <div class="histlist" id="savesList"></div>
+    <div class="closebar"><button class="btn primary" id="savesCloseBtn">Close</button></div>
+  </div>
 </div>
 
 <script>
@@ -426,12 +436,17 @@ const B={
   shipyard:{n:"Shipyard",i:"🛳",c:42,navalDef:.5,d:"+50% defense vs naval attacks"}};
 const BORDER=["factory","mine","market","bank","farm","barracks","fort","tower","hospital","harbor","lab","silo","interceptor","shield","shipyard"];
 const MAXB=5;
-const PERKS={ industrial:{n:"Industrialists",i:"🏭",d:"<b>+25% gold</b>."}, agrarian:{n:"Agrarians",i:"🌾",d:"<b>+25% food</b>, cheap troops."},
-  warmonger:{n:"Warmongers",i:"⚔",d:"armies <b>attack +20%</b>."}, fortifier:{n:"Fortifiers",i:"🛡",d:"provinces <b>defend +20%</b>."},
-  rocketeer:{n:"Rocketeers",i:"🚀",d:"cheap missiles; <b>start w/ Silo</b>."}, seafarer:{n:"Seafarers",i:"⚓",d:"longer naval reach; coasts resist raids."}};
+const PERKS={
+  industrial:{n:"Industrialists",i:"🏭",d:"<b>+25% gold</b>.",ult:{n:"Economic Surge",i:"💹",c:50,cd:40,d:"+150 gold instantly."}},
+  agrarian:{n:"Agrarians",i:"🌾",d:"<b>+25% food</b>, cheap troops.",ult:{n:"Harvest Festival",i:"🎉",c:50,cd:40,d:"+150 food, +2 troops on every province."}},
+  warmonger:{n:"Warmongers",i:"⚔",d:"armies <b>attack +20%</b>.",ult:{n:"War Cry",i:"📯",c:50,cd:40,d:"+30% attack power for 20s."}},
+  fortifier:{n:"Fortifiers",i:"🛡",d:"provinces <b>defend +20%</b>.",ult:{n:"Iron Walls",i:"⛓",c:50,cd:40,d:"+30% defense for 20s."}},
+  rocketeer:{n:"Rocketeers",i:"🚀",d:"cheap missiles; <b>start w/ Silo</b>.",ult:{n:"Saturation Strike",i:"☄",c:50,cd:40,d:"instantly reload your missile silo."}},
+  seafarer:{n:"Seafarers",i:"⚓",d:"longer naval reach; coasts resist raids.",ult:{n:"Tidal Surge",i:"🌊",c:50,cd:40,d:"+3 troops on every coastal province."}}};
 const SITES={ gold:{i:"💎",n:"Gold Vein",gold:1.0}, oil:{i:"🛢",n:"Oil Field",gold:1.2}, delta:{i:"🌱",n:"Fertile Delta",food:1.2},
   ruins:{i:"🏛",n:"Ancient Ruins",boost:.15}, fortress:{i:"🗿",n:"Old Fortress",def:.5},
-  metals:{i:"⛰",n:"Rare Metals",gold:1.7}, holy:{i:"⛪",n:"Holy Site",def:.3,boost:.1} };
+  metals:{i:"⛰",n:"Rare Metals",gold:1.7}, holy:{i:"⛪",n:"Holy Site",def:.3,boost:.1},
+  trade:{i:"📦",n:"Trade Post",gold:1.4,shipped:true} };
 const DIFF={ peaceful:{n:"Peaceful",d:"Bots barely fight",econ:.5,think:6,aggr:.03,build:.25,harbor:false,missile:false,edge:.7},
   easy:{n:"Easy",d:"Passive, poor bots",econ:.6,think:4.5,aggr:.15,build:.35,harbor:false,missile:false,edge:.85},
   medium:{n:"Medium",d:"A fair fight",econ:1.0,think:3.2,aggr:.35,build:.55,harbor:true,missile:false,edge:1.0},
@@ -492,6 +507,13 @@ const TECH={
   irrigation:{n:"Irrigation",i:"🌾",c:55,d:"+10% food income"},
   medicine:{n:"Field Medicine",i:"⛑",c:50,d:"Hospitals heal 2x faster"},
   naval:{n:"Naval Doctrine",i:"⚓",c:65,d:"+1 harbor range"},
+};
+/* ===== WONDERS (one per empire, build-once, huge cost, huge permanent bonus) ===== */
+const WONDERS={
+  library:{n:"Great Library",i:"📚",c:260,d:"+15% gold and food income, empire-wide"},
+  colossus:{n:"Colossus",i:"🗽",c:260,d:"+30% max army capacity"},
+  gardens:{n:"Hanging Gardens",i:"🌷",c:260,d:"All provinces slowly self-heal, even without a Hospital"},
+  wall:{n:"Great Wall",i:"🧱",c:260,d:"+25% defense on every province you own"},
 };
 const AI_NAMES=["Ironpeak Hegemony","Verdant Coalition","Sunspear Caliphate","Frostmark Realm","Azure League"];
 const AI_COLORS=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const PLAYER_COLOR="#2e5e8c";
@@ -751,12 +773,17 @@ function genWorld(islandCount){
 
 /* ===== SETUP ===== */
 function startGame(perk,diff,mode,fog,campaignId,worldSize){
-  clearSave();
+  // NOTE: deliberately does NOT call clearSave() here -- with multiple save slots, S at this point
+  // still refers to whatever the PREVIOUS session's game was, and clearSave() deletes S.saveSlot's
+  // slot specifically. Wiping it on every new-game start would delete an unrelated saved game the
+  // moment you start something else. Every real exit path already keeps slots correct on its own:
+  // leaveGame() saves the game being left, and endGame() clears the slot for the game that just ended.
   if(campaignId){ const m=MISSIONS.find(x=>x.id===campaignId); const orig=Math.random; Math.random=mulberry32(m.seed);
     try{ startGameInner(perk,diff,mode,fog,worldSize); S.campaignId=campaignId; } finally{ Math.random=orig; } }
   else { startGameInner(perk,diff,mode,fog,worldSize); S.campaignId=null; }
 }
 function startGameInner(perk,diff,mode,fog,worldSize){
+  resetSurrenderArm();
   mode=mode||"conquest";
   const wsz=WORLD_SIZES[worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
@@ -767,13 +794,13 @@ function startGameInner(perk,diff,mode,fog,worldSize){
   const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
   const bigs=conts.slice(0,wsz.conts); const pIdx=Math.floor(Math.random()*bigs.length);
   const pCont=bigs[pIdx], aiConts=bigs.filter((_,i)=>i!==pIdx);
-  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0,spyCD:0,hero:null,tech:{}};
+  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0,spyCD:0,hero:null,tech:{},ultCD:0,ultUntil:0,wonder:null,mercCD:0,kills:0,totalGoldEarned:0};
   const pcap=nCap(pCont); pcap.owner="player";pcap.troops=8;pcap.cap=true;pcap.b.factory=true;pcap.b.barracks=true;
   S.nations.player.capitalId=pcap.id; S.playerCapitalId=pcap.id; if(perk==="rocketeer")pcap.b.silo=true;
   const cperks=["warmonger","fortifier",null];
   aiConts.forEach((cont,i)=>{ const id="ai"+(i+1);
     S.nations[id]={id,name:AI_NAMES[i%5],color:AI_COLORS[i%5],isPlayer:false,perk:cperks[i%3],personality:pickPersonality(),
-      gold:30,think:rnd(1,DIFF[diff].think),missileCD:0,spyCD:0};
+      gold:30,think:rnd(1,DIFF[diff].think),missileCD:0,spyCD:0,kills:0,totalGoldEarned:0};
     const cap=nCap(cont); cap.owner=id;cap.troops=7;cap.cap=true;cap.b.factory=true;cap.b.barracks=true; S.nations[id].capitalId=cap.id;
     // some modes hand bots a head start (extra bordering land + troops)
     const extra=MODE[mode].botStart; if(extra){ cap.troops+=3; let ring=neighbors(cap).filter(x=>x.land&&x.owner==="sea");
@@ -801,6 +828,7 @@ function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas
 
 /* ===== MULTIPLAYER SETUP (host builds the match; guest deserializes it) ===== */
 function startMultiplayerHost(lobby){
+  resetSurrenderArm();
   const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog, goldMul=lobby.goldMul||1;
   const wsz=WORLD_SIZES[lobby.worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
@@ -817,14 +845,14 @@ function startMultiplayerHost(lobby){
   const teamOf={}, allHumanRealIds=[], allAiIds=[];
   humans.forEach((p,i)=>{ teamOf[p.rid]=p.team;
     const isMe=p.rid==="player"; const chosenPerk=(p.perk&&PERKS[p.perk])?p.perk:pickAiPerk();
-    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50*goldMul,food:45,missileCD:0,spyCD:0,hero:null,human:true,tech:{}};
+    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50*goldMul,food:45,missileCD:0,spyCD:0,hero:null,human:true,tech:{},ultCD:0,ultUntil:0,wonder:null,mercCD:0,kills:0,totalGoldEarned:0};
     const cap=nCap(contOrder[i]); cap.owner=p.rid;cap.troops=8;cap.cap=true;cap.b.factory=true;cap.b.barracks=true;
     S.nations[p.rid].capitalId=cap.id; if(isMe){S.playerCapitalId=cap.id;} if(S.nations[p.rid].perk==="rocketeer")cap.b.silo=true;
     allHumanRealIds.push(p.rid); });
   const cperks=["warmonger","fortifier",null]; let aiCount=0;
   for(let i=humans.length;i<total;i++){ const id="ai"+(++aiCount);
     const teamLetter = i<lobby.teamSize?"A":"B"; teamOf[id]=teamLetter;
-    S.nations[id]={id,name:AI_NAMES[aiCount%5],color:AI_COLORS[(aiCount+2)%5],isPlayer:false,perk:cperks[aiCount%3],personality:pickPersonality(),gold:30*goldMul,think:rnd(1,DIFF[diff].think),missileCD:0,spyCD:0};
+    S.nations[id]={id,name:AI_NAMES[aiCount%5],color:AI_COLORS[(aiCount+2)%5],isPlayer:false,perk:cperks[aiCount%3],personality:pickPersonality(),gold:30*goldMul,think:rnd(1,DIFF[diff].think),missileCD:0,spyCD:0,kills:0,totalGoldEarned:0};
     const cap=nCap(contOrder[i]); cap.owner=id;cap.troops=7;cap.cap=true;cap.b.factory=true;cap.b.barracks=true; S.nations[id].capitalId=cap.id;
     allAiIds.push(id); }
   S.nations.sea={id:"sea",color:"#33586e"}; S.nations.neutral={id:"neutral",name:"Unclaimed",color:"#c3b288"};
@@ -850,7 +878,8 @@ function mpRemapId(id,forRealId){ if(!forRealId)return id; if(id===forRealId)ret
 function mpSerializeInit(forRealId){
   const cells=S.cells.map(c=>c.land?{col:c.col,row:c.row,land:1,terr:c.terr,site:c.site,cap:c.cap,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b}:{col:c.col,row:c.row,land:0});
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
-    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,personality:n.personality||null,human:!!n.human,tech:n.tech||{},capitalId:null}; });
+    nations[rid]={id:rid,name:n.name,color:n.color,isPlayer:rid==="player",perk:n.perk,gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,personality:n.personality||null,human:!!n.human,tech:n.tech||{},capitalId:null,
+      ultCD:n.ultCD||0,ultUntil:n.ultUntil||0,wonder:n.wonder||null,mercCD:n.mercCD||0,kills:n.kills||0,totalGoldEarned:n.totalGoldEarned||0}; });
   // fix capitalId references after id remap (capitalId is a CELL id, unaffected — cells keep their own col_row ids)
   Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const rid=mpRemapId(id,forRealId); nations[rid].capitalId=S.nations[id].capitalId; });
   const teamOf={}; Object.keys(S.mp.teamOf).forEach(id=>{ teamOf[mpRemapId(id,forRealId)]=S.mp.teamOf[id]; });
@@ -859,6 +888,7 @@ function mpSerializeInit(forRealId){
   return {cells,nations,teamOf,allHumanRealIds,allAiIds,myTeam:teamOf.player,diff:S.diff,mode:S.mode,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,time:S.time};
 }
 function initMultiplayerGuest(p){
+  resetSurrenderArm();
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:p.time||0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:99999,fogTimer:0,
      cam:{x:0,y:0,scale:1},diff:p.diff,mode:p.mode,fog:!!p.fog,winFrac:p.winFrac,econMul:p.econMul,everAttacked:false,
@@ -896,6 +926,11 @@ function mpApplyOrder(actingNat,order){
   else if(order.kind==="tech"){ buyTech(actingNat,order.key); }
   else if(order.kind==="spy"){ doSpyCore(actingNat,order.targetId); }
   else if(order.kind==="hero"){ doHeroCore(actingNat); }
+  else if(order.kind==="ultimate"){ doUltimateCore(actingNat); }
+  else if(order.kind==="merc"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)doMercCore(actingNat,order.cellId); }
+  else if(order.kind==="wonder"){ buyWonderCore(actingNat,order.key); }
+  else if(order.kind==="surrender"){ doSurrenderCore(actingNat); }
+  else if(order.kind==="autodef"){ const c=byId(order.cellId); if(c&&c.owner===actingNat)c.autoDefend=!c.autoDefend; }
   worldDirty=true;
 }
 // ---- state broadcast (host → guests), called from the main loop every ~350ms ----
@@ -905,15 +940,16 @@ function mpBroadcastState(){ if(!S.mp||S.mp.role!=="host")return;
   MPLOBBY.specConns.forEach(conn=>{ try{ conn.send({type:"state",payload:mpSerializeState(null)}); }catch(e){} });
 }
 function mpSerializeState(forRealId){
-  const cells=S.cells.filter(c=>c.land).map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap}));
+  const cells=S.cells.filter(c=>c.land).map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap,autoDefend:!!c.autoDefend}));
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
-    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,tech:n.tech||{}}; });
+    nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,tech:n.tech||{},
+      ultCD:n.ultCD||0,ultUntil:n.ultUntil||0,wonder:n.wonder||null,mercCD:n.mercCD||0,kills:n.kills||0,totalGoldEarned:n.totalGoldEarned||0}; });
   const armies=S.armies.map(a=>({owner:mpRemapId(a.owner,forRealId),count:a.count,fromId:a.fromId,toId:a.toId,ox:a.ox,oy:a.oy,tx:a.tx,ty:a.ty,t:a.t,dur:a.dur,extra:a.extra,formation:a.formation}));
   const missiles=S.missiles.map(m=>({owner:mpRemapId(m.owner,forRealId),toId:m.toId,ox:m.ox,oy:m.oy,tx:m.tx,ty:m.ty,t:m.t,dur:m.dur,intercepted:m.intercepted,interceptT:m.interceptT}));
   return {cells,nations,armies,missiles,time:S.time,over:S.over};
 }
 function mpApplyState(p){ if(!S)return;
-  p.cells.forEach(pc=>{ const c=S.map[pc.id]; if(!c)return; if(c.owner!==pc.owner){c.owner=pc.owner;worldDirty=true;} c.troops=pc.troops; c.b=pc.b; c.cap=pc.cap; });
+  p.cells.forEach(pc=>{ const c=S.map[pc.id]; if(!c)return; if(c.owner!==pc.owner){c.owner=pc.owner;worldDirty=true;} c.troops=pc.troops; c.b=pc.b; c.cap=pc.cap; c.autoDefend=!!pc.autoDefend; });
   Object.keys(p.nations).forEach(id=>{ const n=S.nations[id]; if(n)Object.assign(n,p.nations[id]); });
   S.armies=p.armies; S.missiles=p.missiles; S.time=p.time;
   if(S.fog){ computeFog(); worldDirty=true; }
@@ -925,13 +961,15 @@ function mpSendOrder(order){ if(MPLOBBY.conn){ try{MPLOBBY.conn.send({type:"orde
 /* ===== ECONOMY (per second) ===== */
 function labCount(nat){ return ownedCells(nat).filter(c=>c.b.lab).length; }
 function ratesFor(natId){ const n=S.nations[natId],owned=ownedCells(natId); let g=0,f=0,cap=0;
+  const shipped=hasBuilding(natId,"harbor");
   owned.forEach(c=>{ g+=0.4;f+=0.4; for(const k in c.b){if(!c.b[k])continue;const d=B[k];if(d.gold)g+=d.gold;if(d.food)f+=d.food;if(d.cap)cap+=d.cap;}
-    if(c.site){const s=SITES[c.site];if(s.gold)g+=s.gold;if(s.food)f+=s.food;} });
+    if(c.site){const s=SITES[c.site];if(s.gold)g+=s.shipped?(shipped?s.gold:s.gold*0.4):s.gold;if(s.food)f+=s.food;} });
   let boost=1+0.10*labCount(natId); owned.forEach(c=>{if(c.site&&SITES[c.site].boost)boost+=SITES[c.site].boost;});
   g*=boost;f*=boost; if(n.perk==="industrial")g*=1.25; if(n.perk==="agrarian")f*=1.25;
   if(n.tech&&n.tech.currency)g*=1.1; if(n.tech&&n.tech.irrigation)f*=1.1;
+  if(n.wonder==="library"){g*=1.15;f*=1.15;}
   g*=S.econMul; f*=S.econMul;
-  const troops=totalTroops(natId); const armyCap=10+owned.length*2+cap;
+  const troops=totalTroops(natId); let armyCap=10+owned.length*2+cap; if(n.wonder==="colossus")armyCap=Math.round(armyCap*1.3);
   return {gold:g,food:f,foodNet:f-troops*UPKEEP,troops,armyCap}; }
 function playerRates(){ return ratesFor("player"); }
 function escMul(){ return 1+(MODE[S.mode].esc||0)*Math.min(2,S.time/240); }
@@ -947,11 +985,15 @@ function fogUnknown(cell){ return S.fog && !S.explored.has(cell.id); }        //
 /* ===== COMBAT ===== */
 function defBonus(cell){ let b=TERR[cell.terr].def; if(cell.b.fort)b+=B.fort.def;
   if(cell.b.tower)b+=B.tower.defAdj; else if(neighbors(cell).some(n=>n.owner===cell.owner&&n.b.tower))b+=B.tower.defAdj;
-  if(cell.site&&SITES[cell.site].def)b+=SITES[cell.site].def; if(perkOf(cell.owner)==="fortifier")b+=0.2; return b; }
+  if(cell.site&&SITES[cell.site].def)b+=SITES[cell.site].def; if(perkOf(cell.owner)==="fortifier")b+=0.2;
+  const defNat=S.nations[cell.owner]; if(defNat&&defNat.wonder==="wall")b+=0.25;
+  if(defNat&&perkOf(cell.owner)==="fortifier"&&defNat.ultUntil>S.time)b+=0.3;
+  return b; }
 function resolve(amount,attNat,target,extra,formation,naval){ if(target.troops<=0)return{win:true,att:amount,def:0};
   const attNatObj=S.nations[attNat], attTech=(attNatObj||{}).tech;
   let am=(extra||1)*(perkOf(attNat)==="warmonger"?1.2:1)*(attTech&&attTech.siege?1.1:1);
   if(attNatObj&&attNatObj.hero)am*=1+0.03*attNatObj.hero.level;
+  if(attNatObj&&perkOf(attNat)==="warmonger"&&attNatObj.ultUntil>S.time)am*=1.3;
   const fort=defBonus(target);
   let navalDef=0; if(naval){ if(target.b.shipyard)navalDef+=B.shipyard.navalDef; else if(neighbors(target).some(n=>n.owner===target.owner&&n.b.shipyard))navalDef+=B.shipyard.navalDef*0.5; }
   if(formation==="cavalry")am*=1.2; else if(formation==="artillery")am*=(fort>=0.15?1.5:0.85);
@@ -983,9 +1025,18 @@ function arriveArmy(a){ const tgt=byId(a.toId); if(!tgt)return;
     else if(a.owner==="player")pushLog("🔰 "+pName(tgt)+"'s shield blocked your attack!","bad");
     worldDirty=true; return; }
   const res=resolve(a.count,a.owner,tgt,a.extra,a.formation,a.naval); addFx("clash",tgt.cx,tgt.cy,a.owner,res.win?a.count:tgt.troops);
-  if(res.win){ const prev=tgt.owner; tgt.owner=a.owner;tgt.troops=res.att;tgt.cap=tgt.cap&&false;
+  if(res.win){ const prev=tgt.owner, wasCapital=tgt.cap; tgt.owner=a.owner;tgt.troops=res.att;tgt.cap=tgt.cap&&false;
     const attNatObj=S.nations[a.owner]; if(attNatObj&&attNatObj.hero){ attNatObj.hero.xp+=10; attNatObj.hero.level=1+Math.floor(attNatObj.hero.xp/100); }
-    if(a.owner==="player"){pushLog("Captured "+pName(tgt)+".","good");sndCapture();} else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad"); }
+    if(attNatObj)attNatObj.kills=(attNatObj.kills||0)+1;
+    if(a.owner==="player"){pushLog("Captured "+pName(tgt)+".","good");sndCapture();} else if(prev==="player")pushLog(S.nations[a.owner].name+" took "+pName(tgt)+"!","bad");
+    // a fallen capital brings the whole empire down with it -- every remaining tile that nation held flips to the conqueror
+    if(wasCapital&&prev!=="neutral"&&prev!=="sea"&&prev!==a.owner){
+      let flipped=0; S.cells.forEach(c=>{ if(c.land&&c.owner===prev){ c.owner=a.owner; flipped++; addFx("clash",c.cx,c.cy,a.owner); } });
+      if(flipped){ const fallenName=S.nations[prev]?S.nations[prev].name:prev, conqName=S.nations[a.owner]?S.nations[a.owner].name:a.owner;
+        if(a.owner==="player")pushLog("🏴 "+fallenName+"'s capital has fallen — their empire collapses into your dominion!","boom");
+        else if(prev==="player")pushLog("🏴 Your capital has fallen — the Dominion collapses under "+conqName+"!","bad");
+        else pushLog("🏴 "+fallenName+"'s empire has collapsed into "+conqName+"!","boom"); }
+    } }
   else { tgt.troops=res.def; if(a.owner==="player")pushLog("Attack on "+pName(tgt)+" failed.","bad"); }
   worldDirty=true; }
 function pName(cell){ return (cell.site?SITES[cell.site].n:cell.terr)+" "+cell.col+"·"+cell.row+(cell.cap?" ★":""); }
@@ -1027,11 +1078,13 @@ function update(dt){ if(S.over)return; S.time+=dt;
   const humanIds = S.mp ? S.mp.allHumanRealIds : ["player"];
   humanIds.forEach(id=>{ const n=S.nations[id]; if(!n)return; const pr=ratesFor(id);
     n.missileCD=Math.max(0,(n.missileCD||0)-dt); n.spyCD=Math.max(0,(n.spyCD||0)-dt);
-    n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt;
+    n.ultCD=Math.max(0,(n.ultCD||0)-dt); n.mercCD=Math.max(0,(n.mercCD||0)-dt);
+    n.gold+=pr.gold*dt; n.food+=pr.foodNet*dt; n.totalGoldEarned=(n.totalGoldEarned||0)+pr.gold*dt;
     if(n.food<0){ n.food=0; // starve slowly
       if(Math.random()<dt*0.4){ const pool=ownedCells(id).filter(c=>c.troops>0).sort((a,b)=>b.troops-a.troops); if(pool[0]){pool[0].troops--;worldDirty=true; if(id==="player")pushLog("A regiment starved!","bad");} } }
     ownedCells(id).forEach(c=>{ if(c.b.hospital){ const medMul=n.tech&&n.tech.medicine?2:1;
-      c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen*medMul; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
+      c.regenAcc=(c.regenAcc||0)+dt*B.hospital.regen*medMul; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} }
+      else if(n.wonder==="gardens"){ c.regenAcc=(c.regenAcc||0)+dt*0.15; if(c.regenAcc>=1){c.troops++;c.regenAcc-=1;worldDirty=true;} } });
   });
   // population growth: provinces slowly raise a local militia up to a cap
   S.cells.forEach(c=>{ if(!c.land||(!humanIds.includes(c.owner)&&!c.owner.startsWith("ai")))return;
@@ -1052,7 +1105,8 @@ function update(dt){ if(S.over)return; S.time+=dt;
     const myTeam=S.mp?S.mp.teamOf[id]:null;
     const threat = S.mp ? (Object.keys(S.nations).filter(nid=>S.mp.teamOf[nid]&&S.mp.teamOf[nid]!==myTeam).reduce((a,nid)=>a+ownedCells(nid).length,0))/totalLand()*100
                          : ownedCells("player").length/totalLand()*100;
-    nat.gold+=(owned.length*0.5+1)*d.econ*S.econMul*escMul()*dt; nat.missileCD=Math.max(0,(nat.missileCD||0)-dt); nat.think-=dt; if(nat.think>0)return; nat.think=d.think*rnd(.8,1.2);
+    const aiIncome=(owned.length*0.5+1)*d.econ*S.econMul*escMul()*dt; nat.gold+=aiIncome; nat.totalGoldEarned=(nat.totalGoldEarned||0)+aiIncome;
+    nat.missileCD=Math.max(0,(nat.missileCD||0)-dt); nat.think-=dt; if(nat.think>0)return; nat.think=d.think*rnd(.8,1.2);
     aiAct(id,nat,owned,d,threat); });
   // trade routes (solo/campaign: passive mutual income while a trade pact is active)
   if(S.trades){ Object.keys(S.trades).forEach(id=>{ if(S.nations[id]){ S.nations.player.gold+=0.3*dt; S.nations[id].gold+=0.3*dt; } }); }
@@ -1063,7 +1117,7 @@ function update(dt){ if(S.over)return; S.time+=dt;
   // fog of war reveal
   if(S.fog){ S.fogTimer-=dt; if(S.fogTimer<=0){ S.fogTimer=0.4; computeFog(); worldDirty=true; } }
   // win/lose
-  S.winTimer-=dt; if(S.winTimer<=0){ S.winTimer=1; checkGameOver(); }
+  S.winTimer-=dt; if(S.winTimer<=0){ S.winTimer=1; checkGameOver(); runAutoDefend(); }
   recordSnap();
 }
 function fireEvent(){ const land=S.cells.filter(c=>c.land); if(!land.length)return;
@@ -1157,6 +1211,44 @@ function doHeroCore(natId){ const nat=S.nations[natId]; if(!nat||nat.hero||nat.g
   nat.gold-=HERO_COST; nat.hero={xp:0,level:1}; if(natId==="player")pushLog("🎖 A Commander joins your ranks!","good"); worldDirty=true; }
 function doHero(){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"hero"}); return; }
   doHeroCore("player"); renderPanel(); paint(); }
+/* ===== FACTION ULTIMATES (one per faction, repeatable on a cooldown) ===== */
+function doUltimateCore(natId){ const nat=S.nations[natId]; const ult=PERKS[nat&&nat.perk]&&PERKS[nat.perk].ult; if(!nat||!ult)return;
+  if((nat.ultCD||0)>0||nat.gold<ult.c)return;
+  nat.gold-=ult.c; nat.ultCD=ult.cd;
+  const owned=ownedCells(natId);
+  if(nat.perk==="industrial"){ nat.gold+=150; }
+  else if(nat.perk==="agrarian"){ nat.food+=150; owned.forEach(c=>{c.troops+=2;}); }
+  else if(nat.perk==="warmonger"){ nat.ultUntil=S.time+20; }
+  else if(nat.perk==="fortifier"){ nat.ultUntil=S.time+20; }
+  else if(nat.perk==="rocketeer"){ nat.missileCD=0; }
+  else if(nat.perk==="seafarer"){ owned.forEach(c=>{ if(isCoastal(c))c.troops+=3; }); }
+  if(natId==="player")pushLog("⚡ "+ult.n+" activated!","good"); worldDirty=true; }
+function doUltimate(){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"ultimate"}); return; }
+  doUltimateCore("player"); renderPanel(); paint(); }
+/* ===== MERCENARIES (instant troop boost, at any owned province) ===== */
+const MERC_COST=40, MERC_TROOPS=9, MERC_CD=30;
+function doMercCore(natId,cellId){ const nat=S.nations[natId]; const c=byId(cellId); if(!nat||!c||c.owner!==natId)return;
+  if((nat.mercCD||0)>0||nat.gold<MERC_COST)return;
+  nat.gold-=MERC_COST; nat.mercCD=MERC_CD; c.troops+=MERC_TROOPS; addFx("merge",c.cx,c.cy,natId);
+  if(natId==="player")pushLog("🗡 Mercenaries join the garrison at "+pName(c)+"!","good"); worldDirty=true; }
+function doMerc(cellId){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"merc",cellId}); return; }
+  doMercCore("player",cellId); renderPanel(); paint(); }
+/* ===== WONDERS (one-time, one per empire, huge permanent bonus) ===== */
+function buyWonderCore(natId,key){ const nat=S.nations[natId]; if(!nat||!WONDERS[key]||nat.wonder||nat.gold<WONDERS[key].c)return;
+  nat.gold-=WONDERS[key].c; nat.wonder=key; if(natId==="player")pushLog("🏛 "+WONDERS[key].n+" completed!","good"); worldDirty=true; }
+function buyWonder(key){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"wonder",key}); return; }
+  buyWonderCore("player",key); renderPanel(); paint(); }
+/* ===== STANDING ORDERS (auto-defend: a threatened province quietly pulls reinforcement from a strong neighbour) ===== */
+function toggleAutoDefend(cellId){ const c=byId(cellId); if(!c)return; c.autoDefend=!c.autoDefend; renderPanel(); }
+function runAutoDefend(){
+  S.cells.forEach(c=>{ if(!c.land||!c.autoDefend||c.owner==="sea"||c.owner==="neutral"||c.troops>=4)return;
+    const helper=neighbors(c).filter(n=>n.land&&n.owner===c.owner&&n.troops>=10).sort((a,b)=>b.troops-a.troops)[0];
+    if(helper){ sendArmy(helper,c,Math.min(5,helper.troops-5),1,"standard"); } });
+}
+/* ===== SURRENDER (forfeit your own nation -- an individual decision, no vote needed) ===== */
+function doSurrenderCore(natId){ const nat=S.nations[natId]; if(!nat)return;
+  S.cells.forEach(c=>{ if(c.owner===natId){ c.owner="neutral"; } });
+  if(natId==="player")pushLog("🏳 You have surrendered.","bad"); worldDirty=true; }
 /* ===== DIPLOMACY (solo/campaign: player <-> AI non-aggression pacts) ===== */
 function proposePeace(nationId){ const nat=S.nations[nationId]; if(!nat)return;
   if(S.pacts&&S.pacts[nationId]){ delete S.pacts[nationId]; pushLog("💔 You broke the peace with "+nat.name+".","bad"); renderPanel(); return; }
@@ -1413,6 +1505,10 @@ function renderPanel(){ const title=document.getElementById("ppTitle"),tag=docum
     h+=`</div><div class="buildgrid" style="margin-top:5px">
       <button class="bbtn full" data-rec="1" ${nn.gold>=rc&&pr.troops<pr.armyCap?'':'disabled'} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">➕ ${t("Recruit")}</span><span class="cost">${rc}g</span></button>
       <button class="bbtn full" data-rec="5" ${nn.gold>=rc*5&&pr.troops<pr.armyCap?'':'disabled'} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">➕ ${t("Recruit ×5")}</span><span class="cost">${rc*5}g</span></button></div>`;
+    { const mercCd=Math.ceil(nn.mercCD||0);
+      h+=`<div class="buildgrid" style="margin-top:5px">
+        <button class="bbtn full" data-merc="${c.id}" ${(nn.gold<MERC_COST||mercCd>0)?'disabled':''} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">🗡 Hire Mercenaries (+${MERC_TROOPS})${mercCd>0?' — '+mercCd+'s':''}</span><span class="cost">${MERC_COST}g</span></button>
+        <button class="bbtn full ${c.autoDefend?'owned':''}" data-autodef="${c.id}" style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">🛡 Auto-Defend</span><span class="cost">${c.autoDefend?'ON':'OFF'}</span></button></div>`; }
     h+=`<div class="hint">${t("Select this tile, set the slider, then click a glowing neighbour to march or attack. Harbors ⚓ let you strike coasts across the sea.")}</div>`;
     if(c.cap){ nn.tech=nn.tech||{};
       h+=`<div class="prow" style="margin-top:10px"><span class="k">🔬 Tech Tree</span><span class="v"></span></div><div class="buildgrid">`;
@@ -1423,6 +1519,18 @@ function renderPanel(){ const title=document.getElementById("ppTitle"),tag=docum
       h+=`<div class="prow" style="margin-top:10px"><span class="k">🎖 Commander</span><span class="v"></span></div>`;
       if(nn.hero)h+=`<div class="prow"><span class="k">Level ${nn.hero.level} (+${nn.hero.level*3}% attack)</span><span class="v">${nn.hero.xp%100}/100 xp</span></div>`;
       else h+=`<div class="buildgrid"><button class="bbtn full" data-hero="1" ${nn.gold<HERO_COST?'disabled':''} style="flex-direction:row;justify-content:space-between;align-items:center"><span class="bt">🎖 Recruit Commander</span><span class="cost">${HERO_COST}g</span></button></div>`;
+      const ult=PERKS[nn.perk].ult, ultCd=Math.ceil(nn.ultCD||0);
+      h+=`<div class="prow" style="margin-top:10px"><span class="k">⚡ Ultimate</span><span class="v"></span></div>
+        <div class="buildgrid"><button class="bbtn full" data-ult="1" ${(nn.gold<ult.c||ultCd>0)?'disabled':''} style="flex-direction:row;justify-content:space-between;align-items:center">
+          <span class="bt">${ult.i} ${ult.n}${ultCd>0?' — '+ultCd+'s':''}</span><span class="cost">${ult.c}g</span></button></div>
+        <div class="muted" style="font-size:10px;margin-top:3px">${ult.d}</div>`;
+      h+=`<div class="prow" style="margin-top:10px"><span class="k">🏛 Wonders</span><span class="v"></span></div>`;
+      if(nn.wonder)h+=`<div class="prow"><span class="k">${WONDERS[nn.wonder].i} ${WONDERS[nn.wonder].n}</span><span class="v">Built</span></div>`;
+      else { h+=`<div class="buildgrid">`;
+        Object.keys(WONDERS).forEach(k=>{ const w=WONDERS[k];
+          h+=`<button class="bbtn" data-wonder="${k}" ${nn.gold<w.c?'disabled':''}><span class="bt">${w.i} ${w.n}</span><small>${w.d}</small><span class="cost">${w.c}g</span></button>`; });
+        h+=`</div>`; }
+      h+=`<button class="btn full" style="margin-top:12px;width:100%;border-color:var(--crimson);color:var(--crimson)" data-surrender="1">🏳 ${surrenderArmed?'Click again to confirm':'Surrender'}</button>`;
     }
   } else { h+=`<div class="hint" style="border-color:var(--crimson);background:rgba(152,40,31,.08);color:var(--crimson)">${c.owner==='neutral'?t("Unclaimed")+'.':t("Held by")+' '+(n?n.name:t("a rival"))+'.'} ${t("Send an army from an adjacent tile you own, or 🚀 missile it.")}</div>`;
     if(n&&n.personality&&AI_PERSONALITIES[n.personality])h+=`<div class="prow"><span class="k">Disposition</span><span class="v">${AI_PERSONALITIES[n.personality].i} ${AI_PERSONALITIES[n.personality].n}</span></div>`;
@@ -1445,12 +1553,22 @@ function updatePanelLive(){ const c=S.selected?byId(S.selected):null;
   const r1=document.querySelector('[data-rec="1"]'),r5=document.querySelector('[data-rec="5"]');
   if(r1)r1.disabled=!(nn.gold>=rc&&pr.troops<pr.armyCap); if(r5)r5.disabled=!(nn.gold>=rc*5&&pr.troops<pr.armyCap);
   document.querySelectorAll("[data-tech]").forEach(btn=>{ const k=btn.dataset.tech; if(!(nn.tech&&nn.tech[k]))btn.disabled=nn.gold<TECH[k].c; });
-  const heroBtn=document.querySelector("[data-hero]"); if(heroBtn)heroBtn.disabled=nn.gold<HERO_COST; }
+  const heroBtn=document.querySelector("[data-hero]"); if(heroBtn)heroBtn.disabled=nn.gold<HERO_COST;
+  const ultBtn=document.querySelector("[data-ult]"); if(ultBtn)ultBtn.disabled=nn.gold<PERKS[nn.perk].ult.c||(nn.ultCD||0)>0;
+  document.querySelectorAll("[data-wonder]").forEach(btn=>{ btn.disabled=nn.gold<WONDERS[btn.dataset.wonder].c; });
+  document.querySelectorAll("[data-merc]").forEach(btn=>{ btn.disabled=nn.gold<MERC_COST||(nn.mercCD||0)>0; }); }
 function pushLog(m,cls){ S.log.unshift({t:Math.floor(S.time),m,cls:cls||""}); if(S.log.length>20)S.log.pop();
   document.getElementById("logfeed").innerHTML=S.log.slice(0,10).map(l=>`<span class="logline ${l.cls}"><span class="tag">${l.t}s</span>${l.m}</span>`).join(""); }
 
 /* ===== END / BOOT ===== */
 let leaveArmed=false, leaveTimer=null;
+let surrenderArmed=false, surrenderTimer=null;
+function resetSurrenderArm(){ surrenderArmed=false; clearTimeout(surrenderTimer); }
+function doSurrender(){ if(!surrenderArmed){ surrenderArmed=true; renderPanel();
+    clearTimeout(surrenderTimer); surrenderTimer=setTimeout(()=>{surrenderArmed=false;renderPanel();},4000); return; }
+  clearTimeout(surrenderTimer); surrenderArmed=false;
+  if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"surrender"}); } else { doSurrenderCore("player"); }
+  renderPanel(); paint(); }
 function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
   if(!leaveArmed){ leaveArmed=true; b.classList.add("armed"); b.textContent=t("Leave?");
     clearTimeout(leaveTimer); leaveTimer=setTimeout(()=>{leaveArmed=false;b.classList.remove("armed");b.textContent=t("Leave");},2500); return; }
@@ -1465,11 +1583,20 @@ function leaveGame(){ const b=document.getElementById("leaveBtn"); if(!b)return;
 function endGame(win,text){ S.over=true; document.getElementById("endTitle").textContent=win?t("Victory"):t("Defeat");
   document.getElementById("endTitle").style.color=win?"var(--good)":"var(--crimson)";
   document.getElementById("endText").textContent=text; document.getElementById("endOverlay").hidden=false;
+  buildEndSummary();
   recordHistory(win); if(win&&S.campaignId)setCampaignComplete(S.campaignId); checkAchievements(win); clearSave(); return true; }
+function buildEndSummary(){ const el=document.getElementById("endSummary"); if(!el)return;
+  if(!S.mp){ el.innerHTML=""; return; }
+  const rows=Object.keys(S.nations).filter(id=>id!=="sea"&&id!=="neutral").map(id=>{ const n=S.nations[id];
+    return {id,name:id==="player"?"You":n.name,land:ownedCells(id).length,kills:n.kills||0,gold:Math.round(n.totalGoldEarned||0)}; })
+    .sort((a,b)=>b.land-a.land);
+  el.innerHTML=`<div class="steplbl" style="margin-top:6px">Match Summary</div><div class="histlist">`+rows.map(r=>
+    `<div class="histrow"><span class="hmode">${r.name}</span><span class="hmeta">${r.land} land · ${r.kills} captures · ${r.gold}g earned</span></div>`).join("")+`</div>`; }
 function recordHistory(win){ try{
   const hist=JSON.parse(localStorage.getItem("dominion_history")||"[]");
-  hist.unshift({date:Date.now(),win,mode:S.mode,diff:S.diff,perk:S.nations.player.perk,mp:!!S.mp,teamSize:S.mp?Math.max(1,Object.values(S.mp.teamOf).filter(t=>t===S.mp.myTeam).length):0,duration:Math.round(S.time),replay:(S.replaySnaps||[]).slice(-40)});
+  hist.unshift({date:Date.now(),win,mode:S.mode,diff:S.diff,perk:S.nations.player.perk,mp:!!S.mp,teamSize:S.mp?Math.max(1,Object.values(S.mp.teamOf).filter(t=>t===S.mp.myTeam).length):0,duration:Math.round(S.time),replay:(S.replaySnaps||[]).slice(-40),daily:!!S.dailyKey});
   localStorage.setItem("dominion_history",JSON.stringify(hist.slice(0,50)));
+  if(S.dailyKey)setDailyDone();
 }catch(e){} }
 function recordSnap(){ if(!S)return; if(S.lastSnapT!=null&&S.time-S.lastSnapT<14)return; S.lastSnapT=S.time;
   const land={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; land[id]=ownedCells(id).length; });
@@ -1511,29 +1638,45 @@ document.addEventListener("visibilitychange",()=>{ if(!S||S.over)return;
   if(document.hidden){ if(SETTINGS.autoPause&&S.speed>0&&!(S.mp&&S.mp.role==="guest")){ wasAutoPaused=true; S.speed=0; } }
   else if(wasAutoPaused){ wasAutoPaused=false; S.speed=1; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x.dataset.s==="1")); } });
 
-/* ===== SAVE / RESUME (solo only) ===== */
+/* ===== SAVE / RESUME (solo only, 3 slots) ===== */
+const SAVE_SLOTS=3;
+function saveSlotKey(i){ return "dominion_save_"+i; }
+function migrateOldSave(){ try{ const old=localStorage.getItem("dominion_save"); // pre-multi-slot save format
+    if(old&&!localStorage.getItem(saveSlotKey(0))){ localStorage.setItem(saveSlotKey(0),old); }
+    if(old)localStorage.removeItem("dominion_save"); }catch(e){} }
+function readSlot(i){ try{ const raw=localStorage.getItem(saveSlotKey(i)); return raw?JSON.parse(raw):null; }catch(e){ return null; } }
+function listSaveSlots(){ return Array.from({length:SAVE_SLOTS},(_,i)=>{ const d=readSlot(i);
+  return d?{slot:i,empty:false,mode:d.mode,diff:d.diff,time:d.time,savedAt:d.savedAt}:{slot:i,empty:true}; }); }
+function pickSaveSlot(){ // prefer an empty slot; otherwise overwrite the oldest
+  const slots=listSaveSlots(); const empty=slots.find(s=>s.empty); if(empty)return empty.slot;
+  return slots.reduce((oldest,s)=>s.savedAt<slots[oldest].savedAt?s.slot:oldest,0); }
 function saveGameState(){ if(!S||S.mp||S.over)return;
   try{
+    if(S.saveSlot==null)S.saveSlot=pickSaveSlot();
     const cells=S.cells.map(c=>({col:c.col,row:c.row,land:c.land,cont:c.cont,terr:c.terr,site:c.site,cap:c.cap,owner:c.owner,troops:c.troops,b:c.b,regenAcc:c.regenAcc||0,popAcc:c.popAcc||0}));
     const data={cells,nations:S.nations,playerCapitalId:S.playerCapitalId,armies:S.armies,missiles:S.missiles,
       time:S.time,mode:S.mode,diff:S.diff,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,
       visible:S.fog?Array.from(S.visible):[],explored:S.fog?Array.from(S.explored):[],
       raidTimer:S.raidTimer,eventTimer:S.eventTimer,log:S.log,deploy:S.deploy,selected:S.selected,deployLock:S.deployLock,
       campaignId:S.campaignId||null,pacts:S.pacts||{},trades:S.trades||{},spyReveal:S.spyReveal||{},everAttacked:!!S.everAttacked,
-      replaySnaps:S.replaySnaps||[],lastSnapT:S.lastSnapT,savedAt:Date.now()};
-    localStorage.setItem("dominion_save",JSON.stringify(data));
+      replaySnaps:S.replaySnaps||[],lastSnapT:S.lastSnapT,dailyKey:S.dailyKey||null,savedAt:Date.now()};
+    localStorage.setItem(saveSlotKey(S.saveSlot),JSON.stringify(data));
   }catch(e){} }
-function clearSave(){ try{localStorage.removeItem("dominion_save");}catch(e){} }
-function hasSave(){ try{return !!localStorage.getItem("dominion_save");}catch(e){return false;} }
-function loadGameState(){
-  let data; try{data=JSON.parse(localStorage.getItem("dominion_save"));}catch(e){return false;}
-  if(!data||!data.cells)return false;
+function clearSave(){ try{ if(S&&S.saveSlot!=null)localStorage.removeItem(saveSlotKey(S.saveSlot)); }catch(e){} }
+function deleteSaveSlot(i){ try{localStorage.removeItem(saveSlotKey(i));}catch(e){} }
+function hasSave(){ return listSaveSlots().some(s=>!s.empty); }
+function mostRecentSlot(){ const slots=listSaveSlots().filter(s=>!s.empty); if(!slots.length)return null;
+  return slots.reduce((best,s)=>s.savedAt>best.savedAt?s:best).slot; }
+function loadGameState(slot){
+  resetSurrenderArm();
+  if(slot==null)slot=mostRecentSlot(); if(slot==null)return false;
+  const data=readSlot(slot); if(!data||!data.cells)return false;
   S={cells:[],grid:[],map:{},nations:data.nations,armies:data.armies||[],missiles:data.missiles||[],fx:[],
-     selected:data.selected,deploy:data.deploy||0,deployLock:!!data.deployLock,missileMode:false,over:false,
+     selected:data.selected,deploy:data.deploy||0,deployLock:!!data.deployLock,missileMode:false,over:false,saveSlot:slot,
      time:data.time||0,speed:1,log:data.log||[],raidTimer:data.raidTimer||4,winTimer:1,eventTimer:data.eventTimer||30,fogTimer:0,
      cam:{x:0,y:0,scale:1},diff:data.diff,mode:data.mode,fog:!!data.fog,winFrac:data.winFrac,econMul:data.econMul,
      visible:new Set(data.visible||[]),explored:new Set(data.explored||[]),landCount:data.landCount,campaignId:data.campaignId||null,pacts:data.pacts||{},
-     trades:data.trades||{},spyReveal:data.spyReveal||{},everAttacked:!!data.everAttacked,replaySnaps:data.replaySnaps||[],lastSnapT:data.lastSnapT!=null?data.lastSnapT:null};
+     trades:data.trades||{},spyReveal:data.spyReveal||{},everAttacked:!!data.everAttacked,replaySnaps:data.replaySnaps||[],lastSnapT:data.lastSnapT!=null?data.lastSnapT:null,dailyKey:data.dailyKey||null};
   for(let r=0;r<ROWS;r++)S.grid[r]=[];
   data.cells.forEach(pc=>{ const ct=hexCenter(pc.col,pc.row);
     const cell={id:pc.col+"_"+pc.row,col:pc.col,row:pc.row,cx:ct.x,cy:ct.y,poly:hexPolyPoints(ct.x,ct.y),
@@ -1547,6 +1690,16 @@ function loadGameState(){
   S.cam.scale=1.15; centerOn(byId(S.playerCapitalId));
   lastT=performance.now(); if(!rafOn){rafOn=true;requestAnimationFrame(loop);}
   return true; }
+function buildSavesModal(){
+  document.getElementById("savesList").innerHTML=listSaveSlots().map(s=>s.empty?
+    `<div class="histrow"><span class="hmode muted">Slot ${s.slot+1} — empty</span></div>` :
+    `<div class="histrow"><span class="hmode">${MODE[s.mode]?MODE[s.mode].i:''} ${MODE[s.mode]?t(MODE[s.mode].n):s.mode} · Slot ${s.slot+1}</span>
+      <span class="hmeta">${DIFF[s.diff]?t(DIFF[s.diff].n):s.diff} · ${fmtDuration(s.time)}</span>
+      <button class="btn ghost" style="padding:3px 8px;font-size:10.5px" data-loadslot="${s.slot}">▶ Load</button>
+      <button class="btn ghost" style="padding:3px 8px;font-size:10.5px" data-delslot="${s.slot}">🗑</button></div>`).join("");
+  document.querySelectorAll("#savesList [data-loadslot]").forEach(b=>b.addEventListener("click",()=>{ document.getElementById("savesOverlay").hidden=true; loadGameState(+b.dataset.loadslot); }));
+  document.querySelectorAll("#savesList [data-delslot]").forEach(b=>b.addEventListener("click",()=>{ deleteSaveSlot(+b.dataset.delslot); buildSavesModal(); buildStart(); }));
+}
 
 /* ===== HISTORY & STATS ===== */
 function mostCommon(arr){ if(!arr.length)return null; const c={}; arr.forEach(x=>c[x]=(c[x]||0)+1); return Object.keys(c).sort((a,b)=>c[b]-c[a])[0]; }
@@ -1562,7 +1715,7 @@ function buildHistoryModal(){
     <div class="spod"><b>${favMode&&MODE[favMode]?MODE[favMode].i:'–'}</b><span>Top Mode</span></div>
     <div class="spod"><b>${favPerk&&PERKS[favPerk]?PERKS[favPerk].i:'–'}</b><span>Top Faction</span></div>`;
   document.getElementById("histList").innerHTML = hist.length ? hist.map((h,i)=>`<div class="histrow"><span class="hw ${h.win?'win':'loss'}"></span>
-    <span class="hmode">${MODE[h.mode]?MODE[h.mode].i:''} ${MODE[h.mode]?t(MODE[h.mode].n):h.mode}${h.mp?' 🌐 '+h.teamSize+'v'+h.teamSize:''}</span>
+    <span class="hmode">${MODE[h.mode]?MODE[h.mode].i:''} ${MODE[h.mode]?t(MODE[h.mode].n):h.mode}${h.mp?' 🌐 '+h.teamSize+'v'+h.teamSize:''}${h.daily?' 📅':''}</span>
     <span class="hmeta">${DIFF[h.diff]?t(DIFF[h.diff].n):h.diff} · ${PERKS[h.perk]?PERKS[h.perk].i:''} · ${fmtDuration(h.duration)} · ${new Date(h.date).toLocaleDateString()}</span>
     ${h.replay&&h.replay.length>1?`<button class="btn ghost" style="padding:3px 8px;font-size:10.5px" data-replay="${i}">▶</button>`:''}</div>`).join("")
     : `<div class="muted" style="text-align:center;padding:20px">No games played yet.</div>`;
@@ -1607,6 +1760,7 @@ const MISSIONS=[
   {id:3,seed:377051,title:"Iron Harvest",desc:"A Blitz economy war — outbuild your rivals before they outbuild you.",perk:"industrial",diff:"medium",mode:"blitz",fog:false},
   {id:4,seed:461829,title:"Fog of the Unknown",desc:"You can't see them coming. Scout with Watchtowers before you commit.",perk:"seafarer",diff:"hard",mode:"conquest",fog:true},
   {id:5,seed:559104,title:"The Nightmare Alliance",desc:"Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.",perk:"rocketeer",diff:"nightmare",mode:"regicide",fog:false},
+  {id:6,seed:190412,title:"The Reckoning",desc:"Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.",perk:"warmonger",diff:"impossible",mode:"regicide",fog:false,legendary:true},
 ];
 function getCampaignProgress(){ try{return JSON.parse(localStorage.getItem("dominion_campaign")||"{}");}catch(e){return {};} }
 function setCampaignComplete(id){ const p=getCampaignProgress(); p[id]=true; try{localStorage.setItem("dominion_campaign",JSON.stringify(p));}catch(e){} }
@@ -1615,12 +1769,25 @@ function buildCampaignModal(){
   document.getElementById("missionList").innerHTML=MISSIONS.map((m,i)=>{
     const unlocked=i===0||prog[MISSIONS[i-1].id]; const done=prog[m.id];
     return `<button class="missioncard ${unlocked?'':'locked'}" data-id="${m.id}" ${unlocked?'':'disabled'}>
-      <span class="mnum">${m.id}</span><span style="flex:1"><span class="mtitle">${m.title}</span><br><span class="mdesc">${m.desc}</span></span>
+      <span class="mnum">${m.legendary?'👑':m.id}</span><span style="flex:1"><span class="mtitle">${m.title}</span><br><span class="mdesc">${m.desc}</span></span>
       ${done?'<span class="mcheck">✓</span>':(unlocked?'':'<span class="mcheck" style="color:var(--ink-soft)">🔒</span>')}</button>`;
   }).join("");
   document.querySelectorAll("#missionList .missioncard").forEach(b=>{ if(b.disabled)return;
     b.addEventListener("click",()=>{ const m=MISSIONS.find(x=>x.id===+b.dataset.id); document.getElementById("campaignOverlay").hidden=true; startGame(m.perk,m.diff,m.mode,m.fog,m.id); }); });
 }
+
+/* ===== DAILY CHALLENGE (same seeded mission for everyone, resets at UTC midnight) ===== */
+function dailySeed(){ const d=new Date(); const key=d.getUTCFullYear()*10000+(d.getUTCMonth()+1)*100+d.getUTCDate();
+  let h=key; h=Math.imul(h^(h>>>16),2246822507); h=Math.imul(h^(h>>>13),3266489909); h^=h>>>16;
+  return {seed:(h>>>0),key}; }
+function getDailyDone(){ try{ const d=JSON.parse(localStorage.getItem("dominion_daily")||"{}"); return d.key===dailySeed().key&&d.done; }catch(e){return false;} }
+function setDailyDone(){ try{localStorage.setItem("dominion_daily",JSON.stringify({key:dailySeed().key,done:true}));}catch(e){} }
+function startDailyChallenge(){ const {seed,key}=dailySeed();
+  const perks=Object.keys(PERKS), diffs=["easy","medium","hard","hard","nightmare"];
+  const perk=perks[seed%perks.length], diff=diffs[Math.floor(seed/perks.length)%diffs.length];
+  const orig=Math.random; Math.random=mulberry32(seed); // no clearSave() here -- see the note in startGame()
+  try{ startGameInner(perk,diff,"conquest",false,"medium"); S.campaignId=null; S.dailyKey=key; }
+  finally{ Math.random=orig; } }
 
 /* ===== MULTIPLAYER: room codes, lobby, PeerJS wiring ===== */
 const MPLOBBY={role:null,code:null,name:"",teamSize:1,mode:"conquest",diff:"medium",fog:false,worldSize:"medium",goldMul:1,
@@ -1855,8 +2022,11 @@ function buildStart(){
   document.getElementById("factionPick").innerHTML=Object.keys(PERKS).map(k=>`<button class="fcard" data-p="${k}"><div class="fn"><span class="fi">${PERKS[k].i}</span>${t(PERKS[k].n)}</div><div class="fb">${t(PERKS[k].d)}</div></button>`).join("");
   document.querySelectorAll(".fcard").forEach(b=>b.addEventListener("click",()=>startGame(b.dataset.p,selDiff,selMode,document.getElementById("fogChk").checked,null,selWorldSize)));
   const cb=document.getElementById("continueBtn"); if(cb)cb.hidden=!hasSave();
+  const sb=document.getElementById("savesBtn"); if(sb)sb.hidden=!hasSave();
+  const db=document.getElementById("dailyBtn"); if(db)db.textContent=getDailyDone()?"📅 Daily Challenge ✓":"📅 Daily Challenge";
 }
-function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2d");
+function boot(){ migrateOldSave();
+  canvas=document.getElementById("map"); ctx=canvas.getContext("2d");
   off=document.createElement("canvas"); off.width=WORLD_W; off.height=WORLD_H; offCtx=off.getContext("2d");
   miniCanvas=document.getElementById("minimap"); miniCtx=miniCanvas.getContext("2d");
   miniCanvas.addEventListener("click",e=>{ if(!S)return; const r=miniCanvas.getBoundingClientRect();
@@ -1880,7 +2050,12 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
     else if(b.dataset.spy)doSpy(b.dataset.spy);
     else if(b.dataset.hero)doHero();
     else if(b.dataset.tech)doTech(b.dataset.tech);
-    else if(b.dataset.form){ S.deployFormation=b.dataset.form; renderPanel(); } });
+    else if(b.dataset.form){ S.deployFormation=b.dataset.form; renderPanel(); }
+    else if(b.dataset.ult)doUltimate();
+    else if(b.dataset.wonder)buyWonder(b.dataset.wonder);
+    else if(b.dataset.merc)doMerc(b.dataset.merc);
+    else if(b.dataset.autodef){ if(S.mp&&S.mp.role==="guest"){ mpSendOrder({kind:"autodef",cellId:b.dataset.autodef}); } else { toggleAutoDefend(b.dataset.autodef); } }
+    else if(b.dataset.surrender)doSurrender(); });
   pp.addEventListener("input",e=>{ if(!S)return; if(e.target.id==="depSlider"){ S.deploy=+e.target.value; const dv=document.getElementById("depVal"); if(dv)dv.textContent=e.target.value; } });
   document.getElementById("modebar").addEventListener("click",e=>{ if(S&&e.target.closest("button"))toggleMissile(); });
   const ahd=document.querySelector("aside > .phead"); if(ahd)ahd.addEventListener("click",()=>document.querySelector("aside").classList.toggle("open"));
@@ -1910,6 +2085,9 @@ function boot(){ canvas=document.getElementById("map"); ctx=canvas.getContext("2
 
   // ---- continue / history / campaign ----
   document.getElementById("continueBtn").addEventListener("click",()=>{ loadGameState(); });
+  document.getElementById("savesBtn").addEventListener("click",()=>{ buildSavesModal(); document.getElementById("savesOverlay").hidden=false; });
+  document.getElementById("savesCloseBtn").addEventListener("click",()=>document.getElementById("savesOverlay").hidden=true);
+  document.getElementById("dailyBtn").addEventListener("click",()=>{ startDailyChallenge(); });
   document.getElementById("historyBtn").addEventListener("click",()=>{ buildHistoryModal(); document.getElementById("historyOverlay").hidden=false; });
   document.getElementById("histCloseBtn").addEventListener("click",()=>document.getElementById("historyOverlay").hidden=true);
   document.getElementById("histClearBtn").addEventListener("click",()=>{ try{localStorage.removeItem("dominion_history");}catch(e){} buildHistoryModal(); });
