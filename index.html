@@ -171,6 +171,9 @@
   .langgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;}
   .langbtn{border:1.5px solid var(--line);border-radius:8px;padding:7px 5px;background:var(--parchment);font-size:12px;text-align:center;}
   .langbtn.sel{border-color:var(--crimson);background:#fff2e2;}
+  .colorgrid{display:flex;flex-wrap:wrap;gap:9px;}
+  .colorswatch{width:30px;height:30px;border-radius:50%;border:2px solid rgba(0,0,0,.15);cursor:pointer;flex:none;padding:0;box-shadow:inset 0 0 0 2px rgba(255,255,255,.25);}
+  .colorswatch.sel{border-color:var(--ink);box-shadow:0 0 0 3px var(--gold-2);}
 
   /* ---- multiplayer ---- */
   .mplink{display:block;text-align:center;font-size:12.5px;color:var(--sea-2);text-decoration:underline;cursor:pointer;margin:2px 0 14px;background:none;border:0;width:100%;font-family:inherit;}
@@ -285,6 +288,7 @@
       <button class="qlink" id="ironmanBtn">☠ Ironman</button>
       <button class="qlink" id="historyBtn" data-i18n="📜 History &amp; Stats">📜 History &amp; Stats</button>
       <button class="qlink" id="achievementsBtn" data-i18n="🏆 Achievements">🏆 Achievements</button>
+      <button class="qlink" id="startSettingsBtn" data-i18n="⚙ Settings">⚙ Settings</button>
     </div>
   </div>
 </div>
@@ -380,6 +384,8 @@
     <h2 style="font-size:24px" id="settingsTitle" data-i18n="Settings">Settings</h2>
     <div class="steplbl" id="setLangLbl" data-i18n="Language">Language</div>
     <div class="langgrid" id="setLangGrid"></div>
+    <div class="steplbl" id="setColorLbl" data-i18n="Team Color">Team Color</div>
+    <div class="colorgrid" id="setColorGrid" style="margin-bottom:14px"></div>
     <div class="setgrid">
       <div class="setrow"><div><div class="sl" id="setSoundLbl" data-i18n="Sound">Sound</div><div class="sd" id="setSoundDesc" data-i18n="Beeps for joins, captures, missiles">Beeps for joins, captures, missiles</div></div>
         <div style="display:flex;align-items:center;gap:10px"><input type="range" id="setVolume" min="0" max="100" value="70"><div class="toggle on" id="setSoundToggle"></div></div></div>
@@ -533,6 +539,9 @@ const WONDERS={
 };
 const AI_NAMES=["Ironpeak Hegemony","Verdant Coalition","Sunspear Caliphate","Frostmark Realm","Azure League"];
 const AI_COLORS=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const PLAYER_COLOR="#2e5e8c";
+// preset swatches for the player's chosen team color (Settings) -- picked to stay distinct from AI_COLORS
+const PLAYER_COLORS=["#2e5e8c","#98281f","#3c6b2a","#7a4a9e","#c9932e","#1f8a78","#4a4a4a","#c2548a","#1f3a5f","#e0662e"];
+function playerColor(){ return SETTINGS.playerColor||PLAYER_COLOR; }
 const WIN_FRACTION=0.5, MISSILE_COST=45, UPKEEP=0.06, MISSILE_COOLDOWN=18, MISSILE_BLAST=2, INT_RANGE=4, INT_CHANCE=0.6;
 const POP_RATE=0.075, EVENT_MIN=28, EVENT_MAX=55;
 
@@ -566,6 +575,7 @@ const TR={
   "Tech Tree":"Árbol Tecnológico",
   "Free":"Gratis",
   "⏸ PAUSED":"⏸ PAUSADO",
+  "Team Color":"Color del Equipo","⚙ Settings":"⚙ Ajustes",
   [TAGLINE]:"Un mundo vivo de continentes e islas dispersas. El tiempo nunca se detiene: extrae oro, forma ejércitos, navega los mares y conquista la Tierra en tiempo real, mientras las potencias rivales hacen lo mismo. Fija el reto y elige tu pueblo."
  },
  fr:{
@@ -593,6 +603,7 @@ const TR={
   "Tech Tree":"Arbre Technologique",
   "Free":"Gratuit",
   "⏸ PAUSED":"⏸ EN PAUSE",
+  "Team Color":"Couleur d'Équipe","⚙ Settings":"⚙ Paramètres",
   [TAGLINE]:"Un monde vivant de continents et d'îles éparses. Le temps ne s'arrête jamais : extrayez de l'or, levez des armées, naviguez et conquérez la Terre en temps réel, pendant que les puissances rivales font de même. Réglez le défi, puis choisissez votre peuple."
  },
  de:{
@@ -620,6 +631,7 @@ const TR={
   "Tech Tree":"Technologiebaum",
   "Free":"Kostenlos",
   "⏸ PAUSED":"⏸ PAUSIERT",
+  "Team Color":"Teamfarbe","⚙ Settings":"⚙ Einstellungen",
   [TAGLINE]:"Eine lebendige Welt aus Kontinenten und verstreuten Inseln. Die Zeit steht nie still — schürfe Gold, hebe Armeen aus, befahre die Meere und erobere die Erde in Echtzeit, während rivalisierende Mächte dasselbe tun. Wähle die Schwierigkeit und dann dein Volk."
  },
  pt:{
@@ -647,6 +659,7 @@ const TR={
   "Tech Tree":"Árvore Tecnológica",
   "Free":"Grátis",
   "⏸ PAUSED":"⏸ PAUSADO",
+  "Team Color":"Cor da Equipe","⚙ Settings":"⚙ Configurações",
   [TAGLINE]:"Um mundo vivo de continentes e ilhas dispersas. O tempo nunca para — extraia ouro, forme exércitos, navegue os mares e conquiste a Terra em tempo real, enquanto potências rivais fazem o mesmo. Defina o desafio e escolha o seu povo."
  },
  it:{
@@ -674,6 +687,7 @@ const TR={
   "Tech Tree":"Albero Tecnologico",
   "Free":"Gratis",
   "⏸ PAUSED":"⏸ IN PAUSA",
+  "Team Color":"Colore della Squadra","⚙ Settings":"⚙ Impostazioni",
   [TAGLINE]:"Un mondo vivo di continenti e isole sparse. Il tempo non si ferma mai — estrai oro, arruola eserciti, naviga i mari e conquista la Terra in tempo reale, mentre le potenze rivali fanno lo stesso. Imposta la sfida, poi scegli il tuo popolo."
  },
  ru:{
@@ -701,6 +715,7 @@ const TR={
   "Tech Tree":"Дерево технологий",
   "Free":"Бесплатно",
   "⏸ PAUSED":"⏸ ПАУЗА",
+  "Team Color":"Цвет команды","⚙ Settings":"⚙ Настройки",
   [TAGLINE]:"Живой мир из континентов и разбросанных островов. Время не останавливается — добывайте золото, набирайте армии, плавайте по морям и покоряйте Землю в реальном времени, пока соперничающие державы делают то же самое. Задайте вызов и выберите свой народ."
  },
  zh:{
@@ -728,6 +743,7 @@ const TR={
   "Tech Tree":"科技树",
   "Free":"免费",
   "⏸ PAUSED":"⏸ 已暂停",
+  "Team Color":"队伍颜色","⚙ Settings":"⚙ 设置",
   [TAGLINE]:"一个由大陆和散落岛屿组成的鲜活世界。时间永不停止 — 开采金币、组建军队、航行海洋，实时征服地球，而对手列强也在做同样的事。设定挑战，然后选择你的民族。"
  },
  ja:{
@@ -755,6 +771,7 @@ const TR={
   "Tech Tree":"テクノロジーツリー",
   "Free":"無料",
   "⏸ PAUSED":"⏸ 一時停止中",
+  "Team Color":"チームカラー","⚙ Settings":"⚙ 設定",
   [TAGLINE]:"大陸と点在する島々からなる生きた世界。時は止まらない — 資金を採掘し、軍を編成し、海を渡り、リアルタイムで地球を征服する。ライバル列強も同じことをする。難易度を設定し、民族を選ぼう。"
  }
 };
@@ -873,7 +890,7 @@ function startGameInner(perk,diff,mode,fog,worldSize){
   const nCap=c=>{ let best=c.cells[0],bn=-1; c.cells.forEach(cell=>{const n=neighbors(cell).filter(x=>x.land&&x.cont===cell.cont).length; if(n>bn){bn=n;best=cell;}}); return best; };
   const bigs=conts.slice(0,wsz.conts); const pIdx=Math.floor(Math.random()*bigs.length);
   const pCont=bigs[pIdx], aiConts=bigs.filter((_,i)=>i!==pIdx);
-  S.nations.player={id:"player",name:"Your Dominion",color:PLAYER_COLOR,isPlayer:true,perk,gold:50,food:45,missileCD:0,spyCD:0,hero:null,tech:{},ultCD:0,ultUntil:0,wonder:null,mercCD:0,kills:0,totalGoldEarned:0};
+  S.nations.player={id:"player",name:"Your Dominion",color:playerColor(),isPlayer:true,perk,gold:50,food:45,missileCD:0,spyCD:0,hero:null,tech:{},ultCD:0,ultUntil:0,wonder:null,mercCD:0,kills:0,totalGoldEarned:0};
   const pcap=nCap(pCont); pcap.owner="player";pcap.troops=8;pcap.cap=true;pcap.b.factory=true;pcap.b.barracks=true;
   S.nations.player.capitalId=pcap.id; S.playerCapitalId=pcap.id; if(perk==="rocketeer")pcap.b.silo=true;
   if(mode==="sandbox")pcap.b.harbor=true; // sandbox: start with sea access so every island is reachable from turn one, even a landlocked capital
@@ -925,7 +942,7 @@ function startMultiplayerHost(lobby){
   const teamOf={}, allHumanRealIds=[], allAiIds=[];
   humans.forEach((p,i)=>{ teamOf[p.rid]=p.team;
     const isMe=p.rid==="player"; const chosenPerk=(p.perk&&PERKS[p.perk])?p.perk:pickAiPerk();
-    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?PLAYER_COLOR:AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50*goldMul,food:45,missileCD:0,spyCD:0,hero:null,human:true,tech:{},ultCD:0,ultUntil:0,wonder:null,mercCD:0,kills:0,totalGoldEarned:0};
+    S.nations[p.rid]={id:p.rid,name:p.name,color:isMe?playerColor():AI_COLORS[(i)%5],isPlayer:isMe,perk:chosenPerk,gold:50*goldMul,food:45,missileCD:0,spyCD:0,hero:null,human:true,tech:{},ultCD:0,ultUntil:0,wonder:null,mercCD:0,kills:0,totalGoldEarned:0};
     const cap=nCap(contOrder[i]); cap.owner=p.rid;cap.troops=8;cap.cap=true;cap.b.factory=true;cap.b.barracks=true;
     S.nations[p.rid].capitalId=cap.id; if(isMe){S.playerCapitalId=cap.id;} if(S.nations[p.rid].perk==="rocketeer")cap.b.silo=true;
     if(mode==="sandbox")cap.b.harbor=true; // sandbox: everyone starts with sea access so every island is reachable
@@ -1755,7 +1772,7 @@ function recordSnap(){ if(!S)return; if(S.lastSnapT!=null&&S.time-S.lastSnapT<14
   S.replaySnaps=S.replaySnaps||[]; S.replaySnaps.push({t:Math.round(S.time),land}); if(S.replaySnaps.length>40)S.replaySnaps.shift(); }
 
 /* ===== SETTINGS ===== */
-const SETTINGS_DEFAULT={sound:true,volume:70,music:false,reduceMotion:false,autoPause:true,confirmAttack:false};
+const SETTINGS_DEFAULT={sound:true,volume:70,music:false,reduceMotion:false,autoPause:true,confirmAttack:false,playerColor:"#2e5e8c"};
 let SETTINGS=(()=>{ try{ const raw=localStorage.getItem("dominion_settings"); return raw?Object.assign({},SETTINGS_DEFAULT,JSON.parse(raw)):Object.assign({},SETTINGS_DEFAULT); }catch(e){ return Object.assign({},SETTINGS_DEFAULT); } })();
 function saveSettings(){ try{localStorage.setItem("dominion_settings",JSON.stringify(SETTINGS));}catch(e){} }
 let audioCtx=null;
@@ -1802,10 +1819,16 @@ function syncSettingsUI(){
   document.getElementById("setConfirmToggle").classList.toggle("on",SETTINGS.confirmAttack);
   document.getElementById("setVolume").value=SETTINGS.volume;
   document.querySelectorAll("#setLangGrid .langbtn").forEach(b=>b.classList.toggle("sel",b.dataset.l===LANG));
+  document.querySelectorAll("#setColorGrid .colorswatch").forEach(b=>b.classList.toggle("sel",b.dataset.c===playerColor()));
 }
+function pickPlayerColor(hex){ SETTINGS.playerColor=hex; saveSettings();
+  if(S&&S.nations.player){ S.nations.player.color=hex; worldDirty=true; paint(); } // apply live if a game is already running
+  syncSettingsUI(); }
 function buildSettingsModal(){
   document.getElementById("setLangGrid").innerHTML=LANGS.map(([code,name])=>`<button class="langbtn ${code===LANG?'sel':''}" data-l="${code}">${name}</button>`).join("");
   document.querySelectorAll("#setLangGrid .langbtn").forEach(b=>b.addEventListener("click",()=>{setLang(b.dataset.l);syncSettingsUI();}));
+  document.getElementById("setColorGrid").innerHTML=PLAYER_COLORS.map(hex=>`<button class="colorswatch ${hex===playerColor()?'sel':''}" data-c="${hex}" style="background:${hex}" title="${hex}"></button>`).join("");
+  document.querySelectorAll("#setColorGrid .colorswatch").forEach(b=>b.addEventListener("click",()=>pickPlayerColor(b.dataset.c)));
 }
 /* ===== INTERACTIVE TUTORIAL ===== */
 const TUTORIAL_STEPS=[
@@ -1945,7 +1968,7 @@ function drawReplay(snaps){ const cv=document.getElementById("replayCanvas"); if
   g.clearRect(0,0,w,h); if(!snaps||!snaps.length){ document.getElementById("replayLegend").innerHTML=""; return; }
   const ids=Object.keys(snaps[snaps.length-1].land);
   const maxLand=Math.max(1,...snaps.flatMap(s=>ids.map(id=>s.land[id]||0)));
-  const others=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const palette={player:PLAYER_COLOR}; let oi=0;
+  const others=["#a8322d","#5c6e34","#6b466f","#2f7a86","#9a5b1e"]; const palette={player:playerColor()}; let oi=0;
   ids.forEach(id=>{ if(!palette[id])palette[id]=others[(oi++)%others.length]; });
   ids.forEach(id=>{ g.beginPath(); snaps.forEach((s,i)=>{ const x=i/Math.max(1,snaps.length-1)*(w-20)+10, y=h-10-(s.land[id]||0)/maxLand*(h-20);
       if(i===0)g.moveTo(x,y); else g.lineTo(x,y); }); g.strokeStyle=palette[id]; g.lineWidth=2.2; g.stroke(); });
@@ -2015,7 +2038,7 @@ function mpAssignTeam(){ const c=mpTeamCounts(); return c.A<=c.B?"A":"B"; }
 function renderLobby(){
   const list=document.getElementById("mpLobbyList");
   list.innerHTML=MPLOBBY.players.map(p=>{ const isMe=p.rid===MPLOBBY.myRid; const perk=PERKS[p.perk||"industrial"];
-    return `<div class="lobbyrow"><span class="ldot" style="background:${p.rid==='player'?PLAYER_COLOR:AI_COLORS[0]}"></span>
+    return `<div class="lobbyrow"><span class="ldot" style="background:${p.rid==='player'?playerColor():AI_COLORS[0]}"></span>
     <span class="lname">${p.name}${p.isHost?' 👑':''}</span>${isMe?'<span class="lyou">(you)</span>':''}
     <span class="lperk" data-rid="${p.rid}" title="${isMe?t('Click to change faction'):t(perk.n)}" ${isMe?'':'style="pointer-events:none;opacity:.75"'}>${perk.i} ${t(perk.n)}</span>
     <span class="lteam ${p.team}" data-rid="${p.rid}" ${MPLOBBY.role==='host'?'':'style="pointer-events:none"'}>${p.team==='A'?t('Team A'):t('Team B')}</span></div>`; }).join("");
@@ -2313,7 +2336,9 @@ function boot(){ migrateOldSave();
   document.getElementById("leaveBtn").addEventListener("click",leaveGame);
 
   // ---- settings ----
-  document.getElementById("settingsBtn").addEventListener("click",()=>{ buildSettingsModal(); syncSettingsUI(); document.getElementById("settingsOverlay").hidden=false; });
+  const openSettings=()=>{ buildSettingsModal(); syncSettingsUI(); document.getElementById("settingsOverlay").hidden=false; };
+  document.getElementById("settingsBtn").addEventListener("click",openSettings);
+  document.getElementById("startSettingsBtn").addEventListener("click",openSettings);
   document.getElementById("settingsClose").addEventListener("click",()=>document.getElementById("settingsOverlay").hidden=true);
   const toggleRow=(id,key)=>document.getElementById(id).addEventListener("click",()=>{ SETTINGS[key]=!SETTINGS[key]; saveSettings(); syncSettingsUI(); });
   toggleRow("setSoundToggle","sound"); toggleRow("setMotionToggle","reduceMotion"); toggleRow("setPauseToggle","autoPause"); toggleRow("setConfirmToggle","confirmAttack");
