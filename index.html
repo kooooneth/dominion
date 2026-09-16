@@ -68,6 +68,11 @@
   .modebar{position:absolute;top:10px;left:50%;transform:translateX(-50%);font-size:13px;padding:8px 14px;border-radius:8px;
     border:1.5px dashed #ffcf8f;background:rgba(122,42,18,.92);color:#ffe9cf;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);}
   .modebar button{background:rgba(255,255,255,.15);color:#ffe9cf;border:1px solid rgba(255,255,255,.3);border-radius:5px;padding:3px 9px;font-size:11px;}
+  .pauseBanner{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:9;pointer-events:none;
+    font-family:'Cinzel',serif;font-size:38px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:#ffe9cf;background:rgba(20,16,8,.74);padding:18px 46px;border-radius:14px;border:2px solid rgba(255,207,143,.7);
+    box-shadow:0 10px 40px rgba(0,0,0,.5);text-align:center;}
+  @media(max-width:480px){ .pauseBanner{font-size:22px;padding:12px 24px;letter-spacing:.08em;} }
   .zoomctl{position:absolute;right:calc(clamp(240px,var(--aside-w,320px),520px) + 12px);bottom:12px;display:flex;flex-direction:column;gap:4px;z-index:6;}
   #minimap{position:absolute;top:12px;right:calc(clamp(240px,var(--aside-w,320px),520px) + 12px);z-index:6;border:1.5px solid rgba(242,232,207,.5);border-radius:6px;background:#16262f;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.35);}
   @media(max-width:720px){ #minimap{right:12px;} }
@@ -237,6 +242,7 @@
     <div class="mapwrap">
       <canvas id="map"></canvas>
       <div class="modebar" id="modebar" hidden></div>
+      <div class="pauseBanner" id="pauseBanner" hidden data-i18n="⏸ PAUSED">⏸ PAUSED</div>
       <div class="maphud" id="maphud"></div>
       <canvas id="minimap" width="160" height="106" title="Click to jump the camera" data-i18n-title="Click to jump the camera"></canvas>
       <div class="zoomctl"><button id="zin">+</button><button id="zout">−</button></div>
@@ -559,6 +565,7 @@ const TR={
   "Sandbox":"Sandbox","No win or lose — just build":"Sin ganar ni perder — solo construir","The Coastal Uprising":"El Levantamiento Costero","A small world, one weak rival. Learn the basics.":"Un mundo pequeño, un rival débil. Aprende lo básico.","Two Front War":"Guerra en Dos Frentes","Enemies press from both sides. Expand fast, pick a side to break first.":"Los enemigos presionan por ambos lados. Expándete rápido y elige un bando para romper primero.","Iron Harvest":"Cosecha de Hierro","A Blitz economy war — outbuild your rivals before they outbuild you.":"Una guerra económica Blitz — supera a tus rivales en construcción antes de que ellos te superen a ti.","Fog of the Unknown":"Niebla de lo Desconocido","You can't see them coming. Scout with Watchtowers before you commit.":"No los verás venir. Explora con Atalayas antes de comprometerte.","The Nightmare Alliance":"La Alianza de Pesadilla","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"Todos los rivales en dificultad Pesadilla. Volarán misiles — construye Defensa Aérea pronto.","The Reckoning":"El Ajuste de Cuentas","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"Nivel legendario. El mapa de El Levantamiento Costero vuelve — en dificultad Imposible, con reglas de Regicidio. Sin piedad.",
   "Tech Tree":"Árbol Tecnológico",
   "Free":"Gratis",
+  "⏸ PAUSED":"⏸ PAUSADO",
   [TAGLINE]:"Un mundo vivo de continentes e islas dispersas. El tiempo nunca se detiene: extrae oro, forma ejércitos, navega los mares y conquista la Tierra en tiempo real, mientras las potencias rivales hacen lo mismo. Fija el reto y elige tu pueblo."
  },
  fr:{
@@ -585,6 +592,7 @@ const TR={
   "Sandbox":"Bac à sable","No win or lose — just build":"Ni victoire ni défaite — juste construire","The Coastal Uprising":"Le Soulèvement Côtier","A small world, one weak rival. Learn the basics.":"Un petit monde, un rival faible. Apprenez les bases.","Two Front War":"Guerre sur Deux Fronts","Enemies press from both sides. Expand fast, pick a side to break first.":"Les ennemis pressent des deux côtés. Développez-vous vite et choisissez un camp à briser en premier.","Iron Harvest":"Moisson de Fer","A Blitz economy war — outbuild your rivals before they outbuild you.":"Une guerre économique Blitz — surpassez vos rivaux en construction avant qu'ils ne vous surpassent.","Fog of the Unknown":"Brouillard de l'Inconnu","You can't see them coming. Scout with Watchtowers before you commit.":"Vous ne les verrez pas venir. Éclairez avec des Tours de guet avant de vous engager.","The Nightmare Alliance":"L'Alliance du Cauchemar","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"Tous les rivaux en difficulté Cauchemar. Des missiles voleront — construisez la Défense aérienne tôt.","The Reckoning":"Le Jugement","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"Niveau légendaire. La carte du Soulèvement Côtier revient — en difficulté Impossible, règles du Régicide. Sans pitié.",
   "Tech Tree":"Arbre Technologique",
   "Free":"Gratuit",
+  "⏸ PAUSED":"⏸ EN PAUSE",
   [TAGLINE]:"Un monde vivant de continents et d'îles éparses. Le temps ne s'arrête jamais : extrayez de l'or, levez des armées, naviguez et conquérez la Terre en temps réel, pendant que les puissances rivales font de même. Réglez le défi, puis choisissez votre peuple."
  },
  de:{
@@ -611,6 +619,7 @@ const TR={
   "Sandbox":"Sandkasten","No win or lose — just build":"Kein Sieg oder Niederlage — nur Bauen","The Coastal Uprising":"Der Küstenaufstand","A small world, one weak rival. Learn the basics.":"Eine kleine Welt, ein schwacher Rivale. Lerne die Grundlagen.","Two Front War":"Krieg an zwei Fronten","Enemies press from both sides. Expand fast, pick a side to break first.":"Feinde drängen von beiden Seiten. Expandiere schnell und wähle eine Seite, die du zuerst brichst.","Iron Harvest":"Eiserne Ernte","A Blitz economy war — outbuild your rivals before they outbuild you.":"Ein Blitz-Wirtschaftskrieg — überbaue deine Rivalen, bevor sie dich überbauen.","Fog of the Unknown":"Nebel des Unbekannten","You can't see them coming. Scout with Watchtowers before you commit.":"Du siehst sie nicht kommen. Erkunde mit Wachtürmen, bevor du dich festlegst.","The Nightmare Alliance":"Das Albtraum-Bündnis","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"Jeder Rivale auf Albtraum-Schwierigkeit. Raketen werden fliegen — baue früh Luftabwehr.","The Reckoning":"Die Abrechnung","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"Legendäre Stufe. Die Karte des Küstenaufstands kehrt zurück — auf Schwierigkeit Unmöglich, Königsmord-Regeln. Keine Gnade.",
   "Tech Tree":"Technologiebaum",
   "Free":"Kostenlos",
+  "⏸ PAUSED":"⏸ PAUSIERT",
   [TAGLINE]:"Eine lebendige Welt aus Kontinenten und verstreuten Inseln. Die Zeit steht nie still — schürfe Gold, hebe Armeen aus, befahre die Meere und erobere die Erde in Echtzeit, während rivalisierende Mächte dasselbe tun. Wähle die Schwierigkeit und dann dein Volk."
  },
  pt:{
@@ -637,6 +646,7 @@ const TR={
   "Sandbox":"Sandbox","No win or lose — just build":"Sem vitória ou derrota — só construir","The Coastal Uprising":"O Levante Costeiro","A small world, one weak rival. Learn the basics.":"Um mundo pequeno, um rival fraco. Aprenda o básico.","Two Front War":"Guerra em Duas Frentes","Enemies press from both sides. Expand fast, pick a side to break first.":"Inimigos pressionam de ambos os lados. Expanda rápido e escolha um lado para derrubar primeiro.","Iron Harvest":"Colheita de Ferro","A Blitz economy war — outbuild your rivals before they outbuild you.":"Uma guerra econômica Blitz — construa mais que seus rivais antes que eles construam mais que você.","Fog of the Unknown":"Névoa do Desconhecido","You can't see them coming. Scout with Watchtowers before you commit.":"Você não os verá chegando. Explore com Torres de Vigia antes de se comprometer.","The Nightmare Alliance":"A Aliança do Pesadelo","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"Todos os rivais na dificuldade Pesadelo. Mísseis voarão — construa Defesa Aérea cedo.","The Reckoning":"O Acerto de Contas","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"Nível lendário. O mapa de O Levante Costeiro retorna — na dificuldade Impossível, regras de Regicídio. Sem piedade.",
   "Tech Tree":"Árvore Tecnológica",
   "Free":"Grátis",
+  "⏸ PAUSED":"⏸ PAUSADO",
   [TAGLINE]:"Um mundo vivo de continentes e ilhas dispersas. O tempo nunca para — extraia ouro, forme exércitos, navegue os mares e conquiste a Terra em tempo real, enquanto potências rivais fazem o mesmo. Defina o desafio e escolha o seu povo."
  },
  it:{
@@ -663,6 +673,7 @@ const TR={
   "Sandbox":"Sandbox","No win or lose — just build":"Nessuna vittoria o sconfitta — solo costruire","The Coastal Uprising":"La Rivolta Costiera","A small world, one weak rival. Learn the basics.":"Un piccolo mondo, un rivale debole. Impara le basi.","Two Front War":"Guerra su Due Fronti","Enemies press from both sides. Expand fast, pick a side to break first.":"I nemici incalzano da entrambi i lati. Espanditi velocemente e scegli un lato da abbattere per primo.","Iron Harvest":"Raccolto di Ferro","A Blitz economy war — outbuild your rivals before they outbuild you.":"Una guerra economica Blitz — costruisci più dei tuoi rivali prima che loro costruiscano più di te.","Fog of the Unknown":"Nebbia dell'Ignoto","You can't see them coming. Scout with Watchtowers before you commit.":"Non li vedrai arrivare. Esplora con Torri di guardia prima di impegnarti.","The Nightmare Alliance":"L'Alleanza dell'Incubo","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"Ogni rivale a difficoltà Incubo. Voleranno missili — costruisci presto la Difesa Aerea.","The Reckoning":"La Resa dei Conti","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"Livello leggendario. La mappa de La Rivolta Costiera ritorna — a difficoltà Impossibile, regole del Regicidio. Nessuna pietà.",
   "Tech Tree":"Albero Tecnologico",
   "Free":"Gratis",
+  "⏸ PAUSED":"⏸ IN PAUSA",
   [TAGLINE]:"Un mondo vivo di continenti e isole sparse. Il tempo non si ferma mai — estrai oro, arruola eserciti, naviga i mari e conquista la Terra in tempo reale, mentre le potenze rivali fanno lo stesso. Imposta la sfida, poi scegli il tuo popolo."
  },
  ru:{
@@ -689,6 +700,7 @@ const TR={
   "Sandbox":"Песочница","No win or lose — just build":"Без победы и поражения — просто стройте","The Coastal Uprising":"Прибрежное восстание","A small world, one weak rival. Learn the basics.":"Маленький мир, один слабый соперник. Изучите основы.","Two Front War":"Война на два фронта","Enemies press from both sides. Expand fast, pick a side to break first.":"Враги давят с обеих сторон. Расширяйтесь быстро и выберите, кого сломить первым.","Iron Harvest":"Железная жатва","A Blitz economy war — outbuild your rivals before they outbuild you.":"Экономическая война в стиле Блиц — постройте больше соперников, пока они не построили больше вас.","Fog of the Unknown":"Туман неизвестности","You can't see them coming. Scout with Watchtowers before you commit.":"Вы не увидите их приближения. Разведывайте с помощью дозорных башен, прежде чем действовать.","The Nightmare Alliance":"Альянс кошмара","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"Все соперники на сложности Кошмар. Полетят ракеты — стройте ПВО заранее.","The Reckoning":"Расплата","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"Легендарный уровень. Карта Прибрежного восстания возвращается — на сложности Невозможно, правила Цареубийства. Без пощады.",
   "Tech Tree":"Дерево технологий",
   "Free":"Бесплатно",
+  "⏸ PAUSED":"⏸ ПАУЗА",
   [TAGLINE]:"Живой мир из континентов и разбросанных островов. Время не останавливается — добывайте золото, набирайте армии, плавайте по морям и покоряйте Землю в реальном времени, пока соперничающие державы делают то же самое. Задайте вызов и выберите свой народ."
  },
  zh:{
@@ -715,6 +727,7 @@ const TR={
   "Sandbox":"沙盒","No win or lose — just build":"无胜负——只管建设","The Coastal Uprising":"沿海起义","A small world, one weak rival. Learn the basics.":"一个小世界，一个弱小的对手。学习基础操作。","Two Front War":"两线作战","Enemies press from both sides. Expand fast, pick a side to break first.":"敌人从两侧逼近。快速扩张，选择先击破一方。","Iron Harvest":"钢铁丰收","A Blitz economy war — outbuild your rivals before they outbuild you.":"一场闪电战式的经济战——在对手超越你之前抢先建设超越他们。","Fog of the Unknown":"未知迷雾","You can't see them coming. Scout with Watchtowers before you commit.":"你无法看到敌人来袭。行动前先用瞭望塔进行侦察。","The Nightmare Alliance":"噩梦联盟","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"所有对手均为噩梦难度。导弹将会满天飞——尽早建造防空设施。","The Reckoning":"清算之日","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"传奇难度。沿海起义的地图再次出现——在不可能难度下，采用弑君规则。毫不留情。",
   "Tech Tree":"科技树",
   "Free":"免费",
+  "⏸ PAUSED":"⏸ 已暂停",
   [TAGLINE]:"一个由大陆和散落岛屿组成的鲜活世界。时间永不停止 — 开采金币、组建军队、航行海洋，实时征服地球，而对手列强也在做同样的事。设定挑战，然后选择你的民族。"
  },
  ja:{
@@ -741,6 +754,7 @@ const TR={
   "Sandbox":"サンドボックス","No win or lose — just build":"勝敗なし——ただ建設するだけ","The Coastal Uprising":"沿岸の蜂起","A small world, one weak rival. Learn the basics.":"小さな世界、弱いライバルが1つ。基本を学びましょう。","Two Front War":"二正面戦争","Enemies press from both sides. Expand fast, pick a side to break first.":"敵が両側から迫ります。素早く拡大し、先に打ち破る側を選びましょう。","Iron Harvest":"鉄の収穫","A Blitz economy war — outbuild your rivals before they outbuild you.":"電撃戦式の経済戦——ライバルに先んじて建設しましょう。","Fog of the Unknown":"未知の霧","You can't see them coming. Scout with Watchtowers before you commit.":"敵の接近が見えません。行動前に見張り塔で偵察しましょう。","The Nightmare Alliance":"悪夢の同盟","Every rival at Nightmare difficulty. Missiles will fly — build Air Defense early.":"すべてのライバルが悪夢難易度。ミサイルが飛び交います——早めに防空を建設しましょう。","The Reckoning":"清算の時","Legendary tier. The Coastal Uprising's map returns — at Impossible difficulty, Regicide rules. No mercy.":"伝説級。沿岸の蜂起のマップが再来——不可能難易度、王殺しルールで。容赦なし。",
   "Tech Tree":"テクノロジーツリー",
   "Free":"無料",
+  "⏸ PAUSED":"⏸ 一時停止中",
   [TAGLINE]:"大陸と点在する島々からなる生きた世界。時は止まらない — 資金を採掘し、軍を編成し、海を渡り、リアルタイムで地球を征服する。ライバル列強も同じことをする。難易度を設定し、民族を選ぼう。"
  }
 };
@@ -848,7 +862,7 @@ function startGame(perk,diff,mode,fog,campaignId,worldSize){
   else { startGameInner(perk,diff,mode,fog,worldSize); S.campaignId=null; }
 }
 function startGameInner(perk,diff,mode,fog,worldSize){
-  resetSurrenderArm(); startMusic();
+  resetSurrenderArm(); startMusic(); hidePauseBanner();
   mode=mode||"conquest";
   const wsz=WORLD_SIZES[worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
@@ -894,7 +908,7 @@ function centerOn(cell){ const vw=canvas?canvas.clientWidth:900,vh=canvas?canvas
 
 /* ===== MULTIPLAYER SETUP (host builds the match; guest deserializes it) ===== */
 function startMultiplayerHost(lobby){
-  resetSurrenderArm(); startMusic();
+  resetSurrenderArm(); startMusic(); hidePauseBanner(); mpLastCellKeys=null; // fresh match: don't diff against a previous match's cells
   const diff=lobby.diff, mode=lobby.mode, fog=lobby.fog, goldMul=lobby.goldMul||1;
   const wsz=WORLD_SIZES[lobby.worldSize]||WORLD_SIZES.medium;
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
@@ -956,7 +970,7 @@ function mpSerializeInit(forRealId){
   return {cells,nations,teamOf,allHumanRealIds,allAiIds,myTeam:teamOf.player,diff:S.diff,mode:S.mode,fog:S.fog,winFrac:S.winFrac,econMul:S.econMul,landCount:S.landCount,time:S.time};
 }
 function initMultiplayerGuest(p){
-  resetSurrenderArm(); startMusic();
+  resetSurrenderArm(); startMusic(); hidePauseBanner();
   S={cells:[],grid:[],map:{},nations:{},armies:[],missiles:[],fx:[],selected:null,deploy:0,deployLock:false,
      missileMode:false,over:false,time:p.time||0,speed:1,log:[],raidTimer:4,winTimer:1,eventTimer:99999,fogTimer:0,
      cam:{x:0,y:0,scale:1},diff:p.diff,mode:p.mode,fog:!!p.fog,winFrac:p.winFrac,econMul:p.econMul,everAttacked:false,
@@ -1002,13 +1016,26 @@ function mpApplyOrder(actingNat,order){
   worldDirty=true;
 }
 // ---- state broadcast (host → guests), called from the main loop every ~350ms ----
+// cells are the dominant cost of this payload (hundreds of them, most static from one tick to the next --
+// troop growth alone only bumps a cell's integer troop count roughly once every 9-13s, see popAcc in update())
+// so only cells that actually changed since the last broadcast are sent, cutting typical payload size by
+// 90%+ and reducing the lag guests feel on slower connections. nations/armies/missiles stay full every tick
+// since those arrays are small (<=8 nations, usually a handful of armies/missiles) -- not worth delta-ing.
+let mpLastCellKeys=null; // Map(cellId -> diff key), reset whenever a new match starts (see startMultiplayerHost/mpBecomeHost)
+function mpCellKey(c){ const bl=Object.keys(c.b).filter(k=>c.b[k]);
+  return c.owner+"|"+c.troops+"|"+(c.cap?1:0)+"|"+(c.autoDefend?1:0)+"|"+bl.join(","); }
+function mpChangedCells(){ const prev=mpLastCellKeys, next=new Map(), changed=[];
+  S.cells.forEach(c=>{ if(!c.land)return; const key=mpCellKey(c); next.set(c.id,key);
+    if(!prev||prev.get(c.id)!==key)changed.push(c); });
+  mpLastCellKeys=next; return changed; }
 function mpBroadcastState(){ if(!S.mp||S.mp.role!=="host")return;
+  const changedCells=mpChangedCells();
   MPLOBBY.conns.forEach((conn,peerId)=>{ const rid=MPLOBBY.peerToRid.get(peerId); if(!rid)return;
-    try{ conn.send({type:"state",payload:mpSerializeState(rid)}); }catch(e){} });
-  MPLOBBY.specConns.forEach(conn=>{ try{ conn.send({type:"state",payload:mpSerializeState(null)}); }catch(e){} });
+    try{ conn.send({type:"state",payload:mpSerializeState(rid,changedCells)}); }catch(e){} });
+  MPLOBBY.specConns.forEach(conn=>{ try{ conn.send({type:"state",payload:mpSerializeState(null,changedCells)}); }catch(e){} });
 }
-function mpSerializeState(forRealId){
-  const cells=S.cells.filter(c=>c.land).map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap,autoDefend:!!c.autoDefend}));
+function mpSerializeState(forRealId,changedCells){
+  const cells=changedCells.map(c=>({id:c.col+"_"+c.row,owner:mpRemapId(c.owner,forRealId),troops:c.troops,b:c.b,cap:c.cap,autoDefend:!!c.autoDefend}));
   const nations={}; Object.keys(S.nations).forEach(id=>{ if(id==="sea"||id==="neutral")return; const n=S.nations[id]; const rid=mpRemapId(id,forRealId);
     nations[rid]={gold:n.gold,food:n.food,missileCD:n.missileCD||0,spyCD:n.spyCD||0,hero:n.hero||null,tech:n.tech||{},
       ultCD:n.ultCD||0,ultUntil:n.ultUntil||0,wonder:n.wonder||null,mercCD:n.mercCD||0,kills:n.kills||0,totalGoldEarned:n.totalGoldEarned||0}; });
@@ -1547,6 +1574,7 @@ function renderMinimap(){ if(!miniCtx||!S)return; const w=miniCanvas.width,h=min
 function paint(){ if(ctx&&S)render(); }
 function openDrawer(){ const a=document.querySelector('aside'); if(a)a.classList.add('open'); }
 let mpBroadcastAcc=0, saveAcc=0;
+function setGameSpeed(v){ S.speed=v; const pb=document.getElementById("pauseBanner"); if(pb)pb.hidden=v>0; }
 function loop(now){ const raw=(now-lastT)/1000; lastT=now; const dt=Math.min(0.05,raw)*S.speed;
   const isGuest=S.mp&&S.mp.role==="guest";
   if(!S.over&&S.speed>0&&!isGuest)update(dt); render();
@@ -1681,6 +1709,7 @@ function pushLog(m,cls){ S.log.unshift({t:Math.floor(S.time),m,cls:cls||""}); if
 let leaveArmed=false, leaveTimer=null;
 let surrenderArmed=false, surrenderTimer=null;
 function resetSurrenderArm(){ surrenderArmed=false; clearTimeout(surrenderTimer); }
+function hidePauseBanner(){ const pb=document.getElementById("pauseBanner"); if(pb)pb.hidden=true; }
 function doSurrender(){ if(!surrenderArmed){ surrenderArmed=true; renderPanel();
     clearTimeout(surrenderTimer); surrenderTimer=setTimeout(()=>{surrenderArmed=false;renderPanel();},4000); return; }
   clearTimeout(surrenderTimer); surrenderArmed=false;
@@ -1801,8 +1830,8 @@ function startTutorial(){ tutorialStep=0; buildTutorialStepUI(); document.getEle
 function closeTutorial(){ document.getElementById("tutorialOverlay").hidden=true; try{localStorage.setItem("dominion_tutorial_seen","1");}catch(e){} }
 let wasAutoPaused=false;
 document.addEventListener("visibilitychange",()=>{ if(!S||S.over)return;
-  if(document.hidden){ if(SETTINGS.autoPause&&S.speed>0&&!(S.mp&&S.mp.role==="guest")){ wasAutoPaused=true; S.speed=0; } }
-  else if(wasAutoPaused){ wasAutoPaused=false; S.speed=1; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x.dataset.s==="1")); } });
+  if(document.hidden){ if(SETTINGS.autoPause&&S.speed>0&&!(S.mp&&S.mp.role==="guest")){ wasAutoPaused=true; setGameSpeed(0); } }
+  else if(wasAutoPaused){ wasAutoPaused=false; setGameSpeed(1); document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x.dataset.s==="1")); } });
 
 /* ===== SAVE / RESUME (solo only, 3 slots) ===== */
 const SAVE_SLOTS=3;
@@ -1834,7 +1863,7 @@ function hasSave(){ return listSaveSlots().some(s=>!s.empty); }
 function mostRecentSlot(){ const slots=listSaveSlots().filter(s=>!s.empty); if(!slots.length)return null;
   return slots.reduce((best,s)=>s.savedAt>best.savedAt?s:best).slot; }
 function loadGameState(slot){
-  resetSurrenderArm(); startMusic();
+  resetSurrenderArm(); startMusic(); hidePauseBanner();
   if(slot==null)slot=mostRecentSlot(); if(slot==null)return false;
   const data=readSlot(slot); if(!data||!data.cells)return false;
   S={cells:[],grid:[],map:{},nations:data.nations,armies:data.armies||[],missiles:data.missiles||[],fx:[],
@@ -2111,6 +2140,7 @@ function mpReconnectAttempt(onFail){
 function mpBecomeHost(){
   const banner=document.getElementById("discbanner"); banner.hidden=false; banner.textContent="👑 "+t("Host lost — taking over as host…");
   MPLOBBY.role="host"; MPLOBBY.conns=new Map(); MPLOBBY.peerToRid=new Map(); MPLOBBY.specConns=new Map(); MPLOBBY.started=true;
+  mpLastCellKeys=null; // new host, fresh diff baseline -- reconnecting guests get a full init anyway
   if(S){ S.mp.role="host"; S.mp.conns=MPLOBBY.conns; }
   try{
     MPLOBBY.peer=new Peer("dom-"+MPLOBBY.code,{debug:0});
@@ -2243,7 +2273,7 @@ function boot(){ migrateOldSave();
   document.getElementById("zin").addEventListener("click",()=>zoomBtn(1.2));
   document.getElementById("zout").addEventListener("click",()=>zoomBtn(1/1.2));
   document.getElementById("speed").addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||!S)return;
-    S.speed=+b.dataset.s; document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x===b)); });
+    setGameSpeed(+b.dataset.s); document.querySelectorAll("#speed button").forEach(x=>x.classList.toggle("on",x===b)); });
   const pp=document.getElementById("ppBody");
   pp.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled||!S)return;
     if(b.dataset.bk)doBuild(b.dataset.bk); else if(b.dataset.rec)doRecruit(+b.dataset.rec);
